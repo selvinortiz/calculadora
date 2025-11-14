@@ -51,7 +51,7 @@ export default function Home() {
   return (
     <main style={styles.page}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Calculadora de pagos de propiedad</h1>
+        <h1 style={styles.title}>Calculadora de Pagos</h1>
         <p style={styles.subtitle}>
           Usa interés anual simple. Todos los montos están en quetzales (Q).
         </p>
@@ -164,9 +164,22 @@ export default function Home() {
           </table>
         </div>
 
-        <p style={styles.note}>
-          Fórmula: interés simple = principal × (tasa anual / 100) × años. Pago
+        <p style={styles.support}>
+          💡 Fórmula: interés simple = principal × (tasa anual / 100) × años. Pago
           mensual = (principal + interés total) ÷ (años × 12).
+        </p>
+
+        <p style={styles.support}>
+            📞 Este proyecto fue creado por <b>Selvin Ortiz</b>. Si tiene preguntas o sugerencias,
+            <a
+                href="https://wa.me/16128078475?text=Hola%2C%20necesito%20ayuda%20con%20la%20calculadora."
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.whatsappLink}
+            >
+                escríbame por WhatsApp
+            </a>
+            .
         </p>
       </div>
     </main>
@@ -279,5 +292,18 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginTop: "0.75rem",
     fontSize: "0.8rem",
     color: "#6b7280",
+  },
+  support: {
+    marginTop: "1.25rem",
+    fontSize: "0.85rem",
+    color: "#374151",
+    textAlign: "center",
+  },
+
+  whatsappLink: {
+    color: "#25D366",
+    fontWeight: 600,
+    textDecoration: "none",
+    marginLeft: "0.25rem",
   },
 };

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Calculadora de Selvin",
-  description: "Calculadora de pagos de propiedad de Selvin",
+  title: "Calculadora de Pagos",
+  description: "Calculadora de pagos de propiedad creada por Selvin Ortiz.",
 };
 
 export default function RootLayout({
