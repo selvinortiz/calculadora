@@ -21,7 +21,24 @@ function formatQ(value: number) {
   );
 }
 
-export default function Home() {
+// Amortized loan formula: M = P × [r(1+r)^n] / [(1+r)^n - 1]
+// where M = monthly payment, P = principal, r = monthly rate, n = number of months
+function calculateAmortizedPayment(
+  principal: number,
+  annualRate: number,
+  months: number
+): number {
+  if (principal <= 0 || months <= 0) return 0;
+  if (annualRate === 0) return principal / months;
+
+  const monthlyRate = annualRate / 100 / 12;
+  const numerator = monthlyRate * Math.pow(1 + monthlyRate, months);
+  const denominator = Math.pow(1 + monthlyRate, months) - 1;
+
+  return principal * (numerator / denominator);
+}
+
+export default function AmortizedCalculator() {
   const [price, setPrice] = useState<number>(65000);
   const [downPayment, setDownPayment] = useState<number>(3000);
   const [rate, setRate] = useState<number>(7);
@@ -32,10 +49,10 @@ export default function Home() {
   const rows: TermRow[] = useMemo(() => {
     const result: TermRow[] = [];
     for (let years = 1; years <= 5; years++) {
-      const interestTotal = principal * (rate / 100) * years;
-      const total = principal + interestTotal;
       const months = years * 12;
-      const monthly = months > 0 ? total / months : 0;
+      const monthly = calculateAmortizedPayment(principal, rate, months);
+      const total = monthly * months;
+      const interestTotal = total - principal;
 
       result.push({
         years,
@@ -51,9 +68,9 @@ export default function Home() {
   return (
     <main style={styles.page} className="calculator-page">
       <div style={styles.card} className="calculator-card">
-        <h1 style={styles.title} className="calculator-title">Calculadora de Pagos</h1>
+        <h1 style={styles.title} className="calculator-title">Calculadora de Pagos Amortizados</h1>
         <p style={styles.subtitle} className="calculator-subtitle">
-          Usa interés anual simple. Todos los montos están en quetzales (Q).
+          Usa interés compuesto amortizado. Todos los montos están en quetzales (Q).
         </p>
 
         <div style={styles.grid}>
@@ -170,8 +187,9 @@ export default function Home() {
         </div>
 
         <p style={styles.support} className="calculator-support">
-          💡 Fórmula: interés simple = principal × (tasa anual / 100) × años. Pago
-          mensual = (principal + interés total) ÷ (años × 12).
+          💡 Fórmula amortizada: Pago mensual = P × [r(1+r)^n] / [(1+r)^n - 1],
+          donde P = principal, r = tasa mensual (anual ÷ 12 ÷ 100), n = número de meses.
+          El interés se calcula sobre el saldo pendiente cada mes.
         </p>
 
         <p style={styles.support} className="calculator-support">

@@ -24,3 +24,133 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Calculator dark mode support */
+@media (prefers-color-scheme: dark) {
+  .calculator-page {
+    background: #1a1a1a !important;
+  }
+
+  .calculator-card {
+    background: #2a2a2a !important;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .calculator-title {
+    color: #f3f4f6 !important;
+  }
+
+  .calculator-subtitle {
+    color: #9ca3af !important;
+  }
+
+  .calculator-label {
+    color: #d1d5db !important;
+  }
+
+  .calculator-hint {
+    color: #6b7280 !important;
+  }
+
+  .calculator-input {
+    background: #1f1f1f !important;
+    border-color: #404040 !important;
+    color: #f3f4f6 !important;
+  }
+
+  .calculator-input:focus {
+    border-color: #6366f1 !important;
+  }
+
+  .calculator-input option {
+    background: #2a2a2a;
+    color: #f3f4f6;
+  }
+
+  .calculator-summary {
+    background: #1e1b4b !important;
+    border-color: #312e81 !important;
+    color: #c7d2fe !important;
+  }
+
+  .calculator-th {
+    color: #9ca3af !important;
+    border-bottom-color: #404040 !important;
+  }
+
+  .calculator-td {
+    color: #e5e7eb !important;
+  }
+
+  .calculator-tr {
+    border-bottom-color: #404040 !important;
+  }
+
+  .calculator-tr-highlight {
+    background: #1e1b4b !important;
+    color: #c7d2fe !important;
+  }
+
+  .calculator-support {
+    color: #d1d5db !important;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .calculator-page {
+    padding: 1rem !important;
+  }
+
+  .calculator-card {
+    padding: 1.25rem 1.25rem 1.5rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  .calculator-title {
+    font-size: 1.4rem !important;
+  }
+
+  .calculator-subtitle {
+    font-size: 0.9rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .calculator-input {
+    padding: 0.6rem 0.7rem !important;
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    min-height: 44px !important; /* Better touch target */
+  }
+
+  .calculator-summary {
+    padding: 0.875rem 1rem !important;
+    font-size: 0.85rem !important;
+    line-height: 1.5 !important;
+    word-break: break-word !important;
+  }
+
+  .calculator-th {
+    padding: 0.5rem 0.4rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .calculator-td {
+    padding: 0.5rem 0.4rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  .calculator-support {
+    font-size: 0.8rem !important;
+    padding: 0 0.5rem !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Better table scrolling on mobile */
+  .calculator-table-wrapper {
+    -webkit-overflow-scrolling: touch !important;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
