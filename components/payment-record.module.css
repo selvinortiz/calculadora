@@ -1,0 +1,369 @@
+.document {
+  padding: clamp(1rem, 3vw, 1.5rem);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  box-shadow: var(--shadow);
+}
+
+.header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 2px solid var(--text-strong);
+}
+
+.header p {
+  margin: 0 0 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: clamp(1.15rem, 3vw, 1.5rem);
+}
+
+.documentMeta {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 0.25rem;
+  text-align: right;
+}
+
+.documentMeta span {
+  color: var(--accent-strong);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.documentMeta strong {
+  font-size: 0.76rem;
+}
+
+.warning {
+  margin: 0.75rem 0 0;
+  padding: 0.55rem 0.7rem;
+  color: #842e29;
+  background: #fff1f0;
+  border: 1px solid #f6c7c3;
+  border-radius: 0.55rem;
+  font-size: 0.67rem;
+  font-weight: 700;
+}
+
+.identityGrid,
+.transactionGrid,
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.identityGrid {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.section {
+  margin-top: 0.85rem;
+}
+
+.capitalApplication {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  padding: 0.7rem;
+  background: var(--accent-soft);
+  border: 1px solid #d7ddff;
+  border-radius: 0.6rem;
+}
+
+.capitalApplication > div:first-child {
+  display: grid;
+  max-width: 15rem;
+  gap: 0.18rem;
+}
+
+.capitalApplication > div:first-child span {
+  color: var(--accent-strong);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.capitalApplication > div:first-child small {
+  color: var(--text-muted);
+  font-size: 0.58rem;
+  line-height: 1.35;
+}
+
+.capitalFormula {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.capitalFormula > div {
+  display: grid;
+  min-width: 5.5rem;
+  gap: 0.15rem;
+}
+
+.capitalFormula > div small {
+  color: var(--text-muted);
+  font-size: 0.56rem;
+}
+
+.capitalFormula > div strong {
+  color: var(--text-strong);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.capitalFormula > div[data-emphasized="true"] strong {
+  color: var(--accent-strong);
+}
+
+.capitalFormula > span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.section h3,
+.terms h3 {
+  margin: 0 0 0.55rem;
+  color: var(--text-strong);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.recordItem {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.recordItem span {
+  color: var(--text-muted);
+  font-size: 0.62rem;
+}
+
+.recordItem strong {
+  overflow-wrap: anywhere;
+  color: var(--text-strong);
+  font-size: 0.73rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: 0.48rem 0.55rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+
+.table th:first-child {
+  text-align: left;
+}
+
+.table thead th {
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  text-transform: uppercase;
+}
+
+.table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.summary > div {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.65rem;
+  background: var(--accent-soft);
+  border-radius: 0.55rem;
+}
+
+.summary span {
+  color: var(--text-muted);
+  font-size: 0.58rem;
+}
+
+.summary strong {
+  color: var(--accent-strong);
+  font-size: 0.77rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.terms {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.terms p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+
+.terms .definitionNote {
+  margin-top: 0.45rem;
+  padding: 0.45rem 0.55rem;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border-radius: 0.4rem;
+}
+
+.definitionNote strong {
+  color: var(--text-strong);
+}
+
+.detailGrid {
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  background: var(--surface-subtle);
+  border-radius: 0.55rem;
+}
+
+.signatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin-top: 2.2rem;
+}
+
+.signatures div {
+  display: grid;
+  gap: 0.2rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--text-strong);
+  text-align: center;
+}
+
+.signatures span {
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.signatures small {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.documentFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.55rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  font-size: 0.55rem;
+}
+
+@media (max-width: 42rem) {
+  .identityGrid,
+  .transactionGrid,
+  .summary,
+  .detailGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+  }
+
+  .capitalApplication,
+  .capitalFormula {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .capitalFormula {
+    gap: 0.35rem;
+  }
+
+  .capitalFormula > span {
+    display: none;
+  }
+
+  .documentMeta {
+    text-align: left;
+  }
+}
+
+@media print {
+  .document {
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .header h2 {
+    font-size: 16pt;
+  }
+
+  .identityGrid,
+  .transactionGrid,
+  .summary,
+  .detailGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .recordItem strong,
+  .summary strong {
+    color: #111827;
+  }
+
+  .summary > div,
+  .detailGrid,
+  .table thead th,
+  .terms .definitionNote {
+    background: #f3f4f6;
+  }
+
+  .capitalApplication {
+    background: #f5f7ff;
+    border-color: #c7d2fe;
+  }
+
+  .capitalFormula {
+    flex-direction: row;
+  }
+
+  .capitalFormula > span {
+    display: block;
+  }
+
+  .warning {
+    color: #7f1d1d;
+    background: #fff;
+    border-color: #7f1d1d;
+  }
+}

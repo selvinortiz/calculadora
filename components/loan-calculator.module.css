@@ -1,0 +1,250 @@
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
+  align-items: start;
+  gap: 1rem;
+}
+
+.formCard,
+.resultCard,
+.comparison {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.formCard,
+.resultCard {
+  padding: 1.25rem;
+}
+
+.cardHeading,
+.resultHeading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cardHeading h2,
+.resultHeading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1rem;
+}
+
+.stepLabel {
+  margin: 0 0 0.25rem;
+  color: var(--accent);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.localBadge,
+.resultHeading > span {
+  padding: 0.3rem 0.5rem;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field label {
+  color: var(--text-strong);
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.field input {
+  width: 100%;
+  min-height: 2.85rem;
+  padding: 0.65rem 0.75rem;
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.65rem;
+}
+
+.field input:focus-visible,
+.comparison summary:focus-visible,
+.tableRegion:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.field input.invalid {
+  border-color: var(--danger);
+}
+
+.field small {
+  color: var(--text-muted);
+  font-size: 0.69rem;
+}
+
+.field .error {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.primaryQuote {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 1.15rem;
+  padding: 1rem;
+  background: var(--accent-soft);
+  border-radius: 0.8rem;
+}
+
+.primaryQuote span,
+.primaryQuote small {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.primaryQuote strong {
+  color: var(--accent-strong);
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.quoteBreakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin: 1rem 0 0;
+}
+
+.quoteBreakdown div {
+  min-width: 0;
+}
+
+.quoteBreakdown dt {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.quoteBreakdown dd {
+  margin: 0.2rem 0 0;
+  color: var(--text-strong);
+  font-size: 0.85rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.formula {
+  margin: 1rem 0 0;
+  padding-top: 0.85rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.validationSummary {
+  margin: 0;
+  padding: 1rem;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  border-radius: 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.comparison {
+  grid-column: 1 / -1;
+  padding: 1rem 1.1rem;
+}
+
+.comparison summary {
+  width: fit-content;
+  color: var(--accent-strong);
+  font-size: 0.82rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.scrollHint {
+  display: none;
+  margin: 0.75rem 0 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.tableRegion {
+  margin-top: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.table {
+  width: 100%;
+  min-width: 48rem;
+  border-collapse: collapse;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: 0.7rem 0.8rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.table th:first-child {
+  text-align: left;
+}
+
+.table thead th {
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+}
+
+.table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+@media (max-width: 50rem) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 34rem) {
+  .form,
+  .quoteBreakdown {
+    grid-template-columns: 1fr;
+  }
+
+  .scrollHint {
+    display: block;
+  }
+
+  .tableRegion {
+    margin-top: 0;
+  }
+}

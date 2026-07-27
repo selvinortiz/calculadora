@@ -1,0 +1,356 @@
+.document {
+  padding: clamp(1rem, 3vw, 1.5rem);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  box-shadow: var(--shadow);
+}
+
+.header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 2px solid var(--text-strong);
+}
+
+.header p {
+  margin: 0 0 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: clamp(1.15rem, 3vw, 1.5rem);
+}
+
+.documentMeta {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 0.25rem;
+  text-align: right;
+}
+
+.documentMeta span {
+  color: var(--accent-strong);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.documentMeta strong {
+  font-size: 0.76rem;
+}
+
+.notice {
+  margin: 0.75rem 0 0;
+  padding: 0.55rem 0.7rem;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  font-size: 0.67rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.identityGrid,
+.summary,
+.paymentTerms {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.identityGrid {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.documentItem {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.documentItem span,
+.summary span,
+.paymentTerms span {
+  color: var(--text-muted);
+  font-size: 0.61rem;
+}
+
+.documentItem strong,
+.summary strong,
+.paymentTerms strong {
+  overflow-wrap: anywhere;
+  color: var(--text-strong);
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary {
+  margin-top: 0.85rem;
+}
+
+.summary > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+  padding: 0.65rem;
+  background: var(--surface-subtle);
+  border-radius: 0.55rem;
+}
+
+.summary > div[data-emphasized="true"] {
+  background: var(--accent-soft);
+}
+
+.summary > div[data-emphasized="true"] strong {
+  color: var(--accent-strong);
+}
+
+.paymentTerms {
+  margin-top: 0.55rem;
+  padding: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+}
+
+.paymentTerms > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.scheduleSection {
+  margin-top: 1rem;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.55rem;
+}
+
+.sectionHeading h3,
+.terms h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.sectionHeading p,
+.sectionHeading > span {
+  margin: 0.18rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.sectionHeading > span {
+  flex: 0 0 auto;
+}
+
+.tableRegion {
+  max-height: 36rem;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+}
+
+.tableRegion:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.table {
+  width: 100%;
+  min-width: 44rem;
+  border-collapse: collapse;
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: 0.44rem 0.5rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.table th:first-child,
+.table td:nth-child(2) {
+  text-align: left;
+}
+
+.table thead th {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+}
+
+.table tfoot th,
+.table tfoot td {
+  color: var(--text-strong);
+  background: var(--surface-subtle);
+  border-bottom: 0;
+  font-weight: 800;
+}
+
+.terms {
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.terms p {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.63rem;
+  line-height: 1.5;
+}
+
+.signatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin-top: 2.2rem;
+}
+
+.signatures div {
+  display: grid;
+  gap: 0.2rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--text-strong);
+  text-align: center;
+}
+
+.signatures span {
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.signatures small {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.documentFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.55rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  font-size: 0.55rem;
+}
+
+@media (max-width: 42rem) {
+  .header,
+  .sectionHeading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .documentMeta {
+    text-align: left;
+  }
+
+  .identityGrid,
+  .summary,
+  .paymentTerms {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media print {
+  .document {
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .header h2 {
+    font-size: 16pt;
+  }
+
+  .identityGrid,
+  .summary,
+  .paymentTerms {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .summary > div,
+  .paymentTerms,
+  .notice,
+  .table thead th,
+  .table tfoot th,
+  .table tfoot td {
+    background: #f3f4f6;
+  }
+
+  .summary > div[data-emphasized="true"] {
+    background: #eef2ff;
+  }
+
+  .documentItem strong,
+  .summary strong,
+  .paymentTerms strong,
+  .summary > div[data-emphasized="true"] strong {
+    color: #111827;
+  }
+
+  .tableRegion {
+    max-height: none;
+    overflow: visible;
+    border-radius: 0;
+  }
+
+  .table {
+    min-width: 0;
+    font-size: 7.2pt;
+  }
+
+  .table thead {
+    display: table-header-group;
+  }
+
+  .table tfoot {
+    display: table-row-group;
+  }
+
+  .table thead th {
+    position: static;
+  }
+
+  .table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .table th,
+  .table td {
+    padding: 3.5pt 4pt;
+  }
+
+  .terms,
+  .signatures,
+  .documentFooter {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

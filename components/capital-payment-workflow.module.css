@@ -1,0 +1,691 @@
+.workflow {
+  max-width: 68rem;
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  margin: 0;
+  padding: 0 1.25rem;
+  list-style: none;
+}
+
+.stepper li {
+  position: relative;
+}
+
+.stepper li:not(:last-child)::after {
+  position: absolute;
+  z-index: -1;
+  top: 1rem;
+  right: -50%;
+  left: 50%;
+  height: 1px;
+  background: var(--border);
+  content: "";
+}
+
+.stepButton {
+  display: grid;
+  width: 100%;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stepButton > span {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-size: 0.7rem;
+}
+
+.stepButton[aria-current="step"] {
+  color: var(--accent-strong);
+}
+
+.stepButton[aria-current="step"] > span {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0.3rem 1rem rgb(79 70 229 / 22%);
+}
+
+.stepButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.stepButton:focus-visible,
+.modeOptions button:focus-visible,
+.documentOptions button:focus-visible,
+.segmentedControl button:focus-visible,
+.continueButton:focus-visible,
+.backButton:focus-visible,
+.printButton:focus-visible,
+.field input:focus-visible,
+.comparisonRegion:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.panel {
+  margin-top: 1.25rem;
+  padding: clamp(1.15rem, 4vw, 2rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1.1rem;
+  box-shadow: var(--shadow);
+}
+
+.stepHeading {
+  max-width: 42rem;
+}
+
+.stepHeading p {
+  margin: 0 0 0.35rem;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stepHeading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: clamp(1.25rem, 3vw, 1.65rem);
+}
+
+.stepHeading span {
+  display: block;
+  margin-top: 0.45rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.formGrid,
+.recordForm {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.recordForm {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field label,
+.modeFieldset legend,
+.balanceFieldset legend,
+.documentTypeFieldset legend {
+  color: var(--text-strong);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.documentChoiceFieldset legend {
+  color: var(--text-strong);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.field input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.62rem 0.7rem;
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.62rem;
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.field small {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  line-height: 1.35;
+}
+
+.field .error {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.inlineSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding: 1rem;
+  background: var(--accent-soft);
+  border-radius: 0.8rem;
+}
+
+.inlineSummary div {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.inlineSummary span {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+}
+
+.inlineSummary strong {
+  color: var(--accent-strong);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.modeFieldset,
+.balanceFieldset,
+.documentTypeFieldset,
+.documentChoiceFieldset {
+  margin: 1.4rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.modeOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin-top: 0.55rem;
+}
+
+.modeOptions button {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.85rem;
+  color: var(--text);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.modeOptions button[aria-pressed="true"] {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-color: #a5b4fc;
+}
+
+.modeOptions strong {
+  font-size: 0.78rem;
+}
+
+.modeOptions span {
+  color: var(--text-muted);
+  font-size: 0.67rem;
+}
+
+.documentOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin-top: 0.55rem;
+}
+
+.documentOptions button {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.95rem;
+  color: var(--text);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.documentOptions button[aria-pressed="true"] {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-color: #a5b4fc;
+}
+
+.documentOptions strong {
+  font-size: 0.8rem;
+}
+
+.documentOptions span {
+  color: var(--text-muted);
+  font-size: 0.67rem;
+}
+
+.balanceFieldset {
+  padding: 1rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+}
+
+.balanceControls {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.75fr) minmax(14rem, 1fr);
+  align-items: start;
+  gap: 1rem;
+  margin-top: 0.55rem;
+}
+
+.segmentedControl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  background: var(--border);
+  border-radius: 0.65rem;
+}
+
+.segmentedControl button {
+  min-height: 2.35rem;
+  padding: 0.45rem 0.6rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.segmentedControl button[aria-pressed="true"] {
+  color: var(--accent-strong);
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgb(15 23 42 / 12%);
+}
+
+.balanceFieldset > p {
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.validationSummary {
+  margin: 1rem 0 0;
+  padding: 0.8rem;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  border-radius: 0.65rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.workflowActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.continueButton,
+.backButton,
+.printButton {
+  min-height: 2.7rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.65rem;
+  font-size: 0.76rem;
+  font-weight: 780;
+  cursor: pointer;
+}
+
+.continueButton,
+.printButton {
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.backButton {
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+}
+
+.transactionCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.35rem;
+  padding: 1rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+}
+
+.transactionCard > div {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 0.2rem;
+}
+
+.transactionCard > span {
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.transactionCard div > span,
+.transactionCard small {
+  color: var(--text-muted);
+  font-size: 0.67rem;
+}
+
+.transactionCard strong {
+  color: var(--text-strong);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.transactionCard .transactionEmphasis {
+  padding-left: 1rem;
+  border-left: 1px solid var(--border);
+}
+
+.transactionCard .transactionEmphasis strong {
+  color: var(--accent-strong);
+}
+
+.resultGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.resultValue {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+  padding: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.resultValue.emphasized {
+  background: var(--accent-soft);
+  border-color: #c7d2fe;
+}
+
+.resultValue span,
+.resultValue small {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  line-height: 1.35;
+}
+
+.resultValue strong {
+  overflow-wrap: anywhere;
+  color: var(--text-strong);
+  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.resultValue.emphasized strong {
+  color: var(--accent-strong);
+}
+
+.installmentNote {
+  margin: 0.6rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  text-align: right;
+}
+
+.comparisonRegion {
+  margin-top: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.comparisonTable {
+  width: 100%;
+  min-width: 31rem;
+  border-collapse: collapse;
+  font-size: 0.73rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.comparisonTable th,
+.comparisonTable td {
+  padding: 0.65rem 0.75rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+
+.comparisonTable th:first-child {
+  text-align: left;
+}
+
+.comparisonTable thead th {
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  font-size: 0.63rem;
+  text-transform: uppercase;
+}
+
+.comparisonTable tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.methodNote {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.8rem;
+  padding: 0.8rem;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border-radius: 0.65rem;
+  font-size: 0.69rem;
+}
+
+.methodNote strong {
+  color: var(--text-strong);
+}
+
+.documentTypeFieldset {
+  max-width: 28rem;
+}
+
+.documentTypeFieldset .segmentedControl {
+  margin-top: 0.55rem;
+}
+
+.recordActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 0.85rem;
+  background: var(--surface-subtle);
+  border-radius: 0.7rem;
+}
+
+.recordActions p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.previewLabel {
+  margin: 1.4rem 0 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+@media (max-width: 52rem) {
+  .formGrid,
+  .inlineSummary,
+  .resultGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .balanceControls {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 38rem) {
+  .stepper {
+    padding: 0;
+  }
+
+  .stepButton {
+    font-size: 0.58rem;
+  }
+
+  .formGrid,
+  .recordForm,
+  .inlineSummary,
+  .modeOptions,
+  .documentOptions,
+  .resultGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .transactionCard {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .transactionCard > span {
+    display: none;
+  }
+
+  .transactionCard .transactionEmphasis {
+    padding: 0.7rem 0 0;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
+
+  .installmentNote {
+    text-align: left;
+  }
+
+  .comparisonRegion {
+    overflow: visible;
+    border: 0;
+  }
+
+  .comparisonTable {
+    min-width: 0;
+  }
+
+  .comparisonTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .comparisonTable tbody {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .comparisonTable tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 0.7rem;
+  }
+
+  .comparisonTable tbody th {
+    grid-column: 1 / -1;
+    padding: 0.65rem 0.75rem;
+    background: var(--surface-subtle);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comparisonTable tbody td {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.65rem 0.75rem;
+    text-align: left;
+    border-bottom: 0;
+  }
+
+  .comparisonTable tbody td + td {
+    border-left: 1px solid var(--border);
+  }
+
+  .comparisonTable tbody td::before {
+    color: var(--text-muted);
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .comparisonTable tbody td:first-of-type::before {
+    content: "Antes";
+  }
+
+  .comparisonTable tbody td:last-of-type::before {
+    content: "Después";
+  }
+
+  .recordActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workflowActions {
+    justify-content: stretch;
+  }
+
+  .workflowActions button {
+    flex: 1;
+  }
+}
+
+@media print {
+  .workflow,
+  .panel {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    border: 0;
+    box-shadow: none;
+  }
+}

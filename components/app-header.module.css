@@ -1,0 +1,267 @@
+.sidebar {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  height: 100vh;
+  padding: 1.1rem;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+}
+
+.inner {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.25rem;
+  color: var(--text-strong);
+  text-decoration: none;
+}
+
+.brandMark {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 0.68rem;
+  font-size: 0.95rem;
+  font-weight: 850;
+  box-shadow: 0 0.4rem 1.2rem rgb(79 70 229 / 20%);
+}
+
+.brand > span:last-child {
+  display: grid;
+  gap: 0.05rem;
+}
+
+.brand strong {
+  font-size: 0.88rem;
+  letter-spacing: -0.01em;
+}
+
+.brand small {
+  color: var(--text-muted);
+  font-size: 0.63rem;
+}
+
+.navigationArea {
+  margin-top: 2.35rem;
+}
+
+.navLabel {
+  margin: 0 0 0.55rem;
+  padding: 0 0.65rem;
+  color: var(--text-subtle);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nav {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.navLink {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.65rem;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.navIcon {
+  display: grid;
+  width: 1.65rem;
+  height: 1.65rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.navLink:hover {
+  color: var(--text-strong);
+  background: var(--surface-subtle);
+}
+
+.navLink[aria-current="page"] {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-color: #d7ddff;
+}
+
+.navLink[aria-current="page"] .navIcon {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.methodCard {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: auto;
+  padding: 0.8rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+}
+
+.operatorAvatar {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-radius: 50%;
+  font-size: 0.62rem;
+  font-weight: 850;
+}
+
+.methodCard div {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.methodCard small {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.methodCard strong {
+  max-width: 7rem;
+  overflow: hidden;
+  color: var(--text-strong);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.methodCard div > span {
+  max-width: 7rem;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.58rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.methodCard form {
+  margin-left: auto;
+}
+
+.methodCard button {
+  padding: 0.25rem 0.4rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.methodCard button:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.brand:focus-visible,
+.navLink:focus-visible,
+.methodCard button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 52rem) {
+  .sidebar {
+    position: static;
+    height: auto;
+    padding: 0;
+    background: rgb(255 255 255 / 94%);
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .inner {
+    display: grid;
+    height: auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .brand {
+    padding: 0.75rem 1rem 0.6rem;
+  }
+
+  .navigationArea {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+
+  .navLabel {
+    display: none;
+  }
+
+  .methodCard {
+    margin: 0 0.75rem 0 0;
+    padding: 0.35rem;
+    background: transparent;
+    border: 0;
+  }
+
+  .methodCard div {
+    display: none;
+  }
+
+  .methodCard form {
+    margin: 0;
+  }
+
+  .nav {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0 0.75rem 0.55rem;
+    overflow-x: auto;
+  }
+
+  .navLink {
+    min-height: 2.3rem;
+    flex: 1 0 auto;
+    justify-content: center;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.7rem;
+  }
+
+  .navIcon {
+    display: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) and (max-width: 52rem) {
+  .sidebar {
+    background: rgb(24 27 34 / 94%);
+  }
+}

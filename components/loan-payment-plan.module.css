@@ -1,0 +1,236 @@
+.planCard {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.planCard > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.planCard > summary::-webkit-details-marker {
+  display: none;
+}
+
+.planCard > summary:focus-visible,
+.field input:focus-visible,
+.actions button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
+.planCard > summary > span:first-child {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.planCard summary small {
+  color: var(--accent);
+  font-size: 0.63rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.planCard summary strong {
+  color: var(--text-strong);
+  font-size: 0.95rem;
+}
+
+.planCard summary span span {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.summaryAction {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.7rem;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-radius: 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.summaryAction .openLabel,
+.summaryAction .closeLabel {
+  color: inherit;
+  font-size: inherit;
+}
+
+.summaryAction .closeLabel,
+.planCard[open] .summaryAction .openLabel {
+  display: none;
+}
+
+.planCard[open] .summaryAction .closeLabel {
+  display: inline;
+}
+
+.planContent {
+  padding: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.heading p {
+  margin: 0 0 0.3rem;
+  color: var(--accent);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.heading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1rem;
+}
+
+.heading > span {
+  padding: 0.3rem 0.5rem;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.15rem;
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field label {
+  color: var(--text-strong);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.field input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.62rem 0.7rem;
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.62rem;
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.field small {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+}
+
+.field .error {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 0.85rem;
+  background: var(--surface-subtle);
+  border-radius: 0.7rem;
+}
+
+.actions p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.actions button {
+  flex: 0 0 auto;
+  min-height: 2.7rem;
+  padding: 0.6rem 0.9rem;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 0.65rem;
+  font-size: 0.76rem;
+  font-weight: 780;
+  cursor: pointer;
+}
+
+.previewLabel {
+  margin: 1.4rem 0 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.emptyPreview {
+  margin: 1rem 0 0;
+  padding: 1rem;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border: 1px dashed var(--border-strong);
+  border-radius: 0.7rem;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+@media (max-width: 52rem) {
+  .form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 38rem) {
+  .planCard > summary,
+  .heading,
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .summaryAction {
+    align-self: start;
+  }
+
+  .form {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .planCard {
+    display: contents;
+  }
+}
