@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Calculadora de Créditos
 
-## Getting Started
+Aplicación operativa para acreedores construida con Next.js y enfocada en
+financiamientos con **interés simple** en quetzales. Permite cotizar un crédito,
+registrar un abono a capital, actualizar la obligación restante y preparar una
+simulación, un recibo o un plan de pagos imprimible.
 
-First, run the development server:
+El portal requiere el correo y código de acceso de cada operador. Cada perfil
+incluye nombre, correo, empresa y un código almacenado como hash. No incluye un
+sistema formal de cuentas: los operadores se configuran en el servidor y reciben
+una sesión firmada de 12 horas.
+
+Los cálculos se ejecutan localmente en el navegador. La aplicación no almacena
+ni transmite los montos, nombres o referencias ingresados.
+
+## Flujos
+
+- `/`: portal de operaciones del acreedor.
+- `/acceso`: inicio de sesión por correo y código.
+- `/financiamiento`: cotización de capital, interés total y cuotas, con un plan
+  de pagos fechado para entregar al deudor.
+- `/abono-capital`: flujo de cuatro pasos para:
+  1. cargar las condiciones del crédito;
+  2. registrar un abono independiente o una cuota acompañada de abono;
+  3. verificar capital, interés y saldo antes y después;
+  4. emitir una simulación o recibo para firma y un plan actualizado de las
+     cuotas futuras.
+
+Las fechas del abono se conservan como parte del registro. El cálculo utiliza
+meses completos según el número de cuota indicado; no calcula interés diario.
+
+> Los resultados son estimaciones informativas. Una simulación no constituye
+> comprobante de pago. Un recibo debe ser revisado y firmado por las partes.
+
+## Desarrollo
+
+Requiere Node.js 20.9 o posterior y npm.
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Sin variables de entorno, el modo de desarrollo habilita únicamente:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Correo: `demo@creditos.local`
+- Código: `1234`
 
-## Learn More
+## Configurar operadores
 
-To learn more about Next.js, take a look at the following resources:
+1. Agrega o actualiza un operador:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   npm run portal:hash-code
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   El asistente solicita correo, nombre, empresa y código. Solo el correo es
+   obligatorio: si omites el código, genera cuatro palabras; si omites nombre o
+   empresa, usa valores adecuados para identificar la sesión. El registro se
+   guarda en `.env.local` y el comando imprime el valor listo para pegar en
+   Vercel. Si el correo ya existe, solicita confirmación antes de reemplazarlo.
 
-## Deploy on Vercel
+   Para generar únicamente el hash de un código definido por ti, ejecuta
+   `npm run portal:hash-code -- codigo-secreto`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. Copia `.env.example` a `.env.local` y configura un secreto de sesión de al
+   menos 32 caracteres.
+3. En Vercel, agrega el valor impreso por el asistente a `PORTAL_USERS`:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```dotenv
+   PORTAL_USERS=[{"name":"Ana López","email":"ana@empresa.gt","company":"Créditos del Lago","codeHash":"scrypt$..."}]
+   ```
+
+Los correos deben ser únicos. Los códigos no se guardan directamente: el
+servidor compara hashes `scrypt`. En producción, la aplicación no inicia una
+sesión si falta `PORTAL_USERS` o `PORTAL_SESSION_SECRET`.
+
+## Verificación
+
+```bash
+npm run check
+npm audit --omit=dev
+```
+
+`npm run check` ejecuta lint, comprobación estricta de tipos, pruebas y build de
+producción. El mismo conjunto se ejecuta en GitHub Actions para cada pull
+request y cada push a `main`.
+
+## Estructura
+
+- `app/`: rutas, metadatos, navegación y estilos globales.
+- `components/loan-calculator.tsx`: cotizador de interés simple.
+- `components/capital-payment-workflow.tsx`: flujo de abono y recálculo.
+- `components/payment-record.tsx`: documento imprimible.
+- `components/payment-schedule-document.tsx`: plan de pagos original o
+  actualizado, con fechas de vencimiento.
+- `lib/finance.ts`: cálculos financieros puros y validación.
+- `lib/finance.test.ts`: pruebas de fórmulas, límites y redondeo.
+- `next.config.ts`: cabeceras de seguridad y configuración de Next.js.

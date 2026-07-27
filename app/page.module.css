@@ -1,0 +1,320 @@
+.dashboardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-bottom: 1.35rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.dashboardTitle {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: clamp(1.65rem, 4vw, 2.15rem);
+  letter-spacing: -0.035em;
+}
+
+.dashboardIntro {
+  margin: 0.45rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.sessionStatus {
+  display: flex;
+  min-width: 12rem;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+}
+
+.sessionStatus > span {
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: 0 0 auto;
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 0 0.2rem var(--success-soft);
+}
+
+.sessionStatus div {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.sessionStatus small {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.sessionStatus strong {
+  color: var(--text-strong);
+  font-size: 0.72rem;
+}
+
+.operationSection {
+  margin-top: 1.65rem;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sectionHeading p,
+.cardHeading p {
+  margin: 0 0 0.2rem;
+  color: var(--text-subtle);
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sectionHeading h2,
+.cardHeading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1rem;
+}
+
+.sectionHeading > span {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.operationGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+
+.operationCard {
+  display: grid;
+  min-height: 13.5rem;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 1fr auto;
+  gap: 1rem;
+  padding: 1.25rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  box-shadow: 0 0.45rem 1.5rem rgb(30 41 59 / 4%);
+  text-decoration: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.operationCard:hover {
+  border-color: #a5b4fc;
+  box-shadow: 0 0.75rem 2rem rgb(30 41 59 / 8%);
+}
+
+.operationIcon,
+.smallIcon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border: 1px solid #d7ddff;
+  border-radius: 0.55rem;
+  font-weight: 850;
+}
+
+.operationIcon {
+  width: 2.35rem;
+  height: 2.35rem;
+  font-size: 1rem;
+}
+
+.operationCard p {
+  margin: 0 0 0.25rem;
+  color: var(--text-subtle);
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.operationCard h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1.12rem;
+}
+
+.operationCard div > span {
+  display: block;
+  max-width: 29rem;
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.operationCard > strong {
+  grid-column: 1 / -1;
+  align-self: end;
+  color: var(--accent-strong);
+  font-size: 0.75rem;
+}
+
+.operationCard > strong span {
+  margin-left: 0.25rem;
+}
+
+.primaryCard {
+  color: #eef2ff;
+  background: #3730a3;
+  border-color: #3730a3;
+}
+
+.primaryCard .operationIcon {
+  color: #fff;
+  background: rgb(255 255 255 / 14%);
+  border-color: rgb(255 255 255 / 24%);
+}
+
+.primaryCard p,
+.primaryCard div > span {
+  color: #c7d2fe;
+}
+
+.primaryCard h3,
+.primaryCard > strong {
+  color: #fff;
+}
+
+.supportGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.supportCard {
+  padding: 1.15rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+}
+
+.cardHeading {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.smallIcon {
+  width: 1.85rem;
+  height: 1.85rem;
+  font-size: 0.72rem;
+}
+
+.checklist {
+  display: grid;
+  gap: 0;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checklist li {
+  display: flex;
+  align-items: start;
+  gap: 0.7rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.checklist li > span {
+  display: grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border-radius: 50%;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.checklist div {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.checklist strong,
+.ruleList dd {
+  color: var(--text-strong);
+  font-size: 0.75rem;
+}
+
+.checklist small,
+.ruleList dt {
+  color: var(--text-muted);
+  font-size: 0.67rem;
+}
+
+.ruleList {
+  margin: 1rem 0 0;
+}
+
+.ruleList div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.66rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.ruleList dd {
+  margin: 0;
+  text-align: right;
+}
+
+.operationCard:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+@media (max-width: 58rem) {
+  .operationGrid,
+  .supportGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .operationCard {
+    min-height: 12rem;
+  }
+}
+
+@media (max-width: 38rem) {
+  .dashboardHeader,
+  .sectionHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sessionStatus {
+    min-width: 0;
+  }
+
+  .operationCard {
+    min-height: 0;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operationCard {
+    transition: none;
+  }
+}

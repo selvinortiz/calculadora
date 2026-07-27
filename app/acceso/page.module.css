@@ -1,0 +1,246 @@
+.authPage {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 2rem;
+  background: var(--background);
+}
+
+.authLayout {
+  display: grid;
+  width: min(100%, 58rem);
+  min-height: 34rem;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.82fr);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1.1rem;
+  box-shadow: 0 1.5rem 4rem rgb(30 41 59 / 12%);
+}
+
+.contextPanel {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  color: #eef2ff;
+  background: #312e81;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.brand > span {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  color: #fff;
+  background: #4f46e5;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 0.68rem;
+  font-weight: 850;
+}
+
+.brand div {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.brand strong {
+  font-size: 0.86rem;
+}
+
+.brand small {
+  color: #c7d2fe;
+  font-size: 0.63rem;
+}
+
+.contextCopy {
+  margin: auto 0;
+}
+
+.contextCopy p,
+.formHeading > p {
+  margin: 0 0 0.45rem;
+  color: #a5b4fc;
+  font-size: 0.65rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.contextCopy h1 {
+  max-width: 24rem;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.65rem, 4vw, 2.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.contextCopy > span {
+  display: block;
+  max-width: 26rem;
+  margin-top: 0.9rem;
+  color: #c7d2fe;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.contextPanel ul {
+  display: grid;
+  gap: 0.55rem;
+  margin: auto 0 0;
+  padding: 0;
+  color: #c7d2fe;
+  font-size: 0.68rem;
+  list-style: none;
+}
+
+.contextPanel li::before {
+  margin-right: 0.45rem;
+  color: #86efac;
+  content: "✓";
+  font-weight: 850;
+}
+
+.formPanel {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+}
+
+.formHeading {
+  position: relative;
+}
+
+.lockIcon {
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  place-items: center;
+  margin-bottom: 1.2rem;
+  color: var(--success);
+  background: var(--success-soft);
+  border-radius: 0.6rem;
+  font-size: 0.55rem;
+}
+
+.formHeading > p {
+  color: var(--accent);
+}
+
+.formHeading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1.55rem;
+}
+
+.formHeading > span:last-child {
+  display: block;
+  margin-top: 0.45rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.accessForm {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field label {
+  color: var(--text-strong);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.field input {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.65rem 0.75rem;
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.65rem;
+}
+
+.field small {
+  color: var(--text-muted);
+  font-size: 0.64rem;
+}
+
+.field input:focus-visible,
+.accessForm button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.accessForm > button {
+  min-height: 2.9rem;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.accessForm > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.error {
+  margin: 0;
+  padding: 0.7rem;
+  border-radius: 0.55rem;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.error {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  font-weight: 700;
+}
+
+@media (max-width: 46rem) {
+  .authPage {
+    align-items: start;
+    padding: 1rem;
+  }
+
+  .authLayout {
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .contextPanel {
+    padding: 1.25rem;
+  }
+
+  .contextCopy {
+    margin: 2.5rem 0 0;
+  }
+
+  .contextPanel ul {
+    display: none;
+  }
+
+  .formPanel {
+    padding: 1.5rem 1.25rem;
+  }
+}
