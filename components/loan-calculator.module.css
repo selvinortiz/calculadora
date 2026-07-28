@@ -11,7 +11,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 1rem;
-  box-shadow: var(--shadow);
+  box-shadow: 0 0.45rem 1.5rem rgb(30 41 59 / 5%);
 }
 
 .formCard,
@@ -85,8 +85,8 @@
 }
 
 .field input:focus-visible,
-.comparison summary:focus-visible,
-.tableRegion:focus-visible {
+.termOptions button:focus-visible,
+.planButton:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
@@ -159,6 +159,24 @@
   line-height: 1.45;
 }
 
+.planButton {
+  display: flex;
+  width: 100%;
+  min-height: 2.65rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  padding: 0.6rem 0.75rem;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .validationSummary {
   margin: 0;
   padding: 1rem;
@@ -172,65 +190,77 @@
 
 .comparison {
   grid-column: 1 / -1;
-  padding: 1rem 1.1rem;
+  padding: 0.95rem 1rem;
 }
 
-.comparison summary {
-  width: fit-content;
-  color: var(--accent-strong);
-  font-size: 0.82rem;
-  font-weight: 750;
+.comparisonHeading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.comparisonHeading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.9rem;
+}
+
+.comparisonHeading > span {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+}
+
+.termOptions {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+}
+
+.termOptions button {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+  padding: 0.65rem;
+  color: var(--text);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  text-align: left;
   cursor: pointer;
 }
 
-.scrollHint {
-  display: none;
-  margin: 0.75rem 0 0.35rem;
+.termOptions button[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: #a5b4fc;
+}
+
+.termOptions span,
+.termOptions small {
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: 0.6rem;
 }
 
-.tableRegion {
-  margin-top: 1rem;
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-}
-
-.table {
-  width: 100%;
-  min-width: 48rem;
-  border-collapse: collapse;
-  font-size: 0.76rem;
+.termOptions strong {
+  overflow: hidden;
+  color: var(--text-strong);
+  font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
 }
 
-.table th,
-.table td {
-  padding: 0.7rem 0.8rem;
-  text-align: right;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-
-.table th:first-child {
-  text-align: left;
-}
-
-.table thead th {
-  color: var(--text-muted);
-  background: var(--surface-subtle);
-  font-size: 0.65rem;
-  text-transform: uppercase;
-}
-
-.table tbody tr:last-child > * {
-  border-bottom: 0;
+.termOptions button[aria-pressed="true"] strong {
+  color: var(--accent-strong);
 }
 
 @media (max-width: 50rem) {
   .workspace {
     grid-template-columns: 1fr;
+  }
+
+  .termOptions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -240,11 +270,13 @@
     grid-template-columns: 1fr;
   }
 
-  .scrollHint {
-    display: block;
+  .comparisonHeading {
+    align-items: start;
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
-  .tableRegion {
-    margin-top: 0;
+  .termOptions {
+    grid-template-columns: 1fr 1fr;
   }
 }

@@ -17,8 +17,7 @@ export default async function CapitalPaymentPage() {
         <p className="pageEyebrow">Abonos a capital</p>
         <h1 className="pageTitle">Registrar un abono</h1>
         <p className="pageIntro">
-          Calcula el nuevo capital, los intereses y la cuota; después prepara el
-          comprobante del abono y el plan de pagos actualizado.
+          Actualiza el saldo y prepara los documentos del pago.
         </p>
       </header>
       <CapitalPaymentWorkflow

@@ -15,10 +15,9 @@ export default async function FinancingPage() {
     <main className="appPage">
       <header className="pageHeader">
         <p className="pageEyebrow">Préstamos</p>
-        <h1 className="pageTitle">Calcular un préstamo</h1>
+        <h1 className="pageTitle">Cotizar préstamo</h1>
         <p className="pageIntro">
-          Ingresa las condiciones del préstamo para calcular la cuota mensual, el
-          interés y el total a pagar.
+          Calcula la cuota y prepara el plan de pagos.
         </p>
       </header>
       <LoanCalculator operatorCompany={session?.company ?? ""} />

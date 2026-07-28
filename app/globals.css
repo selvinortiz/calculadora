@@ -44,7 +44,7 @@ body {
 .appShell {
   display: grid;
   min-height: 100vh;
-  grid-template-columns: 15.5rem minmax(0, 1fr);
+  grid-template-columns: 13.75rem minmax(0, 1fr);
 }
 
 .appWorkspace {
@@ -75,22 +75,22 @@ a {
 }
 
 .appPage {
-  width: min(100% - 3rem, 78rem);
+  width: min(100% - 2.5rem, 74rem);
   min-height: 0;
   flex: 1;
   margin: 0 auto;
-  padding: clamp(1.5rem, 4vw, 2.75rem) 0;
+  padding: clamp(1.25rem, 3vw, 2rem) 0;
 }
 
 .pageHeader {
-  max-width: 50rem;
-  margin-bottom: 1.4rem;
+  max-width: 42rem;
+  margin-bottom: 1rem;
 }
 
 .pageEyebrow {
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.35rem;
   color: var(--accent);
-  font-size: 0.73rem;
+  font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -99,29 +99,29 @@ a {
 .pageTitle {
   margin: 0;
   color: var(--text-strong);
-  font-size: clamp(1.65rem, 4vw, 2.25rem);
+  font-size: clamp(1.5rem, 4vw, 2rem);
   line-height: 1.12;
   letter-spacing: -0.03em;
   text-wrap: balance;
 }
 
 .pageIntro {
-  margin: 0.85rem 0 0;
+  margin: 0.45rem 0 0;
   color: var(--text-muted);
-  font-size: clamp(0.86rem, 1.5vw, 0.96rem);
-  line-height: 1.55;
+  font-size: clamp(0.78rem, 1.5vw, 0.88rem);
+  line-height: 1.45;
 }
 
 .appFooter {
   display: flex;
-  width: min(100% - 3rem, 78rem);
+  width: min(100% - 2.5rem, 74rem);
   justify-content: space-between;
   gap: 1rem;
   margin: 0 auto;
-  padding: 1.5rem 0 2rem;
+  padding: 1rem 0 1.4rem;
   color: var(--text-muted);
   border-top: 1px solid var(--border);
-  font-size: 0.76rem;
+  font-size: 0.68rem;
 }
 
 .appFooter p {
@@ -140,8 +140,8 @@ a {
   }
 
   .appPage {
-    width: min(100% - 1.25rem, 74rem);
-    padding-top: 2rem;
+    width: min(100% - 1rem, 74rem);
+    padding-top: 1.25rem;
   }
 
   .appFooter {

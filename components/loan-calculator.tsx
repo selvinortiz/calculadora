@@ -20,6 +20,7 @@ const currencyFormatter = new Intl.NumberFormat("es-GT", {
 });
 
 export function LoanCalculator({ operatorCompany }: { operatorCompany: string }) {
+  const [view, setView] = useState<"quote" | "plan">("quote");
   const [price, setPrice] = useState("65000");
   const [downPayment, setDownPayment] = useState("13000");
   const [annualRate, setAnnualRate] = useState("7");
@@ -59,6 +60,19 @@ export function LoanCalculator({ operatorCompany }: { operatorCompany: string })
       isValid ? calculateTermRows(principal, inputs.annualRate) : [],
     [inputs.annualRate, isValid, principal],
   );
+
+  if (view === "plan" && quote) {
+    return (
+      <LoanPaymentPlan
+        annualRate={inputs.annualRate}
+        downPayment={inputs.downPayment}
+        onBack={() => setView("quote")}
+        operatorCompany={operatorCompany}
+        price={inputs.price}
+        quote={quote}
+      />
+    );
+  }
 
   return (
     <div className={styles.workspace}>
@@ -160,6 +174,14 @@ export function LoanCalculator({ operatorCompany }: { operatorCompany: string })
             Interés = capital × {formatRate(inputs.annualRate)}% × {" "}
             {parsedTermYears} {parsedTermYears === 1 ? "año" : "años"}.
           </p>
+          <button
+            type="button"
+            className={styles.planButton}
+            onClick={() => setView("plan")}
+          >
+            Preparar plan de pagos
+            <span aria-hidden="true">→</span>
+          </button>
         </section>
       ) : (
         <p className={styles.validationSummary} role="status">
@@ -168,51 +190,29 @@ export function LoanCalculator({ operatorCompany }: { operatorCompany: string })
       )}
 
       {quote && (
-        <details className={styles.comparison}>
-          <summary>Comparar plazos de uno a cinco años</summary>
-          <p className={styles.scrollHint}>Desliza para ver todas las columnas.</p>
-          <div
-            className={styles.tableRegion}
-            role="region"
-            aria-label="Comparación de plazos"
-            tabIndex={0}
-          >
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th scope="col">Plazo</th>
-                  <th scope="col">Capital</th>
-                  <th scope="col">Interés</th>
-                  <th scope="col">Total</th>
-                  <th scope="col">Cuota</th>
-                  <th scope="col">Última</th>
-                </tr>
-              </thead>
-              <tbody>
-                {comparisons.map((row) => (
-                  <tr key={row.years}>
-                    <th scope="row">{row.years} {row.years === 1 ? "año" : "años"}</th>
-                    <td>{formatCurrency(row.principal)}</td>
-                    <td>{formatCurrency(row.interestTotal)}</td>
-                    <td>{formatCurrency(row.total)}</td>
-                    <td>{formatCurrency(row.monthly)}</td>
-                    <td>{formatCurrency(row.finalPayment)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <section className={styles.comparison} aria-labelledby="comparison-title">
+          <div className={styles.comparisonHeading}>
+            <div>
+              <p className={styles.stepLabel}>Comparación</p>
+              <h2 id="comparison-title">Cuota por plazo</h2>
+            </div>
+            <span>Selecciona un plazo</span>
           </div>
-        </details>
-      )}
-
-      {quote && (
-        <LoanPaymentPlan
-          annualRate={inputs.annualRate}
-          downPayment={inputs.downPayment}
-          operatorCompany={operatorCompany}
-          price={inputs.price}
-          quote={quote}
-        />
+          <div className={styles.termOptions}>
+            {comparisons.map((row) => (
+              <button
+                key={row.years}
+                type="button"
+                aria-pressed={parsedTermYears === row.years}
+                onClick={() => setTermYears(String(row.years))}
+              >
+                <span>{row.years} {row.years === 1 ? "año" : "años"}</span>
+                <strong>{formatCurrency(row.monthly)}</strong>
+                <small>Total {formatCurrency(row.total)}</small>
+              </button>
+            ))}
+          </div>
+        </section>
       )}
     </div>
   );

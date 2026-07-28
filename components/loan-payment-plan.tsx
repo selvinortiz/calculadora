@@ -11,6 +11,7 @@ import styles from "./loan-payment-plan.module.css";
 type LoanPaymentPlanProps = {
   annualRate: number;
   downPayment: number;
+  onBack: () => void;
   operatorCompany: string;
   price: number;
   quote: SimpleInterestQuote;
@@ -27,6 +28,7 @@ type PlanDetails = {
 export function LoanPaymentPlan({
   annualRate,
   downPayment,
+  onBack,
   operatorCompany,
   price,
   quote,
@@ -83,106 +85,112 @@ export function LoanPaymentPlan({
   }
 
   return (
-    <details className={styles.planCard}>
-      <summary>
-        <span>
-          <small>Documento para el deudor</small>
-          <strong>Preparar plan de pagos</strong>
-          <span>Genera las cuotas con sus fechas de vencimiento.</span>
-        </span>
-        <span className={styles.summaryAction}>
-          <span className={styles.openLabel}>Abrir</span>
-          <span className={styles.closeLabel}>Cerrar</span>
-        </span>
-      </summary>
+    <section className={styles.planWorkspace} aria-labelledby="payment-plan-title">
+      <header className={styles.topBar}>
+        <button type="button" className={styles.backButton} onClick={onBack}>
+          <span aria-hidden="true">←</span>
+          Cotización
+        </button>
+        <div>
+          <p>Documento para el deudor</p>
+          <h2 id="payment-plan-title">Plan de pagos</h2>
+        </div>
+        <span>{quote.months} cuotas</span>
+      </header>
 
-      <div className={styles.planContent}>
-        <div className={styles.heading}>
-          <div>
-            <p>Plan del préstamo</p>
-            <h2>Completa los datos del documento</h2>
+      <div className={styles.planLayout}>
+        <aside className={styles.editor} aria-label="Datos del plan de pagos">
+          <div className={styles.heading}>
+            <div>
+              <p>Datos del documento</p>
+              <h3>Identifica el préstamo</h3>
+            </div>
           </div>
-          <span>{quote.months} cuotas</span>
-        </div>
 
-        <form className={styles.form} onSubmit={(event) => event.preventDefault()} noValidate>
-          <PlanField
-            id="plan-debtor-name"
-            label="Nombre del deudor"
-            value={details.debtorName}
-            onChange={(value) => updateDetails("debtorName", value)}
-            error={showErrors ? errors.debtorName : undefined}
-          />
-          <PlanField
-            id="plan-creditor-name"
-            label="Acreedor o vendedor"
-            value={details.creditorName}
-            onChange={(value) => updateDetails("creditorName", value)}
-            error={showErrors ? errors.creditorName : undefined}
-          />
-          <PlanField
-            id="plan-account-reference"
-            label="Lote o número de cuenta"
-            value={details.accountReference}
-            onChange={(value) => updateDetails("accountReference", value)}
-            error={showErrors ? errors.accountReference : undefined}
-          />
-          <PlanField
-            id="plan-issue-date"
-            label="Fecha de emisión"
-            type="date"
-            value={details.issueDate}
-            onChange={(value) => updateDetails("issueDate", value)}
-            error={showErrors ? errors.issueDate : undefined}
-          />
-          <PlanField
-            id="plan-first-due-date"
-            label="Vencimiento de la primera cuota"
-            type="date"
-            value={details.firstDueDate}
-            onChange={(value) => updateDetails("firstDueDate", value)}
-            error={showErrors ? errors.firstDueDate : undefined}
-            hint="Las demás fechas se programarán mensualmente."
-          />
-        </form>
-
-        <div className={styles.actions}>
-          <p>
-            El plan detalla capital, interés y saldo de cada cuota. No funciona como comprobante de pago.
-          </p>
-          <button type="button" onClick={printPlan}>
-            Imprimir plan o guardar PDF
-          </button>
-        </div>
-
-        {rows.length > 0 ? (
-          <>
-            <div className={styles.previewLabel}>Vista previa del plan de pagos</div>
-            <PaymentScheduleDocument
-              accountReference={details.accountReference}
-              annualRate={annualRate}
-              creditorName={details.creditorName}
-              debtorName={details.debtorName}
-              downPayment={downPayment}
-              finalPayment={quote.finalPayment}
-              interestTotal={quote.interestTotal}
-              issueDate={details.issueDate}
-              monthlyPayment={quote.monthly}
-              originalTermMonths={quote.months}
-              price={price}
-              principal={quote.principal}
-              rows={rows}
-              scheduledTotal={quote.total}
-              variant="original"
+          <form className={styles.form} onSubmit={(event) => event.preventDefault()} noValidate>
+            <PlanField
+              id="plan-debtor-name"
+              label="Deudor"
+              value={details.debtorName}
+              onChange={(value) => updateDetails("debtorName", value)}
+              error={showErrors ? errors.debtorName : undefined}
             />
-          </>
-        ) : (
-          <p className={styles.emptyPreview}>
-            Indica la primera fecha de vencimiento para ver el calendario completo.
-          </p>
-        )}
+            <PlanField
+              id="plan-creditor-name"
+              label="Acreedor o vendedor"
+              value={details.creditorName}
+              onChange={(value) => updateDetails("creditorName", value)}
+              error={showErrors ? errors.creditorName : undefined}
+            />
+            <PlanField
+              id="plan-account-reference"
+              label="Lote o cuenta"
+              value={details.accountReference}
+              onChange={(value) => updateDetails("accountReference", value)}
+              error={showErrors ? errors.accountReference : undefined}
+            />
+            <PlanField
+              id="plan-issue-date"
+              label="Fecha de emisión"
+              type="date"
+              value={details.issueDate}
+              onChange={(value) => updateDetails("issueDate", value)}
+              error={showErrors ? errors.issueDate : undefined}
+            />
+            <PlanField
+              id="plan-first-due-date"
+              label="Primera cuota"
+              type="date"
+              value={details.firstDueDate}
+              onChange={(value) => updateDetails("firstDueDate", value)}
+              error={showErrors ? errors.firstDueDate : undefined}
+              hint="Las demás fechas serán mensuales."
+            />
+          </form>
+
+          <div className={styles.actions}>
+            <p>El plan no acredita pagos recibidos.</p>
+            <button type="button" onClick={printPlan}>
+              Imprimir o guardar PDF
+            </button>
+          </div>
+        </aside>
+
+        <section className={styles.preview} aria-label="Vista previa del plan de pagos">
+          <div className={styles.previewLabel}>
+            <span>Vista previa</span>
+            <small>{rows.length > 0 ? `${rows.length} cuotas` : "Esperando fecha"}</small>
+          </div>
+          <div className={styles.previewViewport}>
+            {rows.length > 0 ? (
+              <PaymentScheduleDocument
+                accountReference={details.accountReference}
+                annualRate={annualRate}
+                creditorName={details.creditorName}
+                debtorName={details.debtorName}
+                downPayment={downPayment}
+                finalPayment={quote.finalPayment}
+                interestTotal={quote.interestTotal}
+                issueDate={details.issueDate}
+                monthlyPayment={quote.monthly}
+                originalTermMonths={quote.months}
+                price={price}
+                principal={quote.principal}
+                rows={rows}
+                scheduledTotal={quote.total}
+                variant="original"
+              />
+            ) : (
+              <div className={styles.emptyPreview}>
+                <span aria-hidden="true">▤</span>
+                <strong>El plan aparecerá aquí</strong>
+                <p>Indica la fecha de la primera cuota.</p>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
-    </details>
+    </section>
   );
 }
 

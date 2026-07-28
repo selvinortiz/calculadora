@@ -14,9 +14,9 @@ export default function HomePage() {
       <header className={styles.dashboardHeader}>
         <div>
           <p className="pageEyebrow">Portal</p>
-          <h1 className={styles.dashboardTitle}>Calculadora para prestamistas</h1>
+          <h1 className={styles.dashboardTitle}>Portal de créditos</h1>
           <p className={styles.dashboardIntro}>
-            Cotiza préstamos, registra abonos y entrega documentos claros.
+            Elige la operación que deseas realizar.
           </p>
         </div>
         <div className={styles.sessionStatus} aria-label="Moneda y tipo de interés">
@@ -30,10 +30,8 @@ export default function HomePage() {
 
       <section className={styles.operationSection} aria-labelledby="operations-title">
         <div className={styles.sectionHeading}>
-          <div>
-            <p>Calculadoras</p>
-            <h2 id="operations-title">¿Qué quieres calcular?</h2>
-          </div>
+          <p>Operaciones</p>
+          <h2 id="operations-title">Comenzar</h2>
         </div>
 
         <div className={styles.operationGrid}>
@@ -41,80 +39,43 @@ export default function HomePage() {
             <span className={styles.operationIcon} aria-hidden="true">+</span>
             <div>
               <p>Nuevo préstamo</p>
-              <h3>Calcular un préstamo</h3>
+              <h3>Cotizar préstamo</h3>
               <span>
-                Obtén la cuota mensual, el interés y el total a pagar a partir del
-                precio, enganche, tasa y plazo; después prepara el plan de pagos.
+                Calcula cuota, interés y total; prepara el plan de pagos.
               </span>
             </div>
-            <strong>Calcular préstamo <span aria-hidden="true">→</span></strong>
+            <strong>Abrir cotizador <span aria-hidden="true">→</span></strong>
           </Link>
 
           <Link className={styles.operationCard} href="/abono-capital">
             <span className={styles.operationIcon} aria-hidden="true">↓</span>
             <div>
               <p>Préstamo vigente</p>
-              <h3>Recalcular un abono a capital</h3>
+              <h3>Registrar abono</h3>
               <span>
-                Actualiza el capital, los intereses y la cuota; después prepara un
-                comprobante y el nuevo plan de pagos.
+                Actualiza el saldo y entrega el comprobante y el nuevo plan.
               </span>
             </div>
-            <strong>Registrar abono <span aria-hidden="true">→</span></strong>
+            <strong>Abrir registro <span aria-hidden="true">→</span></strong>
           </Link>
         </div>
       </section>
 
-      <div className={styles.supportGrid}>
-        <section className={styles.supportCard} aria-labelledby="prepare-title">
-          <div className={styles.cardHeading}>
-            <span className={styles.smallIcon} aria-hidden="true">✓</span>
-            <div>
-              <p>Antes de comenzar</p>
-              <h2 id="prepare-title">Información que necesitarás</h2>
-            </div>
-          </div>
-          <ol className={styles.checklist}>
-            <li>
-              <span>1</span>
-              <div>
-                <strong>Datos del préstamo</strong>
-                <small>Precio, enganche, tasa simple y plazo original.</small>
-              </div>
-            </li>
-            <li>
-              <span>2</span>
-              <div>
-                <strong>Historial de pagos</strong>
-                <small>Última cuota pagada y fechas del abono.</small>
-              </div>
-            </li>
-            <li>
-              <span>3</span>
-              <div>
-                <strong>Datos para los documentos</strong>
-                <small>Deudor, cuenta o lote, recibo, fechas y medio de pago.</small>
-              </div>
-            </li>
-          </ol>
-        </section>
-
-        <aside className={styles.supportCard} aria-labelledby="rules-title">
-          <div className={styles.cardHeading}>
-            <span className={styles.smallIcon} aria-hidden="true">i</span>
-            <div>
-              <p>Cómo funciona</p>
-              <h2 id="rules-title">Reglas del cálculo</h2>
-            </div>
-          </div>
-          <dl className={styles.ruleList}>
-            <div><dt>Moneda</dt><dd>Quetzales (GTQ)</dd></div>
-            <div><dt>Interés</dt><dd>Simple por meses completos</dd></div>
-            <div><dt>Abono</dt><dd>Se aplica directamente a capital</dd></div>
-            <div><dt>Plazo</dt><dd>Mantiene la fecha final del préstamo</dd></div>
-          </dl>
-        </aside>
-      </div>
+      <aside className={styles.rules} aria-label="Condiciones de cálculo">
+        <Rule label="Moneda" value="Quetzales" />
+        <Rule label="Interés" value="Simple" />
+        <Rule label="Período" value="Meses completos" />
+        <Rule label="Abonos" value="Directos a capital" />
+      </aside>
     </main>
+  );
+}
+
+function Rule({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }

@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import styles from "./app-header.module.css";
 
 const NAVIGATION = [
-  { href: "/", label: "Portal", icon: "▦" },
-  { href: "/financiamiento", label: "Calcular préstamo", icon: "+" },
+  { href: "/", label: "Inicio", icon: "▦" },
+  { href: "/financiamiento", label: "Nuevo préstamo", icon: "+" },
   { href: "/abono-capital", label: "Abono a capital", icon: "↓" },
 ] as const;
 
@@ -38,7 +38,7 @@ export function AppHeader({
           </span>
         </Link>
         <div className={styles.navigationArea}>
-          <p className={styles.navLabel}>Herramientas</p>
+          <p className={styles.navLabel}>Operaciones</p>
           <nav className={styles.nav} aria-label="Navegación principal">
             {NAVIGATION.map((item) => {
               const isCurrent =

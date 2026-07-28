@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   calculatePaymentSchedule,
   calculateSimpleInterestQuote,
@@ -357,8 +357,8 @@ export function CapitalPaymentWorkflow({
           <section aria-labelledby="loan-step-title">
             <StepHeading
               eyebrow="Paso 1 de 4"
-              title="Ingresa los datos del préstamo"
-              description="Usa las condiciones originales para calcular el capital, el interés y la cuota."
+              title="Préstamo original"
+              description="Ingresa las condiciones del contrato."
               id="loan-step-title"
             />
             <form className={styles.formGrid} onSubmit={(event) => event.preventDefault()} noValidate>
@@ -376,7 +376,7 @@ export function CapitalPaymentWorkflow({
                 label="Enganche original"
                 value={downPayment}
                 onChange={(event) => setDownPayment(event.target.value)}
-                hint="Pago inicial, sin incluir el abono"
+                hint="Pago inicial"
                 error={attemptedStep === 1 ? loanErrors.downPayment : undefined}
                 max={Number.isFinite(loanInputs.price) ? loanInputs.price : LOAN_LIMITS.price.max}
               />
@@ -385,7 +385,7 @@ export function CapitalPaymentWorkflow({
                 label="Interés anual (%)"
                 value={annualRate}
                 onChange={(event) => setAnnualRate(event.target.value)}
-                hint="Tasa simple del contrato"
+                hint="Tasa del contrato"
                 error={attemptedStep === 1 ? loanErrors.annualRate : undefined}
                 max={100}
                 step="any"
@@ -395,7 +395,7 @@ export function CapitalPaymentWorkflow({
                 label="Plazo original (meses)"
                 value={termMonths}
                 onChange={(event) => setTermMonths(event.target.value)}
-                hint="Por ejemplo, 60 meses"
+                hint="Cuotas acordadas"
                 error={attemptedStep === 1 ? termError : undefined}
                 max={360}
                 step="1"
@@ -416,8 +416,8 @@ export function CapitalPaymentWorkflow({
           <section aria-labelledby="movement-step-title">
             <StepHeading
               eyebrow="Paso 2 de 4"
-              title="Registra el abono"
-              description="Indica si el abono se recibe por separado o junto con la cuota regular."
+              title="Datos del abono"
+              description="Registra el pago y la próxima fecha de cobro."
               id="movement-step-title"
             />
 
@@ -430,7 +430,7 @@ export function CapitalPaymentWorkflow({
                   onClick={() => setTransactionMode("standalone")}
                 >
                   <strong>Abono por separado</strong>
-                  <span>La última cuota ya fue pagada.</span>
+                  <span>La cuota anterior ya está pagada.</span>
                 </button>
                 <button
                   type="button"
@@ -438,7 +438,7 @@ export function CapitalPaymentWorkflow({
                   onClick={() => setTransactionMode("combined")}
                 >
                   <strong>Cuota más abono</strong>
-                  <span>Recibes ambos pagos en la misma fecha.</span>
+                  <span>Ambos pagos se reciben juntos.</span>
                 </button>
               </div>
             </fieldset>
@@ -453,7 +453,7 @@ export function CapitalPaymentWorkflow({
                 }
                 value={paymentNumber}
                 onChange={(event) => setPaymentNumber(event.target.value)}
-                hint={`El acuerdo tiene ${parsedTermMonths} cuotas`}
+                hint={`${parsedTermMonths} cuotas en total`}
                 error={attemptedStep === 2 ? movementErrors.paymentNumber : undefined}
                 max={Math.max(1, parsedTermMonths - 1)}
                 step="1"
@@ -463,7 +463,7 @@ export function CapitalPaymentWorkflow({
                 label="Abono a capital"
                 value={capitalPayment}
                 onChange={(event) => setCapitalPayment(event.target.value)}
-                hint="Monto adicional destinado a capital"
+                hint="Monto aplicado a capital"
                 error={attemptedStep === 2 ? movementErrors.capitalPayment : undefined}
                 max={principal}
               />
@@ -493,7 +493,7 @@ export function CapitalPaymentWorkflow({
             </form>
 
             <fieldset className={styles.balanceFieldset}>
-              <legend>Capital pendiente antes del abono</legend>
+              <legend>Fuente del saldo de capital</legend>
               <div className={styles.balanceControls}>
                 <div className={styles.segmentedControl}>
                   <button
@@ -501,14 +501,14 @@ export function CapitalPaymentWorkflow({
                     aria-pressed={balanceSource === "calculated"}
                     onClick={() => setBalanceSource("calculated")}
                   >
-                    Calcular con el plan
+                    Usar cálculo
                   </button>
                   <button
                     type="button"
                     aria-pressed={balanceSource === "statement"}
                     onClick={() => setBalanceSource("statement")}
                   >
-                    Ingresar saldo
+                    Ingresar saldo exacto
                   </button>
                 </div>
                 {balanceSource === "statement" && (
@@ -524,9 +524,7 @@ export function CapitalPaymentWorkflow({
                 )}
               </div>
               <p>
-                Si conoces el saldo exacto de capital, ingrésalo. Si no, lo
-                calcularemos con las cuotas pagadas. El interés se calcula por meses
-                completos.
+                Usa el saldo del estado de cuenta cuando esté disponible.
               </p>
             </fieldset>
 
@@ -542,51 +540,29 @@ export function CapitalPaymentWorkflow({
           <section aria-labelledby="result-step-title">
             <StepHeading
               eyebrow="Paso 3 de 4"
-              title="Revisa el nuevo saldo y la nueva cuota"
-              description="Confirma el monto recibido y cómo cambia el préstamo después del abono."
+              title="Nuevo plan"
+              description="Revisa las condiciones posteriores al abono."
               id="result-step-title"
             />
 
-            <div className={styles.transactionCard}>
-              {transactionMode === "standalone" ? (
-                <>
-                  <div>
-                    <span>Cuota {result.applyAfterPayment}</span>
-                    <strong>Ya pagada</strong>
-                    <small>{formatDate(lastPaymentDate)}</small>
-                  </div>
-                  <span aria-hidden="true">→</span>
-                  <div className={styles.transactionEmphasis}>
-                    <span>Abono recibido</span>
-                    <strong>{formatCurrency(parsedCapitalPayment)}</strong>
-                    <small>{formatDate(transactionDate)}</small>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <span>Cuota {result.applyAfterPayment}</span>
-                    <strong>{formatCurrency(result.regularPayment)}</strong>
-                  </div>
-                  <span aria-hidden="true">+</span>
-                  <div>
-                    <span>Abono</span>
-                    <strong>{formatCurrency(parsedCapitalPayment)}</strong>
-                  </div>
-                  <span aria-hidden="true">=</span>
-                  <div className={styles.transactionEmphasis}>
-                    <span>Total recibido</span>
-                    <strong>{formatCurrency(result.paymentThisMonth)}</strong>
-                  </div>
-                </>
-              )}
+            <div className={styles.movementSummary}>
+              <SummaryValue
+                label="Movimiento"
+                value={transactionMode === "standalone" ? "Abono a capital" : `Cuota ${result.applyAfterPayment} + abono`}
+              />
+              <SummaryValue
+                label="Total recibido"
+                value={formatCurrency(transactionMode === "standalone" ? parsedCapitalPayment : result.paymentThisMonth)}
+              />
+              <SummaryValue label="Fecha" value={formatDate(transactionDate)} />
+              <SummaryValue label="Próxima cuota" value={`${result.applyAfterPayment + 1} · ${formatDate(nextPaymentDate)}`} />
             </div>
 
             <div className={styles.resultGrid}>
               <ResultValue label="Nuevo saldo de capital" value={formatCurrency(result.newCapital)} emphasized />
               <ResultValue label="Nueva cuota mensual" value={formatCurrency(result.newMonthlyPayment)} note={`${result.remainingMonths} cuotas restantes`} emphasized />
-              <ResultValue label="Saldo total programado" value={formatCurrency(result.newScheduledBalance)} note="Capital más interés futuro" />
-              <ResultValue label="Intereses futuros reducidos" value={formatCurrency(result.totalInterestReduction)} note={`${formatCurrency(result.interestReductionFromCapitalPayment)} corresponden al abono`} />
+              <ResultValue label="Total futuro" value={formatCurrency(result.newScheduledBalance)} note="Capital más interés" />
+              <ResultValue label="Interés reducido" value={formatCurrency(result.totalInterestReduction)} />
             </div>
             <p className={styles.installmentNote}>
               {formatInstallments(result.remainingMonths, result.newMonthlyPayment, result.newFinalPayment)}
@@ -606,18 +582,13 @@ export function CapitalPaymentWorkflow({
                   <ComparisonRow label="Interés futuro" before={formatCurrency(result.originalFutureInterest)} after={formatCurrency(result.newFutureInterest)} />
                   <ComparisonRow label="Saldo programado" before={formatCurrency(result.originalScheduledBalance)} after={formatCurrency(result.newScheduledBalance)} />
                   <ComparisonRow label="Cuota mensual" before={formatCurrency(result.regularPayment)} after={formatCurrency(result.newMonthlyPayment)} />
-                  <ComparisonRow label="Cuotas restantes" before={String(result.remainingMonths)} after={String(result.remainingMonths)} />
                 </tbody>
               </table>
             </div>
 
-            <div className={styles.methodNote}>
-              <strong>Cálculo del interés</strong>
-              <span>Nuevo capital × tasa anual × tiempo restante</span>
-              <small>
-                Capital pendiente: {balanceSource === "statement" ? "saldo ingresado" : "calculado con el plan original"}.
-              </small>
-            </div>
+            <p className={styles.calculationNote}>
+              Interés futuro calculado al {formatRate(loanInputs.annualRate)}% anual sobre el nuevo capital durante {result.remainingMonths} meses.
+            </p>
           </section>
         )}
 
@@ -625,8 +596,8 @@ export function CapitalPaymentWorkflow({
           <section aria-labelledby="record-step-title">
             <StepHeading
               eyebrow="Paso 4 de 4"
-              title="Prepara los documentos"
-              description="Entrega el comprobante del abono y el nuevo calendario de cuotas con fechas de vencimiento."
+              title="Documentos"
+              description="Prepara el comprobante o el plan actualizado."
               id="record-step-title"
             />
 
@@ -639,7 +610,7 @@ export function CapitalPaymentWorkflow({
                   onClick={() => setDocumentView("payment-record")}
                 >
                   <strong>Comprobante del abono</strong>
-                  <span>Recibo para firma o simulación del movimiento.</span>
+                  <span>Recibo o simulación.</span>
                 </button>
                 <button
                   type="button"
@@ -647,111 +618,111 @@ export function CapitalPaymentWorkflow({
                   onClick={() => setDocumentView("payment-schedule")}
                 >
                   <strong>Plan de pagos actualizado</strong>
-                  <span>Cuotas futuras con sus nuevas fechas y montos.</span>
+                  <span>Nuevas cuotas y fechas.</span>
                 </button>
               </div>
             </fieldset>
 
             {documentView === "payment-record" ? (
-              <>
-                <fieldset className={styles.documentTypeFieldset}>
-                  <legend>Tipo de comprobante</legend>
-                  <div className={styles.segmentedControl}>
-                    <button
-                      type="button"
-                      aria-pressed={recordDetails.documentType === "record"}
-                      onClick={() => updateRecordDetails("documentType", "record")}
-                    >
-                      Recibo para firma
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={recordDetails.documentType === "simulation"}
-                      onClick={() => updateRecordDetails("documentType", "simulation")}
-                    >
-                      Simulación de cálculo
+              <div className={styles.documentWorkspace}>
+                <div className={styles.documentEditor}>
+                  <fieldset className={styles.documentTypeFieldset}>
+                    <legend>Tipo de comprobante</legend>
+                    <div className={styles.segmentedControl}>
+                      <button
+                        type="button"
+                        aria-pressed={recordDetails.documentType === "record"}
+                        onClick={() => updateRecordDetails("documentType", "record")}
+                      >
+                        Recibo
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={recordDetails.documentType === "simulation"}
+                        onClick={() => updateRecordDetails("documentType", "simulation")}
+                      >
+                        Simulación
+                      </button>
+                    </div>
+                  </fieldset>
+
+                  <form className={styles.recordForm} onSubmit={(event) => event.preventDefault()} noValidate>
+                    <TextField required={recordDetails.documentType === "record"} label="Deudor" id="debtor-name" value={recordDetails.debtorName} onChange={(value) => updateRecordDetails("debtorName", value)} error={showRecordErrors ? recordErrors.debtorName : undefined} />
+                    <TextField required={recordDetails.documentType === "record"} label="Acreedor o vendedor" id="creditor-name" value={recordDetails.creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showRecordErrors ? recordErrors.creditorName : undefined} />
+                    <TextField required={recordDetails.documentType === "record"} label="Lote o cuenta" id="lot-reference" value={recordDetails.lotReference} onChange={(value) => updateRecordDetails("lotReference", value)} error={showRecordErrors ? recordErrors.lotReference : undefined} />
+                    <TextField required={recordDetails.documentType === "record"} label="Número de recibo" id="receipt-number" value={recordDetails.receiptNumber} onChange={(value) => updateRecordDetails("receiptNumber", value)} error={showRecordErrors ? recordErrors.receiptNumber : undefined} />
+                    <TextField required={recordDetails.documentType === "record"} label="Medio de pago" id="payment-method" value={recordDetails.paymentMethod} onChange={(value) => updateRecordDetails("paymentMethod", value)} placeholder="Efectivo, depósito…" error={showRecordErrors ? recordErrors.paymentMethod : undefined} />
+                    <TextField label="Referencia" id="payment-reference" value={recordDetails.paymentReference} onChange={(value) => updateRecordDetails("paymentReference", value)} />
+                    <TextField required={recordDetails.documentType === "record"} label="Recibido por" id="received-by" value={recordDetails.receivedBy} onChange={(value) => updateRecordDetails("receivedBy", value)} error={showRecordErrors ? recordErrors.receivedBy : undefined} />
+                    <TextField label="Observaciones" id="record-notes" value={recordDetails.notes} onChange={(value) => updateRecordDetails("notes", value)} />
+                  </form>
+
+                  <div className={styles.recordActions}>
+                    <p>{recordDetails.documentType === "simulation" ? "No acredita la recepción de fondos." : "Listo para firma."}</p>
+                    <button type="button" className={styles.printButton} onClick={printRecord}>
+                      Imprimir o guardar PDF
                     </button>
                   </div>
-                </fieldset>
-
-                <form className={styles.recordForm} onSubmit={(event) => event.preventDefault()} noValidate>
-                  <TextField required={recordDetails.documentType === "record"} label="Nombre del deudor" id="debtor-name" value={recordDetails.debtorName} onChange={(value) => updateRecordDetails("debtorName", value)} error={showRecordErrors ? recordErrors.debtorName : undefined} />
-                  <TextField required={recordDetails.documentType === "record"} label="Acreedor o vendedor" id="creditor-name" value={recordDetails.creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showRecordErrors ? recordErrors.creditorName : undefined} />
-                  <TextField required={recordDetails.documentType === "record"} label="Lote o número de cuenta" id="lot-reference" value={recordDetails.lotReference} onChange={(value) => updateRecordDetails("lotReference", value)} error={showRecordErrors ? recordErrors.lotReference : undefined} />
-                  <TextField required={recordDetails.documentType === "record"} label="Número de recibo" id="receipt-number" value={recordDetails.receiptNumber} onChange={(value) => updateRecordDetails("receiptNumber", value)} error={showRecordErrors ? recordErrors.receiptNumber : undefined} />
-                  <TextField required={recordDetails.documentType === "record"} label="Medio de pago" id="payment-method" value={recordDetails.paymentMethod} onChange={(value) => updateRecordDetails("paymentMethod", value)} placeholder="Efectivo, depósito, transferencia…" error={showRecordErrors ? recordErrors.paymentMethod : undefined} />
-                  <TextField label="Referencia del pago" id="payment-reference" value={recordDetails.paymentReference} onChange={(value) => updateRecordDetails("paymentReference", value)} />
-                  <TextField required={recordDetails.documentType === "record"} label="Recibido por" id="received-by" value={recordDetails.receivedBy} onChange={(value) => updateRecordDetails("receivedBy", value)} error={showRecordErrors ? recordErrors.receivedBy : undefined} />
-                  <TextField label="Observaciones" id="record-notes" value={recordDetails.notes} onChange={(value) => updateRecordDetails("notes", value)} />
-                </form>
-
-                <div className={styles.recordActions}>
-                  <p>
-                    {recordDetails.documentType === "simulation"
-                      ? "La simulación proyecta el resultado; no acredita la recepción de fondos."
-                      : "Completa los campos obligatorios para preparar el recibo."}
-                  </p>
-                  <button type="button" className={styles.printButton} onClick={printRecord}>
-                    Imprimir comprobante o guardar PDF
-                  </button>
                 </div>
 
-                <div className={styles.previewLabel}>Vista previa del comprobante</div>
-                <PaymentRecord
-                  annualRate={loanInputs.annualRate}
-                  balanceSource={balanceSource}
-                  capitalPayment={parsedCapitalPayment}
-                  details={recordDetails}
-                  downPayment={loanInputs.downPayment}
-                  lastPaymentDate={lastPaymentDate}
-                  nextPaymentDate={nextPaymentDate}
-                  paymentNumber={parsedPaymentNumber}
-                  price={loanInputs.price}
-                  result={result}
-                  termMonths={parsedTermMonths}
-                  transactionDate={transactionDate}
-                  transactionMode={transactionMode}
-                />
-              </>
+                <DocumentPreview label="Vista previa del comprobante">
+                  <PaymentRecord
+                    annualRate={loanInputs.annualRate}
+                    balanceSource={balanceSource}
+                    capitalPayment={parsedCapitalPayment}
+                    details={recordDetails}
+                    downPayment={loanInputs.downPayment}
+                    lastPaymentDate={lastPaymentDate}
+                    nextPaymentDate={nextPaymentDate}
+                    paymentNumber={parsedPaymentNumber}
+                    price={loanInputs.price}
+                    result={result}
+                    termMonths={parsedTermMonths}
+                    transactionDate={transactionDate}
+                    transactionMode={transactionMode}
+                  />
+                </DocumentPreview>
+              </div>
             ) : (
-              <>
-                <form className={styles.recordForm} onSubmit={(event) => event.preventDefault()} noValidate>
-                  <TextField required label="Nombre del deudor" id="schedule-debtor-name" value={recordDetails.debtorName} onChange={(value) => updateRecordDetails("debtorName", value)} error={showScheduleErrors ? scheduleErrors.debtorName : undefined} />
-                  <TextField required label="Acreedor o vendedor" id="schedule-creditor-name" value={recordDetails.creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showScheduleErrors ? scheduleErrors.creditorName : undefined} />
-                  <TextField required label="Lote o número de cuenta" id="schedule-lot-reference" value={recordDetails.lotReference} onChange={(value) => updateRecordDetails("lotReference", value)} error={showScheduleErrors ? scheduleErrors.lotReference : undefined} />
-                </form>
+              <div className={styles.documentWorkspace}>
+                <div className={styles.documentEditor}>
+                  <form className={styles.recordForm} onSubmit={(event) => event.preventDefault()} noValidate>
+                    <TextField required label="Deudor" id="schedule-debtor-name" value={recordDetails.debtorName} onChange={(value) => updateRecordDetails("debtorName", value)} error={showScheduleErrors ? scheduleErrors.debtorName : undefined} />
+                    <TextField required label="Acreedor o vendedor" id="schedule-creditor-name" value={recordDetails.creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showScheduleErrors ? scheduleErrors.creditorName : undefined} />
+                    <TextField required label="Lote o cuenta" id="schedule-lot-reference" value={recordDetails.lotReference} onChange={(value) => updateRecordDetails("lotReference", value)} error={showScheduleErrors ? scheduleErrors.lotReference : undefined} />
+                  </form>
 
-                <div className={styles.recordActions}>
-                  <p>
-                    El plan empieza con la cuota {result.applyAfterPayment + 1} y no modifica los pagos anteriores.
-                  </p>
-                  <button type="button" className={styles.printButton} onClick={printSchedule}>
-                    Imprimir plan o guardar PDF
-                  </button>
+                  <div className={styles.recordActions}>
+                    <p>Comienza con la cuota {result.applyAfterPayment + 1}.</p>
+                    <button type="button" className={styles.printButton} onClick={printSchedule}>
+                      Imprimir o guardar PDF
+                    </button>
+                  </div>
                 </div>
 
-                <div className={styles.previewLabel}>Vista previa del plan actualizado</div>
-                <PaymentScheduleDocument
-                  accountReference={recordDetails.lotReference}
-                  annualRate={loanInputs.annualRate}
-                  capitalPayment={parsedCapitalPayment}
-                  creditorName={recordDetails.creditorName}
-                  debtorName={recordDetails.debtorName}
-                  downPayment={loanInputs.downPayment}
-                  finalPayment={result.newFinalPayment}
-                  interestTotal={result.newFutureInterest}
-                  issueDate={transactionDate}
-                  monthlyPayment={result.newMonthlyPayment}
-                  originalTermMonths={parsedTermMonths}
-                  previousPaymentNumber={result.applyAfterPayment}
-                  previousPrincipal={result.currentCapital}
-                  price={loanInputs.price}
-                  principal={result.newCapital}
-                  rows={updatedScheduleRows}
-                  scheduledTotal={result.newScheduledBalance}
-                  variant="updated"
-                />
-              </>
+                <DocumentPreview label="Vista previa del plan actualizado">
+                  <PaymentScheduleDocument
+                    accountReference={recordDetails.lotReference}
+                    annualRate={loanInputs.annualRate}
+                    capitalPayment={parsedCapitalPayment}
+                    creditorName={recordDetails.creditorName}
+                    debtorName={recordDetails.debtorName}
+                    downPayment={loanInputs.downPayment}
+                    finalPayment={result.newFinalPayment}
+                    interestTotal={result.newFutureInterest}
+                    issueDate={transactionDate}
+                    monthlyPayment={result.newMonthlyPayment}
+                    originalTermMonths={parsedTermMonths}
+                    previousPaymentNumber={result.applyAfterPayment}
+                    previousPrincipal={result.currentCapital}
+                    price={loanInputs.price}
+                    principal={result.newCapital}
+                    rows={updatedScheduleRows}
+                    scheduledTotal={result.newScheduledBalance}
+                    variant="updated"
+                  />
+                </DocumentPreview>
+              </div>
             )}
           </section>
         )}
@@ -769,6 +740,15 @@ export function CapitalPaymentWorkflow({
           )}
         </div>
       </div>
+    </section>
+  );
+}
+
+function DocumentPreview({ children, label }: { children: ReactNode; label: string }) {
+  return (
+    <section className={styles.documentPreview} aria-label={label}>
+      <div className={styles.previewLabel}>{label}</div>
+      <div className={styles.previewViewport}>{children}</div>
     </section>
   );
 }
@@ -847,4 +827,8 @@ function formatDate(value: string): string {
 function formatInstallments(months: number, monthly: number, finalPayment: number): string {
   if (months === 1) return `Una cuota final de ${formatCurrency(finalPayment)}.`;
   return `${months - 1} cuotas de ${formatCurrency(monthly)} y una última cuota de ${formatCurrency(finalPayment)}.`;
+}
+
+function formatRate(value: number): string {
+  return value.toLocaleString("es-GT", { maximumFractionDigits: 4 });
 }

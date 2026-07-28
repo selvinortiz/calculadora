@@ -54,7 +54,6 @@ export function AccessForm({
           required
           autoFocus
         />
-        <small>El correo asociado a tu acceso.</small>
       </div>
 
       <div className={styles.field}>
@@ -70,13 +69,12 @@ export function AccessForm({
           maxLength={128}
           required
         />
-        <small>Tu código personal de acceso.</small>
       </div>
 
       {error && <p className={styles.error} role="alert">{error}</p>}
 
       <button type="submit" disabled={isSubmitting || !email.trim() || code.length < 4}>
-        {isSubmitting ? "Verificando…" : "Entrar al portal"}
+        {isSubmitting ? "Verificando…" : "Ingresar"}
       </button>
     </form>
   );

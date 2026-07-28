@@ -2,15 +2,15 @@
   display: grid;
   min-height: 100vh;
   place-items: center;
-  padding: 2rem;
+  padding: 1.5rem;
   background: var(--background);
 }
 
 .authLayout {
   display: grid;
-  width: min(100%, 58rem);
-  min-height: 34rem;
-  grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.82fr);
+  width: min(100%, 50rem);
+  min-height: 29rem;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.82fr);
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -21,7 +21,7 @@
 .contextPanel {
   display: flex;
   flex-direction: column;
-  padding: 2rem;
+  padding: 1.65rem;
   color: #eef2ff;
   background: #312e81;
 }
@@ -86,13 +86,14 @@
   max-width: 26rem;
   margin-top: 0.9rem;
   color: #c7d2fe;
-  font-size: 0.78rem;
-  line-height: 1.6;
+  font-size: 0.74rem;
+  line-height: 1.5;
 }
 
 .contextPanel ul {
-  display: grid;
-  gap: 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
   margin: auto 0 0;
   padding: 0;
   color: #c7d2fe;
@@ -118,18 +119,6 @@
   position: relative;
 }
 
-.lockIcon {
-  display: grid;
-  width: 2.2rem;
-  height: 2.2rem;
-  place-items: center;
-  margin-bottom: 1.2rem;
-  color: var(--success);
-  background: var(--success-soft);
-  border-radius: 0.6rem;
-  font-size: 0.55rem;
-}
-
 .formHeading > p {
   color: var(--accent);
 }
@@ -137,7 +126,7 @@
 .formHeading h2 {
   margin: 0;
   color: var(--text-strong);
-  font-size: 1.55rem;
+  font-size: 1.35rem;
 }
 
 .formHeading > span:last-child {
@@ -151,7 +140,7 @@
 .accessForm {
   display: grid;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 1.2rem;
 }
 
 .field {
@@ -173,11 +162,6 @@
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 0.65rem;
-}
-
-.field small {
-  color: var(--text-muted);
-  font-size: 0.64rem;
 }
 
 .field input:focus-visible,

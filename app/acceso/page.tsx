@@ -27,26 +27,24 @@ export default async function AccessPage({
             </div>
           </div>
           <div className={styles.contextCopy}>
-            <p>Hecha para prestamistas</p>
-            <h1>Créditos claros y pagos bien documentados.</h1>
+            <p>Portal para prestamistas</p>
+            <h1>Créditos y pagos, en orden.</h1>
             <span>
-              Calcula préstamos con interés simple, registra abonos a capital y
-              entrega recibos y planes que tus clientes puedan entender.
+              Cotiza préstamos, registra abonos y entrega documentos claros.
             </span>
           </div>
           <ul>
-            <li>Cotizaciones con capital, interés y cuota</li>
-            <li>Recálculo de abonos a capital</li>
-            <li>Recibos y planes listos para imprimir</li>
+            <li>Cotizar</li>
+            <li>Recalcular</li>
+            <li>Imprimir</li>
           </ul>
         </aside>
 
         <div className={styles.formPanel}>
           <div className={styles.formHeading}>
-            <span className={styles.lockIcon} aria-hidden="true">●</span>
-            <p>Portal para prestamistas</p>
-            <h2>Ingresa a tu portal</h2>
-            <span>Usa el correo y código de acceso que recibiste.</span>
+            <p>Acceso seguro</p>
+            <h2>Iniciar sesión</h2>
+            <span>Ingresa tu correo y código de acceso.</span>
           </div>
           <AccessForm nextPath={nextPath} />
         </div>
