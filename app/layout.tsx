@@ -2,6 +2,13 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { AppHeader } from "@/components/app-header";
 import { getCurrentPortalSession } from "@/lib/current-portal-session";
+import {
+  getSiteUrl,
+  PUBLIC_ENTRY_PATH,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+} from "@/lib/site-metadata";
 import "./globals.css";
 
 const geist = Geist({
@@ -11,13 +18,72 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  applicationName: "Calculadora de Créditos",
+  metadataBase: getSiteUrl(),
+  applicationName: SITE_NAME,
   title: {
-    default: "Calculadora de Créditos",
-    template: "%s | Calculadora de Créditos",
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "Herramienta operativa para cotizar créditos y registrar abonos a capital con interés simple en quetzales.",
+  description: SITE_DESCRIPTION,
+  keywords: [
+    "calculadora de créditos",
+    "interés simple",
+    "abono a capital",
+    "préstamos en Guatemala",
+    "calculadora para prestamistas",
+    "plan de pagos",
+    "recibo de pago",
+    "quetzales",
+  ],
+  category: "finance",
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  formatDetection: {
+    address: false,
+    email: false,
+    telephone: false,
+  },
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: SITE_NAME,
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_GT",
+    url: PUBLIC_ENTRY_PATH,
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Calculadora de Créditos, portal de interés simple para prestamistas",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/opengraph-image"],
+  },
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+  },
+  other: {
+    "geo.region": "GT",
+    "geo.placename": "Guatemala",
+  },
 };
 
 export const viewport: Viewport = {

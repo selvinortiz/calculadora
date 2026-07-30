@@ -1,7 +1,26 @@
 {
-  "name": "calculador-de-pagos",
+  "name": "calculadora-de-creditos",
   "version": "0.1.0",
   "private": true,
+  "description": "Portal para prestamistas que cotiza créditos con interés simple, registra abonos a capital y genera documentos imprimibles en quetzales.",
+  "keywords": [
+    "calculadora de créditos",
+    "interés simple",
+    "abono a capital",
+    "préstamos",
+    "Guatemala",
+    "quetzales"
+  ],
+  "author": "Selvin Ortiz",
+  "license": "UNLICENSED",
+  "homepage": "https://calculacuota.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/selvinortiz/calculadora.git"
+  },
+  "bugs": {
+    "url": "https://github.com/selvinortiz/calculadora/issues"
+  },
   "engines": {
     "node": ">=20.9.0"
   },

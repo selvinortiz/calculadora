@@ -325,6 +325,25 @@
     font-family: Arial, Helvetica, sans-serif;
   }
 
+  .header,
+  .warning,
+  .identityGrid,
+  .section,
+  .capitalApplication,
+  .summary,
+  .terms,
+  .detailGrid,
+  .signatures,
+  .documentFooter {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
   .header h2 {
     font-size: 16pt;
   }
@@ -361,7 +380,57 @@
     display: block;
   }
 
+  .header {
+    padding-bottom: 6pt;
+  }
+
+  .identityGrid {
+    padding: 6pt 0;
+  }
+
+  .section,
+  .capitalApplication,
+  .summary,
+  .terms,
+  .detailGrid {
+    margin-top: 6pt;
+  }
+
+  .capitalApplication,
+  .detailGrid {
+    padding: 5pt;
+  }
+
+  .summary > div {
+    padding: 5pt;
+  }
+
+  .table th,
+  .table td {
+    padding: 3.5pt 4pt;
+  }
+
+  .terms {
+    padding-top: 5pt;
+  }
+
+  .terms p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .signatures {
+    margin-top: 18pt;
+  }
+
+  .documentFooter {
+    margin-top: 7pt;
+    padding-top: 5pt;
+  }
+
   .warning {
+    margin-top: 6pt;
+    padding: 4pt 6pt;
     color: #7f1d1d;
     background: #fff;
     border-color: #7f1d1d;

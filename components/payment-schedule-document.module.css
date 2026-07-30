@@ -1,4 +1,11 @@
 .document {
+  display: grid;
+  gap: 1rem;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
   padding: clamp(1rem, 3vw, 1.5rem);
   color: var(--text);
   background: var(--surface);
@@ -48,6 +55,11 @@
   font-size: 0.76rem;
 }
 
+.documentMeta small {
+  color: var(--text-muted);
+  font-size: 0.58rem;
+}
+
 .notice {
   margin: 0.75rem 0 0;
   padding: 0.55rem 0.7rem;
@@ -61,6 +73,7 @@
 }
 
 .identityGrid,
+.continuationGrid,
 .summary,
 .paymentTerms {
   display: grid;
@@ -73,6 +86,14 @@
   border-bottom: 1px solid var(--border);
 }
 
+.continuationGrid {
+  margin-top: 0.7rem;
+  padding: 0.65rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+}
+
 .documentItem {
   display: grid;
   min-width: 0;
@@ -80,6 +101,7 @@
 }
 
 .documentItem span,
+.continuationGrid span,
 .summary span,
 .paymentTerms span {
   color: var(--text-muted);
@@ -87,6 +109,7 @@
 }
 
 .documentItem strong,
+.continuationGrid strong,
 .summary strong,
 .paymentTerms strong {
   overflow-wrap: anywhere;
@@ -161,8 +184,7 @@
 }
 
 .tableRegion {
-  max-height: 36rem;
-  overflow: auto;
+  overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: 0.55rem;
 }
@@ -224,6 +246,10 @@
   line-height: 1.5;
 }
 
+.closingBlock {
+  margin-top: auto;
+}
+
 .signatures {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -272,6 +298,7 @@
   }
 
   .identityGrid,
+  .continuationGrid,
   .summary,
   .paymentTerms {
     grid-template-columns: 1fr 1fr;
@@ -280,8 +307,24 @@
 
 @media print {
   .document {
+    display: block;
     padding: 0;
     font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .page {
+    min-height: 9.95in;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .page:last-child {
+    break-after: auto;
+    page-break-after: auto;
   }
 
   .header h2 {
@@ -289,12 +332,27 @@
   }
 
   .identityGrid,
+  .continuationGrid,
   .summary,
   .paymentTerms {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .header,
+  .notice,
+  .identityGrid,
+  .continuationGrid,
+  .summary,
+  .paymentTerms,
+  .sectionHeading,
+  .closingBlock,
+  .documentFooter {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
   .summary > div,
+  .continuationGrid,
   .paymentTerms,
   .notice,
   .table thead th,
@@ -315,14 +373,13 @@
   }
 
   .tableRegion {
-    max-height: none;
     overflow: visible;
     border-radius: 0;
   }
 
   .table {
     min-width: 0;
-    font-size: 7.2pt;
+    font-size: 6.8pt;
   }
 
   .table thead {
@@ -344,13 +401,47 @@
 
   .table th,
   .table td {
-    padding: 3.5pt 4pt;
+    padding: 2.75pt 3.5pt;
   }
 
-  .terms,
-  .signatures,
+  .notice {
+    margin-top: 6pt;
+    padding: 4pt 6pt;
+  }
+
+  .identityGrid {
+    padding: 6pt 0;
+  }
+
+  .continuationGrid,
+  .summary {
+    margin-top: 6pt;
+  }
+
+  .paymentTerms {
+    margin-top: 4pt;
+    padding: 5pt;
+  }
+
+  .scheduleSection {
+    margin-top: 7pt;
+  }
+
+  .sectionHeading {
+    margin-bottom: 4pt;
+  }
+
+  .terms {
+    margin-top: 7pt;
+    padding-top: 6pt;
+  }
+
+  .signatures {
+    margin-top: 18pt;
+  }
+
   .documentFooter {
-    break-inside: avoid;
-    page-break-inside: avoid;
+    margin-top: auto;
+    padding-top: 5pt;
   }
 }

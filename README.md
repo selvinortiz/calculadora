@@ -5,6 +5,8 @@ financiamientos con **interés simple** en quetzales. Permite cotizar un crédit
 registrar un abono a capital, actualizar la obligación restante y preparar una
 simulación, un recibo o un plan de pagos imprimible.
 
+**Aplicación:** [calculacuota.com](https://calculacuota.com)
+
 El portal requiere el correo y código de acceso de cada operador. Cada perfil
 incluye nombre, correo, empresa y un código almacenado como hash. No incluye un
 sistema formal de cuentas: los operadores se configuran en el servidor y reciben
@@ -76,6 +78,10 @@ Sin variables de entorno, el modo de desarrollo habilita únicamente:
 Los correos deben ser únicos. Los códigos no se guardan directamente: el
 servidor compara hashes `scrypt`. En producción, la aplicación no inicia una
 sesión si falta `PORTAL_USERS` o `PORTAL_SESSION_SECRET`.
+
+La URL pública usada para enlaces canónicos, sitemap y vistas previas sociales
+es `https://calculacuota.com`. Para usar otro dominio en una instalación
+distinta, configura `NEXT_PUBLIC_SITE_URL` con su origen completo.
 
 ## Verificación
 

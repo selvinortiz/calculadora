@@ -1,10 +1,84 @@
 import type { Metadata } from "next";
+import {
+  getSiteUrl,
+  PUBLIC_ENTRY_PATH,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+} from "@/lib/site-metadata";
 import { AccessForm } from "./access-form";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
-  title: "Acceso al portal",
-  description: "Acceso para operadores autorizados del portal de créditos.",
+  title: { absolute: SITE_TITLE },
+  description: SITE_DESCRIPTION,
+  alternates: {
+    canonical: PUBLIC_ENTRY_PATH,
+    languages: {
+      "es-GT": PUBLIC_ENTRY_PATH,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_GT",
+    url: PUBLIC_ENTRY_PATH,
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Calculadora de Créditos, portal de interés simple para prestamistas",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/opengraph-image"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+};
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: SITE_NAME,
+  alternateName: SITE_TITLE,
+  url: new URL(PUBLIC_ENTRY_PATH, getSiteUrl()).toString(),
+  description: SITE_DESCRIPTION,
+  applicationCategory: "FinanceApplication",
+  applicationSubCategory: "Herramienta para prestamistas",
+  operatingSystem: "Web",
+  inLanguage: "es-GT",
+  browserRequirements: "Requiere JavaScript y un navegador moderno.",
+  countryOfOrigin: {
+    "@type": "Country",
+    name: "Guatemala",
+  },
+  audience: {
+    "@type": "BusinessAudience",
+    audienceType: "Prestamistas y operadores de crédito",
+  },
+  featureList: [
+    "Cotizaciones de préstamos con interés simple",
+    "Recálculo de abonos a capital",
+    "Recibos y simulaciones imprimibles",
+    "Planes de pago con fechas y saldos",
+  ],
 };
 
 export default async function AccessPage({
@@ -17,6 +91,12 @@ export default async function AccessPage({
 
   return (
     <main className={styles.authPage}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
+      />
       <section className={styles.authLayout}>
         <aside className={styles.contextPanel}>
           <div className={styles.brand}>
