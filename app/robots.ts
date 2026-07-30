@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: [PUBLIC_ENTRY_PATH, "/opengraph-image", "/favicon.ico"],
-      disallow: ["/api/", "/financiamiento", "/abono-capital"],
+      disallow: ["/api/", "/financiamiento", "/abono-capital", "/ajustes", "/directorio"],
     },
     sitemap: new URL("/sitemap.xml", siteUrl).toString(),
     host: siteUrl.origin,

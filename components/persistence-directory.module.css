@@ -1,0 +1,359 @@
+.directory {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.storageNotice {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.8rem;
+  color: var(--text);
+  background: var(--success-soft);
+  border: 1px solid color-mix(in srgb, var(--success) 35%, var(--border));
+  border-radius: 0.75rem;
+}
+
+.storageNotice > span {
+  color: var(--success);
+  font-size: 0.55rem;
+}
+
+.storageNotice div {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.storageNotice strong {
+  color: var(--text-strong);
+  font-size: 0.7rem;
+}
+
+.storageNotice p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.tabs button {
+  display: inline-flex;
+  min-height: 2.45rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.75rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0.55rem;
+  font-size: 0.69rem;
+  font-weight: 780;
+  cursor: pointer;
+}
+
+.tabs button[aria-selected="true"] {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.tabs button span {
+  display: grid;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  place-items: center;
+  padding: 0 0.3rem;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border-radius: 999px;
+  font-size: 0.58rem;
+}
+
+.notice {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-radius: 0.65rem;
+  font-size: 0.68rem;
+  font-weight: 720;
+}
+
+.twoColumn {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.82fr) minmax(20rem, 1.18fr);
+  align-items: start;
+  gap: 0.8rem;
+}
+
+.card,
+.listCard,
+.previewCard {
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  box-shadow: 0 0.45rem 1.5rem rgb(30 41 59 / 4%);
+}
+
+.cardHeading p,
+.previewCard > p {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cardHeading h2,
+.listCard h2 {
+  margin: 0.2rem 0 0;
+  color: var(--text-strong);
+  font-size: 0.95rem;
+}
+
+.cardHeading > span {
+  display: block;
+  margin-top: 0.28rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+}
+
+.financingForm {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.field label {
+  color: var(--text-strong);
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.52rem 0.62rem;
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.58rem;
+}
+
+.field small {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.formActions {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.15rem;
+}
+
+.formActions button,
+.emptyForm button {
+  min-height: 2.4rem;
+  padding: 0.48rem 0.72rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.58rem;
+  font-size: 0.67rem;
+  font-weight: 780;
+  cursor: pointer;
+}
+
+.formActions button:first-child:not(:last-child) {
+  color: var(--text-strong);
+  background: var(--surface);
+}
+
+.formActions button:last-child,
+.emptyForm button {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.previewCard dl {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.75rem 0 0;
+}
+
+.previewCard dl div {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem;
+  background: var(--surface-subtle);
+  border-radius: 0.65rem;
+}
+
+.previewCard dt {
+  color: var(--text-muted);
+  font-size: 0.61rem;
+}
+
+.previewCard dd {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.listCard h2 {
+  margin-top: 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+
+.profileList {
+  display: grid;
+}
+
+.profileRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.72rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.profileRow:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.profileRow > div:first-child {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.profileRow strong {
+  overflow-wrap: anywhere;
+  color: var(--text-strong);
+  font-size: 0.73rem;
+}
+
+.profileRow span {
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+  font-size: 0.61rem;
+}
+
+.rowActions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.25rem;
+}
+
+.rowActions button {
+  padding: 0.35rem 0.45rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  font-size: 0.6rem;
+  font-weight: 740;
+  cursor: pointer;
+}
+
+.rowActions button:hover {
+  color: var(--text-strong);
+  background: var(--surface-subtle);
+  border-color: var(--border);
+}
+
+.rowActions button:last-child:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.emptyList,
+.emptyForm p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.emptyList {
+  padding: 1.2rem 0.5rem;
+  text-align: center;
+}
+
+.emptyForm {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+  padding: 0.85rem;
+  background: var(--surface-subtle);
+  border-radius: 0.65rem;
+}
+
+.emptyForm strong {
+  color: var(--text-strong);
+  font-size: 0.75rem;
+}
+
+.emptyForm button {
+  margin-top: 0.35rem;
+}
+
+.tabs button:focus-visible,
+.field input:focus-visible,
+.field select:focus-visible,
+.formActions button:focus-visible,
+.rowActions button:focus-visible,
+.emptyForm button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 58rem) {
+  .twoColumn {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 38rem) {
+  .form,
+  .financingForm {
+    grid-template-columns: 1fr;
+  }
+
+  .profileRow {
+    align-items: start;
+    flex-direction: column;
+  }
+}

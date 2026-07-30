@@ -76,6 +76,23 @@ export type PaymentScheduleRow = {
   remainingPrincipal: number;
 };
 
+export type PaymentCreditAdjustmentInputs = {
+  paymentNumber: number;
+  scheduledPayment: number;
+  receivedPayment: number;
+};
+
+export type PaymentCreditAdjustment = {
+  paymentNumber: number;
+  nextPaymentNumber: number;
+  followingPaymentNumber: number;
+  scheduledPayment: number;
+  receivedPayment: number;
+  creditBalance: number;
+  adjustedNextPayment: number;
+  regularPaymentAfterAdjustment: number;
+};
+
 export function roundCurrency(value: number): number {
   if (!Number.isFinite(value)) {
     throw new RangeError("Currency values must be finite.");
@@ -208,6 +225,57 @@ export function calculatePaymentSchedule({
       remainingPrincipal: roundCurrency(Math.max(0, principal - principalPaid)),
     };
   });
+}
+
+/**
+ * Applies an excess received with one installment to the immediately following
+ * installment. This records an advance against that installment; it does not
+ * change capital, interest, the recurring payment, or the agreement end date.
+ */
+export function calculatePaymentCreditAdjustment({
+  paymentNumber,
+  scheduledPayment,
+  receivedPayment,
+}: PaymentCreditAdjustmentInputs): PaymentCreditAdjustment {
+  if (!Number.isInteger(paymentNumber) || paymentNumber <= 0) {
+    throw new RangeError("The payment number must be a positive integer.");
+  }
+  if (
+    !Number.isFinite(scheduledPayment) ||
+    scheduledPayment <= 0 ||
+    !hasCentPrecision(scheduledPayment)
+  ) {
+    throw new RangeError(
+      "The scheduled payment must be positive and use at most two decimals.",
+    );
+  }
+  if (
+    !Number.isFinite(receivedPayment) ||
+    receivedPayment <= scheduledPayment ||
+    !hasCentPrecision(receivedPayment)
+  ) {
+    throw new RangeError(
+      "The received payment must exceed the scheduled payment and use at most two decimals.",
+    );
+  }
+
+  const creditBalance = roundCurrency(receivedPayment - scheduledPayment);
+  if (creditBalance >= scheduledPayment) {
+    throw new RangeError(
+      "The credit balance must be smaller than the next scheduled installment.",
+    );
+  }
+
+  return {
+    paymentNumber,
+    nextPaymentNumber: paymentNumber + 1,
+    followingPaymentNumber: paymentNumber + 2,
+    scheduledPayment: roundCurrency(scheduledPayment),
+    receivedPayment: roundCurrency(receivedPayment),
+    creditBalance,
+    adjustedNextPayment: roundCurrency(scheduledPayment - creditBalance),
+    regularPaymentAfterAdjustment: roundCurrency(scheduledPayment),
+  };
 }
 
 /**

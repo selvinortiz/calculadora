@@ -9,6 +9,10 @@ import {
   validateLoanInputs,
 } from "@/lib/finance";
 import { LoanPaymentPlan } from "./loan-payment-plan";
+import {
+  SavedFinancingPicker,
+  type SavedFinancingSelection,
+} from "./saved-profile-picker";
 import styles from "./loan-calculator.module.css";
 
 const currencyFormatter = new Intl.NumberFormat("es-GT", {
@@ -19,8 +23,30 @@ const currencyFormatter = new Intl.NumberFormat("es-GT", {
   maximumFractionDigits: 2,
 });
 
-export function LoanCalculator({ operatorCompany }: { operatorCompany: string }) {
+type PlanDefaults = {
+  accountReference: string;
+  creditorName: string;
+  customerId: string;
+  debtorName: string;
+  firstDueDate: string;
+};
+
+export function LoanCalculator({
+  operatorCompany,
+  storageScope,
+}: {
+  operatorCompany: string;
+  storageScope: string;
+}) {
   const [view, setView] = useState<"quote" | "plan">("quote");
+  const [selectedFinancingId, setSelectedFinancingId] = useState("");
+  const [planDefaults, setPlanDefaults] = useState<PlanDefaults>({
+    accountReference: "",
+    creditorName: "",
+    customerId: "",
+    debtorName: "",
+    firstDueDate: "",
+  });
   const [price, setPrice] = useState("65000");
   const [downPayment, setDownPayment] = useState("13000");
   const [annualRate, setAnnualRate] = useState("7");
@@ -36,9 +62,12 @@ export function LoanCalculator({ operatorCompany }: { operatorCompany: string })
   );
   const errors = useMemo(() => validateLoanInputs(inputs), [inputs]);
   const parsedTermYears = parseInput(termYears);
+  const parsedTermMonths = parsedTermYears * 12;
   const termError =
-    !Number.isInteger(parsedTermYears) || parsedTermYears < 1 || parsedTermYears > 30
-      ? "Selecciona un plazo entre 1 y 30 años."
+    !Number.isInteger(parsedTermMonths) ||
+    parsedTermMonths < 12 ||
+    parsedTermMonths > 360
+      ? "Ingresa un plazo entre 1 y 30 años, en meses completos."
       : undefined;
   const isValid = Object.keys(errors).length === 0 && !termError;
   const principal = isValid
@@ -50,10 +79,10 @@ export function LoanCalculator({ operatorCompany }: { operatorCompany: string })
         ? calculateSimpleInterestQuote(
             principal,
             inputs.annualRate,
-            parsedTermYears * 12,
+            parsedTermMonths,
           )
         : null,
-    [inputs.annualRate, isValid, parsedTermYears, principal],
+    [inputs.annualRate, isValid, parsedTermMonths, principal],
   );
   const comparisons = useMemo(
     () =>
@@ -70,6 +99,8 @@ export function LoanCalculator({ operatorCompany }: { operatorCompany: string })
         operatorCompany={operatorCompany}
         price={inputs.price}
         quote={quote}
+        initialDetails={planDefaults}
+        storageScope={storageScope}
       />
     );
   }
@@ -84,6 +115,11 @@ export function LoanCalculator({ operatorCompany }: { operatorCompany: string })
           </div>
           <span className={styles.localBadge}>Interés simple</span>
         </div>
+        <SavedFinancingPicker
+          scope={storageScope}
+          value={selectedFinancingId}
+          onSelect={applySavedFinancing}
+        />
         <form
           className={styles.form}
           aria-label="Datos del préstamo"
@@ -140,7 +176,7 @@ export function LoanCalculator({ operatorCompany }: { operatorCompany: string })
             <div>
               <p className={styles.stepLabel}>Cotización</p>
               <h2 id="quote-title">
-                {parsedTermYears} {parsedTermYears === 1 ? "año" : "años"}
+                {formatTerm(parsedTermMonths)}
               </h2>
             </div>
             <span>{quote.months} mensualidades</span>
@@ -172,7 +208,7 @@ export function LoanCalculator({ operatorCompany }: { operatorCompany: string })
           </dl>
           <p className={styles.formula}>
             Interés = capital × {formatRate(inputs.annualRate)}% × {" "}
-            {parsedTermYears} {parsedTermYears === 1 ? "año" : "años"}.
+            {formatTerm(parsedTermMonths)}.
           </p>
           <button
             type="button"
@@ -216,6 +252,24 @@ export function LoanCalculator({ operatorCompany }: { operatorCompany: string })
       )}
     </div>
   );
+
+  function applySavedFinancing(selection: SavedFinancingSelection | null) {
+    setSelectedFinancingId(selection?.financing.id ?? "");
+    if (!selection) return;
+
+    const { customer, financing, organization } = selection;
+    setPrice(String(financing.price));
+    setDownPayment(String(financing.downPayment));
+    setAnnualRate(String(financing.annualRate));
+    setTermYears(String(financing.termMonths / 12));
+    setPlanDefaults({
+      accountReference: financing.accountReference,
+      creditorName: organization?.name || operatorCompany,
+      customerId: customer.id,
+      debtorName: customer.name,
+      firstDueDate: financing.firstDueDate,
+    });
+  }
 }
 
 function Field({
@@ -272,4 +326,13 @@ function formatCurrency(value: number): string {
 
 function formatRate(value: number): string {
   return value.toLocaleString("es-GT", { maximumFractionDigits: 4 });
+}
+
+function formatTerm(months: number): string {
+  if (months % 12 === 0) {
+    const years = months / 12;
+    return `${years} ${years === 1 ? "año" : "años"}`;
+  }
+
+  return `${months} meses`;
 }

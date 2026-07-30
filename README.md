@@ -2,8 +2,8 @@
 
 Aplicación operativa para acreedores construida con Next.js y enfocada en
 financiamientos con **interés simple** en quetzales. Permite cotizar un crédito,
-registrar un abono a capital, actualizar la obligación restante y preparar una
-simulación, un recibo o un plan de pagos imprimible.
+registrar un abono a capital, aplicar saldos a favor y preparar recibos, planes
+de pago y constancias imprimibles.
 
 **Aplicación:** [calculacuota.com](https://calculacuota.com)
 
@@ -12,8 +12,10 @@ incluye nombre, correo, empresa y un código almacenado como hash. No incluye un
 sistema formal de cuentas: los operadores se configuran en el servidor y reciben
 una sesión firmada de 12 horas.
 
-Los cálculos se ejecutan localmente en el navegador. La aplicación no almacena
-ni transmite los montos, nombres o referencias ingresados.
+Los cálculos se ejecutan localmente en el navegador. El directorio opcional
+guarda organizaciones, clientes y perfiles de financiamiento en el
+almacenamiento local del navegador, separado por correo de acceso. Estos datos
+no se sincronizan con otros dispositivos ni se transmiten al servidor.
 
 ## Flujos
 
@@ -27,6 +29,12 @@ ni transmite los montos, nombres o referencias ingresados.
   3. verificar capital, interés y saldo antes y después;
   4. emitir una simulación o recibo para firma y un plan actualizado de las
      cuotas futuras.
+- `/ajustes`: aplica el excedente de un pago a la cuota siguiente sin modificar
+  el capital, el interés, la cuota regular ni la fecha final, y genera una
+  constancia para el expediente.
+- `/directorio`: datos reutilizables de la organización, clientes y condiciones
+  originales de financiamientos. Los perfiles completan los formularios, pero
+  no representan saldos ni historiales de pago.
 
 Las fechas del abono se conservan como parte del registro. El cálculo utiliza
 meses completos según el número de cuota indicado; no calcula interés diario.
@@ -99,7 +107,10 @@ request y cada push a `main`.
 - `app/`: rutas, metadatos, navegación y estilos globales.
 - `components/loan-calculator.tsx`: cotizador de interés simple.
 - `components/capital-payment-workflow.tsx`: flujo de abono y recálculo.
+- `components/payment-adjustment-workflow.tsx`: flujo de aplicación de saldo a
+  favor.
 - `components/payment-record.tsx`: documento imprimible.
+- `components/payment-adjustment-record.tsx`: constancia imprimible del ajuste.
 - `components/payment-schedule-document.tsx`: plan de pagos original o
   actualizado, con fechas de vencimiento.
 - `lib/finance.ts`: cálculos financieros puros y validación.

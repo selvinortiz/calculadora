@@ -29,6 +29,8 @@ export const metadata: Metadata = {
     "calculadora de créditos",
     "interés simple",
     "abono a capital",
+    "ajuste de pago",
+    "saldo a favor",
     "préstamos en Guatemala",
     "calculadora para prestamistas",
     "plan de pagos",
@@ -115,7 +117,7 @@ export default async function RootLayout({
             {children}
             <footer className="appFooter" data-print-hidden>
               <p>
-                Préstamos con interés simple · Abonos a capital · Documentos claros
+                Interés simple · Abonos a capital · Ajustes de pago
               </p>
               <p>
                 <a

@@ -2,11 +2,13 @@
   "name": "calculadora-de-creditos",
   "version": "0.1.0",
   "private": true,
-  "description": "Portal para prestamistas que cotiza créditos con interés simple, registra abonos a capital y genera documentos imprimibles en quetzales.",
+  "description": "Portal para prestamistas que cotiza créditos con interés simple, registra abonos a capital, ajusta pagos y genera documentos imprimibles en quetzales.",
   "keywords": [
     "calculadora de créditos",
     "interés simple",
     "abono a capital",
+    "ajuste de pago",
+    "saldo a favor",
     "préstamos",
     "Guatemala",
     "quetzales"

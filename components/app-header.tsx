@@ -8,6 +8,8 @@ const NAVIGATION = [
   { href: "/", label: "Inicio", icon: "▦" },
   { href: "/financiamiento", label: "Nuevo préstamo", icon: "+" },
   { href: "/abono-capital", label: "Abono a capital", icon: "↓" },
+  { href: "/ajustes", label: "Ajustes", icon: "±" },
+  { href: "/directorio", label: "Directorio", icon: "◇" },
 ] as const;
 
 export function AppHeader({

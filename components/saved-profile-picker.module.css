@@ -1,0 +1,64 @@
+.picker {
+  display: grid;
+  gap: 0.32rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+}
+
+.compact {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.labelRow label {
+  color: var(--text-strong);
+  font-size: 0.7rem;
+  font-weight: 780;
+}
+
+.labelRow a {
+  color: var(--accent-strong);
+  font-size: 0.62rem;
+  font-weight: 750;
+  text-underline-offset: 0.15em;
+}
+
+.picker select {
+  width: 100%;
+  min-height: 2.55rem;
+  padding: 0.55rem 2rem 0.55rem 0.65rem;
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.58rem;
+}
+
+.picker select:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.picker select:focus-visible,
+.labelRow a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.picker small {
+  color: var(--text-muted);
+  font-size: 0.61rem;
+}

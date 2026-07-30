@@ -1,7 +1,7 @@
 export const SITE_NAME = "Calculadora de Créditos";
 export const SITE_TITLE = "Calculadora de Créditos para Prestamistas";
 export const SITE_DESCRIPTION =
-  "Portal para prestamistas que cotiza créditos con interés simple, recalcula abonos a capital y genera recibos y planes de pago en quetzales.";
+  "Portal para prestamistas que cotiza créditos con interés simple, recalcula abonos a capital, ajusta saldos a favor y genera documentos en quetzales.";
 export const PUBLIC_ENTRY_PATH = "/acceso";
 export const DEFAULT_SITE_URL = "https://calculacuota.com";
 

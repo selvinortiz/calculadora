@@ -1,0 +1,480 @@
+.workflow {
+  max-width: 74rem;
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 0.25rem;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  list-style: none;
+}
+
+.stepButton {
+  display: flex;
+  width: 100%;
+  min-height: 2.4rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.5rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0.55rem;
+  font-size: 0.67rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.stepButton > span {
+  display: grid;
+  width: 1.3rem;
+  height: 1.3rem;
+  place-items: center;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border-radius: 50%;
+  font-size: 0.58rem;
+}
+
+.stepButton[aria-current="step"] {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.stepButton[aria-current="step"] > span {
+  color: #fff;
+  background: var(--accent);
+}
+
+.stepButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.panel {
+  margin-top: 0.65rem;
+  padding: clamp(1rem, 2.5vw, 1.35rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  box-shadow: 0 0.45rem 1.5rem rgb(30 41 59 / 5%);
+}
+
+.stepHeading {
+  max-width: 40rem;
+}
+
+.stepHeading p {
+  margin: 0 0 0.25rem;
+  color: var(--accent);
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stepHeading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: clamp(1.05rem, 2.5vw, 1.3rem);
+}
+
+.stepHeading span {
+  display: block;
+  margin-top: 0.28rem;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.field label {
+  color: var(--text-strong);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.65rem;
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.58rem;
+}
+
+.field textarea {
+  min-height: 4.6rem;
+  resize: vertical;
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.field small {
+  color: var(--text-muted);
+  font-size: 0.61rem;
+  line-height: 1.3;
+}
+
+.field .error {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.inlineSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+}
+
+.inlineSummary div {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+}
+
+.inlineSummary span {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.inlineSummary strong {
+  overflow-wrap: anywhere;
+  color: var(--text-strong);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.inlineSummary div[data-emphasized="true"] strong {
+  color: var(--accent-strong);
+}
+
+.resultHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.resultHero > div {
+  display: grid;
+  gap: 0.18rem;
+  padding: 1rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.resultHero > div[data-emphasized="true"] {
+  background: var(--accent-soft);
+  border-color: #c7d2fe;
+}
+
+.resultHero > span {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.resultHero div > span,
+.resultHero small {
+  color: var(--text-muted);
+  font-size: 0.63rem;
+}
+
+.resultHero strong {
+  color: var(--text-strong);
+  font-size: clamp(1.05rem, 3vw, 1.35rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.resultHero div[data-emphasized="true"] strong {
+  color: var(--accent-strong);
+}
+
+.impactTableRegion {
+  margin-top: 0.85rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+}
+
+.impactTable {
+  width: 100%;
+  min-width: 31rem;
+  border-collapse: collapse;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.impactTable th,
+.impactTable td {
+  padding: 0.58rem 0.65rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+
+.impactTable th:first-child {
+  text-align: left;
+}
+
+.impactTable thead th {
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+}
+
+.impactTable tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.unchangedNote {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+  padding: 0.7rem;
+  color: var(--success);
+  background: var(--success-soft);
+  border: 1px solid color-mix(in srgb, var(--success) 22%, transparent);
+  border-radius: 0.65rem;
+}
+
+.unchangedNote > span {
+  display: grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #fff;
+  background: var(--success);
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 850;
+}
+
+.unchangedNote strong {
+  font-size: 0.7rem;
+}
+
+.unchangedNote p {
+  margin: 0.12rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.63rem;
+}
+
+.documentWorkspace {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.34fr) minmax(0, 0.66fr);
+  gap: 0.85rem;
+  margin-top: 0.8rem;
+}
+
+.documentEditor {
+  min-width: 0;
+  padding-right: 0.85rem;
+  border-right: 1px solid var(--border);
+}
+
+.documentForm {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.documentActions {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+}
+
+.documentActions p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+}
+
+.documentPreview {
+  min-width: 0;
+  padding: 0.65rem;
+  background: var(--surface-subtle);
+  border-radius: 0.7rem;
+}
+
+.previewLabel {
+  margin: 0 0 0.45rem;
+  color: var(--text-muted);
+  font-size: 0.59rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.previewViewport {
+  height: min(44rem, calc(100vh - 11rem));
+  min-height: 31rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 0.65rem;
+}
+
+.workflowActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.continueButton,
+.backButton,
+.printButton {
+  min-height: 2.45rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.58rem;
+  font-size: 0.7rem;
+  font-weight: 780;
+  cursor: pointer;
+}
+
+.continueButton,
+.printButton {
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.backButton {
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+}
+
+.stepButton:focus-visible,
+.field input:focus-visible,
+.field textarea:focus-visible,
+.impactTableRegion:focus-visible,
+.continueButton:focus-visible,
+.backButton:focus-visible,
+.printButton:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 68rem) {
+  .formGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 64rem) {
+  .inlineSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .documentWorkspace {
+    grid-template-columns: 1fr;
+  }
+
+  .documentEditor {
+    padding: 0 0 0.85rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 42rem) {
+  .stepButton {
+    min-height: 2.25rem;
+    gap: 0.25rem;
+    padding: 0.35rem 0.2rem;
+    font-size: 0.58rem;
+  }
+
+  .stepButton > span {
+    width: 1.1rem;
+    height: 1.1rem;
+    font-size: 0.52rem;
+  }
+
+  .formGrid,
+  .inlineSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .resultHero {
+    grid-template-columns: 1fr;
+  }
+
+  .resultHero > span {
+    transform: rotate(90deg);
+    text-align: center;
+  }
+
+  .workflowActions {
+    justify-content: stretch;
+  }
+
+  .workflowActions button {
+    flex: 1;
+  }
+
+  .previewViewport {
+    height: 34rem;
+    min-height: 26rem;
+  }
+}
+
+@media print {
+  .workflow,
+  .panel,
+  .documentWorkspace,
+  .documentPreview,
+  .previewViewport {
+    display: block;
+    height: auto;
+    max-width: none;
+    min-height: 0;
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .documentEditor,
+  .previewLabel {
+    display: none;
+  }
+}

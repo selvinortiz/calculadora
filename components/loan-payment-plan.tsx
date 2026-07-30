@@ -6,6 +6,8 @@ import {
   type SimpleInterestQuote,
 } from "@/lib/finance";
 import { PaymentScheduleDocument } from "./payment-schedule-document";
+import { SavedCustomerPicker } from "./saved-profile-picker";
+import { useLocalPersistence } from "@/lib/use-local-persistence";
 import styles from "./loan-payment-plan.module.css";
 
 type LoanPaymentPlanProps = {
@@ -15,6 +17,14 @@ type LoanPaymentPlanProps = {
   operatorCompany: string;
   price: number;
   quote: SimpleInterestQuote;
+  initialDetails: {
+    accountReference: string;
+    creditorName: string;
+    customerId: string;
+    debtorName: string;
+    firstDueDate: string;
+  };
+  storageScope: string;
 };
 
 type PlanDetails = {
@@ -32,22 +42,30 @@ export function LoanPaymentPlan({
   operatorCompany,
   price,
   quote,
+  initialDetails,
+  storageScope,
 }: LoanPaymentPlanProps) {
+  const { data } = useLocalPersistence(storageScope);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(
+    initialDetails.customerId,
+  );
   const [details, setDetails] = useState<PlanDetails>(() => ({
-    accountReference: "",
-    creditorName: operatorCompany,
-    debtorName: "",
-    firstDueDate: "",
+    accountReference: initialDetails.accountReference,
+    creditorName: initialDetails.creditorName,
+    debtorName: initialDetails.debtorName,
+    firstDueDate: initialDetails.firstDueDate,
     issueDate: getTodayIso(),
   }));
   const [showErrors, setShowErrors] = useState(false);
+  const creditorName =
+    details.creditorName || data.organization?.name || operatorCompany;
 
   const errors = useMemo(
     () => ({
       debtorName: details.debtorName.trim()
         ? undefined
         : "Indica el nombre del deudor.",
-      creditorName: details.creditorName.trim()
+      creditorName: creditorName.trim()
         ? undefined
         : "Indica el nombre del acreedor.",
       accountReference: details.accountReference.trim()
@@ -58,7 +76,7 @@ export function LoanPaymentPlan({
         ? undefined
         : "Indica la fecha de la primera cuota.",
     }),
-    [details],
+    [creditorName, details],
   );
   const hasErrors = Object.values(errors).some(Boolean);
   const rows = useMemo(
@@ -107,18 +125,30 @@ export function LoanPaymentPlan({
             </div>
           </div>
 
+          <SavedCustomerPicker
+            scope={storageScope}
+            value={selectedCustomerId}
+            onSelect={(customer) => {
+              setSelectedCustomerId(customer?.id ?? "");
+              if (customer) updateDetails("debtorName", customer.name);
+            }}
+          />
+
           <form className={styles.form} onSubmit={(event) => event.preventDefault()} noValidate>
             <PlanField
               id="plan-debtor-name"
               label="Deudor"
               value={details.debtorName}
-              onChange={(value) => updateDetails("debtorName", value)}
+              onChange={(value) => {
+                setSelectedCustomerId("");
+                updateDetails("debtorName", value);
+              }}
               error={showErrors ? errors.debtorName : undefined}
             />
             <PlanField
               id="plan-creditor-name"
               label="Acreedor o vendedor"
-              value={details.creditorName}
+              value={creditorName}
               onChange={(value) => updateDetails("creditorName", value)}
               error={showErrors ? errors.creditorName : undefined}
             />
@@ -166,7 +196,7 @@ export function LoanPaymentPlan({
               <PaymentScheduleDocument
                 accountReference={details.accountReference}
                 annualRate={annualRate}
-                creditorName={details.creditorName}
+                creditorName={creditorName}
                 debtorName={details.debtorName}
                 downPayment={downPayment}
                 finalPayment={quote.finalPayment}

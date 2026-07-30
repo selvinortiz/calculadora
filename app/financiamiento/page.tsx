@@ -20,7 +20,10 @@ export default async function FinancingPage() {
           Calcula la cuota y prepara el plan de pagos.
         </p>
       </header>
-      <LoanCalculator operatorCompany={session?.company ?? ""} />
+      <LoanCalculator
+        operatorCompany={session?.company ?? ""}
+        storageScope={session?.email ?? "demo@creditos.local"}
+      />
     </main>
   );
 }

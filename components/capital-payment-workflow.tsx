@@ -1,6 +1,11 @@
 "use client";
 
-import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
+import {
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 import {
   calculatePaymentSchedule,
   calculateSimpleInterestQuote,
@@ -15,6 +20,12 @@ import {
   type TransactionMode,
 } from "./payment-record";
 import { PaymentScheduleDocument } from "./payment-schedule-document";
+import {
+  SavedCustomerPicker,
+  SavedFinancingPicker,
+  type SavedFinancingSelection,
+} from "./saved-profile-picker";
+import { useLocalPersistence } from "@/lib/use-local-persistence";
 import styles from "./capital-payment-workflow.module.css";
 
 type Step = 1 | 2 | 3 | 4;
@@ -62,13 +73,18 @@ const INITIAL_RECORD_DETAILS: RecordDetails = {
 export function CapitalPaymentWorkflow({
   operatorCompany,
   operatorName,
+  storageScope,
 }: {
   operatorCompany: string;
   operatorName: string;
+  storageScope: string;
 }) {
+  const { data } = useLocalPersistence(storageScope);
   const [step, setStep] = useState<Step>(1);
   const [maxStep, setMaxStep] = useState<Step>(1);
   const [attemptedStep, setAttemptedStep] = useState<Step | null>(null);
+  const [selectedFinancingId, setSelectedFinancingId] = useState("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
 
   const [price, setPrice] = useState("65000");
   const [downPayment, setDownPayment] = useState("13000");
@@ -88,13 +104,22 @@ export function CapitalPaymentWorkflow({
 
   const [recordDetails, setRecordDetails] = useState<RecordDetails>(() => ({
     ...INITIAL_RECORD_DETAILS,
-    creditorName: operatorCompany,
-    receivedBy: operatorName,
   }));
   const [documentView, setDocumentView] =
     useState<DocumentView>("payment-record");
   const [showRecordErrors, setShowRecordErrors] = useState(false);
   const [showScheduleErrors, setShowScheduleErrors] = useState(false);
+  const creditorName =
+    recordDetails.creditorName || data.organization?.name || operatorCompany;
+  const receivedBy =
+    recordDetails.receivedBy ||
+    data.organization?.defaultRecipient ||
+    operatorName;
+  const resolvedRecordDetails = {
+    ...recordDetails,
+    creditorName,
+    receivedBy,
+  };
 
   const loanInputs = useMemo(
     () => ({
@@ -245,7 +270,7 @@ export function CapitalPaymentWorkflow({
       debtorName: recordDetails.debtorName.trim()
         ? undefined
         : "Indica el nombre del deudor.",
-      creditorName: recordDetails.creditorName.trim()
+      creditorName: creditorName.trim()
         ? undefined
         : "Indica el nombre del acreedor.",
       lotReference: recordDetails.lotReference.trim()
@@ -257,25 +282,25 @@ export function CapitalPaymentWorkflow({
       paymentMethod: recordDetails.paymentMethod.trim()
         ? undefined
         : "Indica cómo se recibió el pago.",
-      receivedBy: recordDetails.receivedBy.trim()
+      receivedBy: receivedBy.trim()
         ? undefined
         : "Indica quién recibió el pago.",
     };
-  }, [recordDetails]);
+  }, [creditorName, receivedBy, recordDetails]);
   const hasRecordErrors = Object.values(recordErrors).some(Boolean);
   const scheduleErrors = useMemo(
     () => ({
       debtorName: recordDetails.debtorName.trim()
         ? undefined
         : "Indica el nombre del deudor.",
-      creditorName: recordDetails.creditorName.trim()
+      creditorName: creditorName.trim()
         ? undefined
         : "Indica el nombre del acreedor.",
       lotReference: recordDetails.lotReference.trim()
         ? undefined
         : "Indica el lote o número de cuenta.",
     }),
-    [recordDetails.creditorName, recordDetails.debtorName, recordDetails.lotReference],
+    [creditorName, recordDetails.debtorName, recordDetails.lotReference],
   );
   const hasScheduleErrors = Object.values(scheduleErrors).some(Boolean);
   const updatedScheduleRows = useMemo(
@@ -318,7 +343,28 @@ export function CapitalPaymentWorkflow({
   }
 
   function updateRecordDetails(field: keyof RecordDetails, value: string) {
+    if (field === "debtorName") setSelectedCustomerId("");
     setRecordDetails((current) => ({ ...current, [field]: value }));
+  }
+
+  function applySavedFinancing(selection: SavedFinancingSelection | null) {
+    setSelectedFinancingId(selection?.financing.id ?? "");
+    if (!selection) return;
+
+    const { customer, financing, organization } = selection;
+    setSelectedCustomerId(customer.id);
+    setPrice(String(financing.price));
+    setDownPayment(String(financing.downPayment));
+    setAnnualRate(String(financing.annualRate));
+    setTermMonths(String(financing.termMonths));
+    setRecordDetails((current) => ({
+      ...current,
+      debtorName: customer.name,
+      creditorName: organization?.name || operatorCompany,
+      lotReference: financing.accountReference,
+      receivedBy:
+        organization?.defaultRecipient || current.receivedBy || operatorName,
+    }));
   }
 
   function printRecord() {
@@ -360,6 +406,11 @@ export function CapitalPaymentWorkflow({
               title="Préstamo original"
               description="Ingresa las condiciones del contrato."
               id="loan-step-title"
+            />
+            <SavedFinancingPicker
+              scope={storageScope}
+              value={selectedFinancingId}
+              onSelect={applySavedFinancing}
             />
             <form className={styles.formGrid} onSubmit={(event) => event.preventDefault()} noValidate>
               <WorkflowField
@@ -626,6 +677,19 @@ export function CapitalPaymentWorkflow({
             {documentView === "payment-record" ? (
               <div className={styles.documentWorkspace}>
                 <div className={styles.documentEditor}>
+                  <SavedCustomerPicker
+                    scope={storageScope}
+                    value={selectedCustomerId}
+                    onSelect={(customer) => {
+                      setSelectedCustomerId(customer?.id ?? "");
+                      if (customer) {
+                        setRecordDetails((current) => ({
+                          ...current,
+                          debtorName: customer.name,
+                        }));
+                      }
+                    }}
+                  />
                   <fieldset className={styles.documentTypeFieldset}>
                     <legend>Tipo de comprobante</legend>
                     <div className={styles.segmentedControl}>
@@ -648,12 +712,12 @@ export function CapitalPaymentWorkflow({
 
                   <form className={styles.recordForm} onSubmit={(event) => event.preventDefault()} noValidate>
                     <TextField required={recordDetails.documentType === "record"} label="Deudor" id="debtor-name" value={recordDetails.debtorName} onChange={(value) => updateRecordDetails("debtorName", value)} error={showRecordErrors ? recordErrors.debtorName : undefined} />
-                    <TextField required={recordDetails.documentType === "record"} label="Acreedor o vendedor" id="creditor-name" value={recordDetails.creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showRecordErrors ? recordErrors.creditorName : undefined} />
+                    <TextField required={recordDetails.documentType === "record"} label="Acreedor o vendedor" id="creditor-name" value={creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showRecordErrors ? recordErrors.creditorName : undefined} />
                     <TextField required={recordDetails.documentType === "record"} label="Lote o cuenta" id="lot-reference" value={recordDetails.lotReference} onChange={(value) => updateRecordDetails("lotReference", value)} error={showRecordErrors ? recordErrors.lotReference : undefined} />
                     <TextField required={recordDetails.documentType === "record"} label="Número de recibo" id="receipt-number" value={recordDetails.receiptNumber} onChange={(value) => updateRecordDetails("receiptNumber", value)} error={showRecordErrors ? recordErrors.receiptNumber : undefined} />
                     <TextField required={recordDetails.documentType === "record"} label="Medio de pago" id="payment-method" value={recordDetails.paymentMethod} onChange={(value) => updateRecordDetails("paymentMethod", value)} placeholder="Efectivo, depósito…" error={showRecordErrors ? recordErrors.paymentMethod : undefined} />
                     <TextField label="Referencia" id="payment-reference" value={recordDetails.paymentReference} onChange={(value) => updateRecordDetails("paymentReference", value)} />
-                    <TextField required={recordDetails.documentType === "record"} label="Recibido por" id="received-by" value={recordDetails.receivedBy} onChange={(value) => updateRecordDetails("receivedBy", value)} error={showRecordErrors ? recordErrors.receivedBy : undefined} />
+                    <TextField required={recordDetails.documentType === "record"} label="Recibido por" id="received-by" value={receivedBy} onChange={(value) => updateRecordDetails("receivedBy", value)} error={showRecordErrors ? recordErrors.receivedBy : undefined} />
                     <TextField label="Observaciones" id="record-notes" value={recordDetails.notes} onChange={(value) => updateRecordDetails("notes", value)} />
                   </form>
 
@@ -670,7 +734,7 @@ export function CapitalPaymentWorkflow({
                     annualRate={loanInputs.annualRate}
                     balanceSource={balanceSource}
                     capitalPayment={parsedCapitalPayment}
-                    details={recordDetails}
+                    details={resolvedRecordDetails}
                     downPayment={loanInputs.downPayment}
                     lastPaymentDate={lastPaymentDate}
                     nextPaymentDate={nextPaymentDate}
@@ -686,9 +750,22 @@ export function CapitalPaymentWorkflow({
             ) : (
               <div className={styles.documentWorkspace}>
                 <div className={styles.documentEditor}>
+                  <SavedCustomerPicker
+                    scope={storageScope}
+                    value={selectedCustomerId}
+                    onSelect={(customer) => {
+                      setSelectedCustomerId(customer?.id ?? "");
+                      if (customer) {
+                        setRecordDetails((current) => ({
+                          ...current,
+                          debtorName: customer.name,
+                        }));
+                      }
+                    }}
+                  />
                   <form className={styles.recordForm} onSubmit={(event) => event.preventDefault()} noValidate>
                     <TextField required label="Deudor" id="schedule-debtor-name" value={recordDetails.debtorName} onChange={(value) => updateRecordDetails("debtorName", value)} error={showScheduleErrors ? scheduleErrors.debtorName : undefined} />
-                    <TextField required label="Acreedor o vendedor" id="schedule-creditor-name" value={recordDetails.creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showScheduleErrors ? scheduleErrors.creditorName : undefined} />
+                    <TextField required label="Acreedor o vendedor" id="schedule-creditor-name" value={creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showScheduleErrors ? scheduleErrors.creditorName : undefined} />
                     <TextField required label="Lote o cuenta" id="schedule-lot-reference" value={recordDetails.lotReference} onChange={(value) => updateRecordDetails("lotReference", value)} error={showScheduleErrors ? scheduleErrors.lotReference : undefined} />
                   </form>
 
@@ -705,7 +782,7 @@ export function CapitalPaymentWorkflow({
                     accountReference={recordDetails.lotReference}
                     annualRate={loanInputs.annualRate}
                     capitalPayment={parsedCapitalPayment}
-                    creditorName={recordDetails.creditorName}
+                    creditorName={creditorName}
                     debtorName={recordDetails.debtorName}
                     downPayment={loanInputs.downPayment}
                     finalPayment={result.newFinalPayment}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculatePaymentCreditAdjustment,
   calculatePaymentSchedule,
   calculateSimpleInterestQuote,
   calculateSimpleInterestRecalculation,
@@ -7,6 +8,51 @@ import {
   roundCurrency,
   validateLoanInputs,
 } from "./finance";
+
+describe("calculatePaymentCreditAdjustment", () => {
+  it("applies the excess to the next installment without changing the regular payment", () => {
+    expect(
+      calculatePaymentCreditAdjustment({
+        paymentNumber: 7,
+        scheduledPayment: 993.56,
+        receivedPayment: 1_035,
+      }),
+    ).toEqual({
+      paymentNumber: 7,
+      nextPaymentNumber: 8,
+      followingPaymentNumber: 9,
+      scheduledPayment: 993.56,
+      receivedPayment: 1_035,
+      creditBalance: 41.44,
+      adjustedNextPayment: 952.12,
+      regularPaymentAfterAdjustment: 993.56,
+    });
+  });
+
+  it("rejects underpayments, imprecise amounts, and credits that cover a full installment", () => {
+    expect(() =>
+      calculatePaymentCreditAdjustment({
+        paymentNumber: 7,
+        scheduledPayment: 993.56,
+        receivedPayment: 900,
+      }),
+    ).toThrow(RangeError);
+    expect(() =>
+      calculatePaymentCreditAdjustment({
+        paymentNumber: 7,
+        scheduledPayment: 993.56,
+        receivedPayment: 1_000.001,
+      }),
+    ).toThrow(RangeError);
+    expect(() =>
+      calculatePaymentCreditAdjustment({
+        paymentNumber: 7,
+        scheduledPayment: 500,
+        receivedPayment: 1_000,
+      }),
+    ).toThrow(RangeError);
+  });
+});
 
 describe("calculatePaymentSchedule", () => {
   it("creates and reconciles a complete new-loan schedule", () => {

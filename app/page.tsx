@@ -5,7 +5,7 @@ import styles from "./page.module.css";
 export const metadata: Metadata = {
   title: "Portal",
   description:
-    "Calcula préstamos y registra abonos a capital con interés simple.",
+    "Calcula préstamos, registra abonos a capital y documenta ajustes de pago.",
 };
 
 export default function HomePage() {
@@ -58,6 +58,18 @@ export default function HomePage() {
             </div>
             <strong>Abrir registro <span aria-hidden="true">→</span></strong>
           </Link>
+
+          <Link className={styles.operationCard} href="/ajustes">
+            <span className={styles.operationIcon} aria-hidden="true">±</span>
+            <div>
+              <p>Saldo a favor</p>
+              <h3>Ajustar un pago</h3>
+              <span>
+                Aplica un excedente a la próxima cuota y prepara la constancia.
+              </span>
+            </div>
+            <strong>Abrir ajuste <span aria-hidden="true">→</span></strong>
+          </Link>
         </div>
       </section>
 
@@ -65,7 +77,7 @@ export default function HomePage() {
         <Rule label="Moneda" value="Quetzales" />
         <Rule label="Interés" value="Simple" />
         <Rule label="Período" value="Meses completos" />
-        <Rule label="Abonos" value="Directos a capital" />
+        <Rule label="Ajustes" value="Saldo a favor" />
       </aside>
     </main>
   );

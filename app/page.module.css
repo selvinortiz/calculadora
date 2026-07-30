@@ -77,7 +77,7 @@
 
 .operationGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.85rem;
   margin-top: 0.7rem;
 }
@@ -204,13 +204,19 @@
   outline-offset: 3px;
 }
 
-@media (max-width: 58rem) {
+@media (max-width: 68rem) {
   .operationGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .operationCard {
     min-height: 9rem;
+  }
+}
+
+@media (max-width: 46rem) {
+  .operationGrid {
+    grid-template-columns: 1fr;
   }
 }
 
