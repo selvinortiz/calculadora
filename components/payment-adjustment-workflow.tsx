@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   calculatePaymentCreditAdjustment,
   type PaymentCreditAdjustment,
@@ -56,10 +56,12 @@ const INITIAL_DETAILS: PaymentAdjustmentRecordDetails = {
 };
 
 export function PaymentAdjustmentWorkflow({
+  initialFinancingId,
   operatorCompany,
   operatorName,
   storageScope,
 }: {
+  initialFinancingId?: string;
   operatorCompany: string;
   operatorName: string;
   storageScope: string;
@@ -212,7 +214,7 @@ export function PaymentAdjustmentWorkflow({
     setAttemptedStep(null);
   }
 
-  function applySavedFinancing(selection: SavedFinancingSelection | null) {
+  const applySavedFinancing = useCallback((selection: SavedFinancingSelection | null) => {
     setSelectedFinancingId(selection?.financing.id ?? "");
     setSelectedLoan(selection?.financing ?? null);
     if (!selection) return;
@@ -229,7 +231,16 @@ export function PaymentAdjustmentWorkflow({
       adjustedBy:
         organization?.defaultRecipient || current.adjustedBy || operatorName,
     }));
-  }
+  }, [operatorCompany, operatorName]);
+
+  useEffect(() => {
+    if (!initialFinancingId || selectedLoan) return;
+    const financing = data.loans.find((item) => item.id === initialFinancingId);
+    const customer = financing ? data.customers.find((item) => item.id === financing.customerId) : undefined;
+    if (!financing || !customer) return;
+    const timeout = window.setTimeout(() => applySavedFinancing({ financing, customer, organization: data.organization }), 0);
+    return () => window.clearTimeout(timeout);
+  }, [applySavedFinancing, data, initialFinancingId, selectedLoan]);
 
   async function postAdjustment() {
     setShowDocumentErrors(true);

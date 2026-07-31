@@ -4,26 +4,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type KeyboardEvent, type PointerEvent } from "react";
 import {
-  AdjustmentsHorizontalIcon,
-  ArrowDownCircleIcon,
   ArrowRightStartOnRectangleIcon,
-  BookOpenIcon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
   ChevronRightIcon,
-  DocumentPlusIcon,
+  Cog6ToothIcon,
+  DocumentTextIcon,
   HomeIcon,
   UserGroupIcon,
+  UsersIcon,
 } from "@heroicons/react/24/outline";
 import styles from "./app-header.module.css";
 import type { OrganizationRole } from "@/lib/domain";
 
 const NAVIGATION = [
   { href: "/", label: "Inicio", icon: HomeIcon },
-  { href: "/financiamiento", label: "Nuevo préstamo", icon: DocumentPlusIcon },
-  { href: "/abono-capital", label: "Abono a capital", icon: ArrowDownCircleIcon },
-  { href: "/ajustes", label: "Ajustes", icon: AdjustmentsHorizontalIcon },
-  { href: "/directorio", label: "Directorio", icon: BookOpenIcon },
+  { href: "/clientes", label: "Clientes", icon: UsersIcon },
+  { href: "/financiamientos", label: "Financiamientos", icon: DocumentTextIcon },
+] as const;
+
+const ADMINISTRATION = [
+  { href: "/configuracion", label: "Configuración", icon: Cog6ToothIcon },
   { href: "/configuracion/accesos", label: "Accesos", icon: UserGroupIcon },
 ] as const;
 
@@ -152,14 +153,11 @@ export function AppHeader({
           </button>
         </div>
         <div className={styles.navigationArea}>
-          <p className={styles.navLabel}>Operaciones</p>
+          <p className={styles.navLabel}>Principal</p>
           <nav className={styles.nav} aria-label="Navegación principal">
-            {NAVIGATION.filter((item) => role === "owner" || item.href !== "/configuracion/accesos").map((item) => {
+            {NAVIGATION.map((item) => {
               const Icon = item.icon;
-              const isCurrent =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname === item.href || pathname.startsWith(`${item.href}/`) || (item.href === "/directorio" && pathname.startsWith("/financiamientos/"));
+              const isCurrent = item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
               return (
                 <Link
@@ -176,6 +174,19 @@ export function AppHeader({
             })}
           </nav>
         </div>
+        {role === "owner" && <div className={styles.adminArea}>
+          <p className={styles.navLabel}>Administración</p>
+          <nav className={styles.nav} aria-label="Administración">
+            {ADMINISTRATION.map((item) => {
+              const Icon = item.icon;
+              const isCurrent = item.href === "/configuracion" ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return <Link key={item.href} className={styles.navLink} href={item.href} aria-current={isCurrent ? "page" : undefined} title={collapsed ? item.label : undefined}>
+                <span className={styles.navIcon} aria-hidden="true"><Icon /></span>
+                <span className={styles.navText}>{item.label}</span>
+              </Link>;
+            })}
+          </nav>
+        </div>}
         <div className={styles.accountArea}>
           <Link
             className={styles.profileLink}

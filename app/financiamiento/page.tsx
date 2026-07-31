@@ -1,25 +1,9 @@
-import type { Metadata } from "next";
-import { LoanCalculator } from "@/components/loan-calculator";
-import { getCurrentPortalSession } from "@/lib/current-portal-session";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Calcular préstamo",
-  description:
-    "Calcula capital, interés total y cuota de un financiamiento con interés simple.",
-};
-
-export default async function FinancingPage() {
-  const session = await getCurrentPortalSession();
-
-  return (
-    <main className="appPage">
-      <header className="pageHeader">
-        <h1 className="pageTitle">Nuevo préstamo</h1>
-      </header>
-      <LoanCalculator
-        operatorCompany={session?.company ?? ""}
-        storageScope={session?.email ?? "demo@creditos.local"}
-      />
-    </main>
-  );
+export default async function FinancingPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(await searchParams)) {
+    if (typeof value === "string") params.set(key, value);
+  }
+  redirect(`/financiamientos/nuevo${params.size ? `?${params}` : ""}`);
 }

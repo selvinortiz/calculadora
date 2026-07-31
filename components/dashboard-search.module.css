@@ -1,0 +1,140 @@
+.searchArea {
+  position: relative;
+  z-index: 5;
+  width: min(100%, 42rem);
+}
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search > svg {
+  position: absolute;
+  left: 0.9rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  color: var(--text-subtle);
+  pointer-events: none;
+}
+
+.search input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.68rem 3.6rem 0.68rem 2.65rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.78rem;
+  box-shadow: 0 0.45rem 1.4rem rgb(30 41 59 / 5%);
+  font-size: 0.76rem;
+}
+
+.search kbd {
+  position: absolute;
+  right: 0.65rem;
+  padding: 0.23rem 0.38rem;
+  color: var(--text-subtle);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.38rem;
+  font-family: inherit;
+  font-size: 0.57rem;
+}
+
+.results {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.35rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 0.78rem;
+  box-shadow: 0 1.2rem 3rem rgb(15 23 42 / 18%);
+}
+
+.results a {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.58rem;
+  color: inherit;
+  border-radius: 0.58rem;
+  text-decoration: none;
+}
+
+.results a:hover {
+  background: var(--accent-soft);
+}
+
+.results a > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 0.08rem;
+}
+
+.results strong,
+.results small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.results strong {
+  color: var(--text-strong);
+  font-size: 0.68rem;
+}
+
+.results small {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.resultIcon {
+  display: grid;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-radius: 0.5rem;
+}
+
+.resultIcon svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.results p {
+  margin: 0;
+  padding: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  text-align: center;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 34rem) {
+  .search kbd {
+    display: none;
+  }
+
+  .search input {
+    padding-right: 0.8rem;
+  }
+}

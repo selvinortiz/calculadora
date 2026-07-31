@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import {
   AdjustmentsHorizontalIcon,
+  ArrowDownCircleIcon,
+  ArrowLeftIcon,
   ArrowPathIcon,
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
@@ -115,10 +118,17 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
     window.location.reload();
   }
   return <>
-    <header className="pageHeader">
-      <p className="pageEyebrow">Financiamiento</p>
-      <h1 className="pageTitle">{loan.customer.name} · {loan.accountReference}</h1>
-      <p className="pageIntro">{loan.status === "active" ? "Activo" : "Anulado"}</p>
+    <header className={styles.loanHeader}>
+      <div>
+        <Link className={styles.backLink} href="/financiamientos"><ArrowLeftIcon aria-hidden="true" />Financiamientos</Link>
+        <p className="pageEyebrow">Financiamiento</p>
+        <h1 className="pageTitle">{loan.customer.name} · {loan.accountReference}</h1>
+        <p className="pageIntro">{loan.status === "active" ? "Activo" : "Anulado"}</p>
+      </div>
+      {loan.status === "active" && <div className={styles.loanActions}>
+        <Link href={`/abono-capital?financiamiento=${loan.id}`}><ArrowDownCircleIcon aria-hidden="true" />Registrar abono</Link>
+        <Link href={`/ajustes?financiamiento=${loan.id}`}><AdjustmentsHorizontalIcon aria-hidden="true" />Registrar ajuste</Link>
+      </div>}
     </header>
     {message && <p className={styles.alert} role="alert">{message}</p>}
     <div className={styles.overviewGrid}>
@@ -303,7 +313,7 @@ function latestAdjustmentStatus(transactions: Transaction[]) {
     creditBalance: moneyValue(adjustment.creditBalance),
   };
 }
-function replacementPath(type: string) { return ({ loan_origination: "/financiamiento", capital_payment: "/abono-capital", payment_adjustment: "/ajustes" } as Record<string, string>)[type] || "/"; }
+function replacementPath(type: string) { return ({ loan_origination: "/financiamientos/nuevo", capital_payment: "/abono-capital", payment_adjustment: "/ajustes" } as Record<string, string>)[type] || "/"; }
 function asRecord(value: unknown): Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {}; }
 function moneyValue(value: unknown) { return typeof value === "number" && Number.isFinite(value) ? money(value) : "—"; }
 function stringValue(value: unknown) { return typeof value === "string" ? value : ""; }

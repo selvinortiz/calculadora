@@ -8,8 +8,9 @@ export const metadata: Metadata = {
     "Aplica un saldo a favor a la siguiente cuota y prepara una constancia imprimible.",
 };
 
-export default async function PaymentAdjustmentPage() {
+export default async function PaymentAdjustmentPage({ searchParams }: { searchParams: Promise<{ financiamiento?: string }> }) {
   const session = await getCurrentPortalSession();
+  const { financiamiento } = await searchParams;
 
   return (
     <main className="appPage">
@@ -17,6 +18,7 @@ export default async function PaymentAdjustmentPage() {
         <h1 className="pageTitle">Ajuste de pago</h1>
       </header>
       <PaymentAdjustmentWorkflow
+        initialFinancingId={financiamiento}
         operatorCompany={session?.company ?? ""}
         operatorName={session?.name ?? ""}
         storageScope={session?.email ?? "demo@creditos.local"}

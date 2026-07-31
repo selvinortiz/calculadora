@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { generateTemporaryPassphrase, requireOwnerContext } from "@/lib/account-administration";
 import type { Json } from "@/lib/database.types";
+import { normalizeEmailAddress } from "@/lib/email-address";
 
 export async function GET() {
   const context = await requireOwnerContext();
@@ -43,9 +44,9 @@ export async function POST(request: NextRequest) {
   let body: unknown;
   try { body = await request.json(); } catch { return jsonError("Datos inválidos.", 400); }
   if (!isRecord(body)) return jsonError("Datos inválidos.", 400);
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const email = normalizeEmailAddress(body.email);
   const displayName = typeof body.displayName === "string" ? body.displayName.trim() : "";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || displayName.length < 1 || displayName.length > 80) {
+  if (!email || displayName.length < 1 || displayName.length > 80) {
     return jsonError("Revisa el nombre y el correo.", 400);
   }
 

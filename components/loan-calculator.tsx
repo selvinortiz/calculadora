@@ -28,9 +28,11 @@ type PlanDefaults = {
 };
 
 export function LoanCalculator({
+  initialCustomer,
   operatorCompany,
   storageScope,
 }: {
+  initialCustomer?: { id: string; name: string };
   operatorCompany: string;
   storageScope: string;
 }) {
@@ -38,8 +40,8 @@ export function LoanCalculator({
   const [planDefaults] = useState<PlanDefaults>({
     accountReference: "",
     creditorName: "",
-    customerId: "",
-    debtorName: "",
+    customerId: initialCustomer?.id || "",
+    debtorName: initialCustomer?.name || "",
     firstDueDate: "",
   });
   const [price, setPrice] = useState("65000");

@@ -99,6 +99,10 @@
   margin-top: 1.7rem;
 }
 
+.adminArea {
+  margin-top: 1.35rem;
+}
+
 .navLabel {
   margin: 0 0 0.55rem;
   padding: 0 0.65rem;
@@ -345,6 +349,10 @@
   margin-top: 1.2rem;
 }
 
+.sidebar[data-collapsed="true"] .adminArea {
+  margin-top: 1rem;
+}
+
 .sidebar[data-collapsed="true"] .navLink {
   justify-content: center;
   padding-inline: 0;
@@ -402,9 +410,15 @@
   }
 
   .navigationArea,
-  .sidebar[data-collapsed="true"] .navigationArea {
+  .sidebar[data-collapsed="true"] .navigationArea,
+  .adminArea,
+  .sidebar[data-collapsed="true"] .adminArea {
     grid-column: 1 / -1;
     margin-top: 0;
+  }
+
+  .adminArea {
+    border-top: 1px solid var(--border);
   }
 
   .navLabel {

@@ -12,7 +12,9 @@ La aplicación registra tres operaciones: originación de un financiamiento, abo
 - `/financiamiento`: cotización y registro atómico de un financiamiento.
 - `/abono-capital`: recálculo desde el plan vigente y registro de un abono.
 - `/ajustes`: crédito de una sola cuota sin cambiar el plan de capital.
-- `/directorio`: organización, numeración, clientes y financiamientos registrados.
+- `/clientes`: listado, búsqueda y perfiles de clientes.
+- `/financiamientos`: listado, búsqueda y detalle de financiamientos registrados.
+- `/configuracion`: organización y numeración de documentos.
 - `/financiamientos/[id]`: condiciones originales, plan vigente, cronología y reimpresión de snapshots.
 - `/configuracion/accesos`: administración de operadores, solo para propietarios.
 

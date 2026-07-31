@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -74,10 +76,12 @@ const INITIAL_RECORD_DETAILS: RecordDetails = {
 };
 
 export function CapitalPaymentWorkflow({
+  initialFinancingId,
   operatorCompany,
   operatorName,
   storageScope,
 }: {
+  initialFinancingId?: string;
   operatorCompany: string;
   operatorName: string;
   storageScope: string;
@@ -361,7 +365,7 @@ export function CapitalPaymentWorkflow({
     setRecordDetails((current) => ({ ...current, [field]: value }));
   }
 
-  function applySavedFinancing(selection: SavedFinancingSelection | null) {
+  const applySavedFinancing = useCallback((selection: SavedFinancingSelection | null) => {
     setSelectedFinancingId(selection?.financing.id ?? "");
     setSelectedLoan(selection?.financing ?? null);
     if (!selection) return;
@@ -382,7 +386,16 @@ export function CapitalPaymentWorkflow({
       receivedBy:
         organization?.defaultRecipient || current.receivedBy || operatorName,
     }));
-  }
+  }, [operatorCompany, operatorName]);
+
+  useEffect(() => {
+    if (!initialFinancingId || selectedLoan) return;
+    const financing = data.loans.find((item) => item.id === initialFinancingId);
+    const customer = financing ? data.customers.find((item) => item.id === financing.customerId) : undefined;
+    if (!financing || !customer) return;
+    const timeout = window.setTimeout(() => applySavedFinancing({ financing, customer, organization: data.organization }), 0);
+    return () => window.clearTimeout(timeout);
+  }, [applySavedFinancing, data, initialFinancingId, selectedLoan]);
 
   async function postCapitalPayment() {
     setShowRecordErrors(true); setShowScheduleErrors(true);

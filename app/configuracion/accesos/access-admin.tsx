@@ -16,6 +16,8 @@ export function AccessAdmin() {
   const [operators, setOperators] = useState<Operator[]>([]);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailTarget, setEmailTarget] = useState<Operator | null>(null);
+  const [emailDraft, setEmailDraft] = useState("");
   const [notice, setNotice] = useState("");
   const [temporaryPassword, setTemporaryPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -68,8 +70,41 @@ export function AccessAdmin() {
     } finally { setBusy(false); }
   }
 
+  function editEmail(operator: Operator) {
+    setNotice("");
+    setTemporaryPassword("");
+    setEmailTarget(operator);
+    setEmailDraft(operator.email);
+  }
+
+  async function updateEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!emailTarget || busy) return;
+    setBusy(true); setNotice(""); setTemporaryPassword("");
+    try {
+      const response = await fetch(`/api/admin/operators/${emailTarget.userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update_email", email: emailDraft }),
+      });
+      const result = await response.json() as { email?: string; message?: string };
+      if (!response.ok) setNotice(result.message || "No fue posible cambiar el correo.");
+      else {
+        setNotice("Correo actualizado.");
+        setEmailTarget(null);
+        setEmailDraft("");
+        await load();
+      }
+    } finally { setBusy(false); }
+  }
+
   return (
-    <div className={styles.grid}>
+    <>
+      {(notice || temporaryPassword) && <section className={styles.feedback} aria-live="polite">
+        {notice && <p>{notice}</p>}
+        {temporaryPassword && <output className={styles.password} aria-label="Contraseña temporal">{temporaryPassword}</output>}
+      </section>}
+      <div className={styles.grid}>
       <section className={styles.card}>
         <h2>Crear operador</h2>
         <p>Se generará una contraseña temporal.</p>
@@ -80,10 +115,6 @@ export function AccessAdmin() {
           <input id="operator-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} maxLength={254} required />
           <button type="submit" disabled={busy}>Crear acceso</button>
         </form>
-        {notice && <p role="status">{notice}</p>}
-        {temporaryPassword && (
-          <output className={styles.password} aria-label="Contraseña temporal">{temporaryPassword}</output>
-        )}
       </section>
       <section className={styles.card}>
         <h2>Usuarios</h2>
@@ -91,16 +122,33 @@ export function AccessAdmin() {
           {operators.map((operator) => (
             <li key={operator.userId}>
               <div><strong>{operator.displayName}</strong><span>{operator.email}</span><small>{operator.role === "owner" ? "Propietario" : operator.active ? "Activo" : "Desactivado"}{operator.mustChangePassword ? " · cambio de contraseña pendiente" : ""}</small></div>
-              {operator.role === "operator" && (
-                <div className={styles.actions}>
+              <div className={styles.actions}>
+                <button type="button" disabled={busy} onClick={() => editEmail(operator)}>Editar correo</button>
+                {operator.role === "operator" && <>
                   <button type="button" disabled={busy} onClick={() => changeOperator(operator.userId, operator.active ? "deactivate" : "reactivate")}>{operator.active ? "Desactivar" : "Reactivar"}</button>
                   <button type="button" disabled={busy || !operator.active} onClick={() => changeOperator(operator.userId, "reset_password")}>Restablecer clave</button>
-                </div>
-              )}
+                </>}
+              </div>
             </li>
           ))}
         </ul>
       </section>
-    </div>
+      </div>
+      {emailTarget && <div className={styles.dialogBackdrop} role="presentation" onMouseDown={(event) => { if (!busy && event.currentTarget === event.target) setEmailTarget(null); }}>
+        <section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="edit-email-title">
+          <p className={styles.dialogEyebrow}>Acceso</p>
+          <h2 id="edit-email-title">Cambiar correo</h2>
+          <p>{emailTarget.displayName}</p>
+          <form onSubmit={updateEmail}>
+            <label htmlFor="access-email">Correo electrónico</label>
+            <input id="access-email" type="email" value={emailDraft} onChange={(event) => setEmailDraft(event.target.value)} maxLength={254} autoFocus required />
+            <div className={styles.dialogActions}>
+              <button type="button" disabled={busy} onClick={() => setEmailTarget(null)}>Cancelar</button>
+              <button type="submit" disabled={busy || emailDraft.trim().toLowerCase() === emailTarget.email.trim().toLowerCase()}>{busy ? "Guardando…" : "Guardar correo"}</button>
+            </div>
+          </form>
+        </section>
+      </div>}
+    </>
   );
 }
