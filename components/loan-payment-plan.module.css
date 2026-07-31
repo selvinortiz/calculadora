@@ -143,6 +143,11 @@
 }
 
 .actions button {
+  --button-hover-color: #fff;
+  --button-hover-background: var(--primary-hover);
+  --button-hover-border: var(--primary-hover);
+  --button-hover-shadow: var(--primary-hover-shadow);
+
   min-height: 2.55rem;
   padding: 0.55rem 0.75rem;
   color: #fff;

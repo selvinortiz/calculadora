@@ -9,10 +9,6 @@ import {
   validateLoanInputs,
 } from "@/lib/finance";
 import { LoanPaymentPlan } from "./loan-payment-plan";
-import {
-  SavedFinancingPicker,
-  type SavedFinancingSelection,
-} from "./saved-profile-picker";
 import styles from "./loan-calculator.module.css";
 
 const currencyFormatter = new Intl.NumberFormat("es-GT", {
@@ -39,8 +35,7 @@ export function LoanCalculator({
   storageScope: string;
 }) {
   const [view, setView] = useState<"quote" | "plan">("quote");
-  const [selectedFinancingId, setSelectedFinancingId] = useState("");
-  const [planDefaults, setPlanDefaults] = useState<PlanDefaults>({
+  const [planDefaults] = useState<PlanDefaults>({
     accountReference: "",
     creditorName: "",
     customerId: "",
@@ -110,16 +105,10 @@ export function LoanCalculator({
       <section className={styles.formCard} aria-labelledby="financing-data-title">
         <div className={styles.cardHeading}>
           <div>
-            <p className={styles.stepLabel}>Préstamo</p>
             <h2 id="financing-data-title">Datos del préstamo</h2>
           </div>
           <span className={styles.localBadge}>Interés simple</span>
         </div>
-        <SavedFinancingPicker
-          scope={storageScope}
-          value={selectedFinancingId}
-          onSelect={applySavedFinancing}
-        />
         <form
           className={styles.form}
           aria-label="Datos del préstamo"
@@ -131,7 +120,6 @@ export function LoanCalculator({
             label="Precio total"
             value={price}
             onChange={(event) => setPrice(event.target.value)}
-            hint="Precio de contado del bien"
             error={errors.price}
             max={LOAN_LIMITS.price.max}
           />
@@ -140,7 +128,6 @@ export function LoanCalculator({
             label="Enganche"
             value={downPayment}
             onChange={(event) => setDownPayment(event.target.value)}
-            hint="Pago inicial"
             error={errors.downPayment}
             max={Math.min(
               Number.isFinite(inputs.price) ? inputs.price : LOAN_LIMITS.price.max,
@@ -152,7 +139,6 @@ export function LoanCalculator({
             label="Interés anual (%)"
             value={annualRate}
             onChange={(event) => setAnnualRate(event.target.value)}
-            hint="Tasa simple anual"
             error={errors.annualRate}
             max={LOAN_LIMITS.annualRate.max}
             step="any"
@@ -174,7 +160,6 @@ export function LoanCalculator({
         <section className={styles.resultCard} aria-labelledby="quote-title" aria-live="polite">
           <div className={styles.resultHeading}>
             <div>
-              <p className={styles.stepLabel}>Cotización</p>
               <h2 id="quote-title">
                 {formatTerm(parsedTermMonths)}
               </h2>
@@ -206,10 +191,6 @@ export function LoanCalculator({
               <dd>{formatCurrency(inputs.downPayment)}</dd>
             </div>
           </dl>
-          <p className={styles.formula}>
-            Interés = capital × {formatRate(inputs.annualRate)}% × {" "}
-            {formatTerm(parsedTermMonths)}.
-          </p>
           <button
             type="button"
             className={styles.planButton}
@@ -229,10 +210,8 @@ export function LoanCalculator({
         <section className={styles.comparison} aria-labelledby="comparison-title">
           <div className={styles.comparisonHeading}>
             <div>
-              <p className={styles.stepLabel}>Comparación</p>
               <h2 id="comparison-title">Cuota por plazo</h2>
             </div>
-            <span>Selecciona un plazo</span>
           </div>
           <div className={styles.termOptions}>
             {comparisons.map((row) => (
@@ -253,23 +232,6 @@ export function LoanCalculator({
     </div>
   );
 
-  function applySavedFinancing(selection: SavedFinancingSelection | null) {
-    setSelectedFinancingId(selection?.financing.id ?? "");
-    if (!selection) return;
-
-    const { customer, financing, organization } = selection;
-    setPrice(String(financing.price));
-    setDownPayment(String(financing.downPayment));
-    setAnnualRate(String(financing.annualRate));
-    setTermYears(String(financing.termMonths / 12));
-    setPlanDefaults({
-      accountReference: financing.accountReference,
-      creditorName: organization?.name || operatorCompany,
-      customerId: customer.id,
-      debtorName: customer.name,
-      firstDueDate: financing.firstDueDate,
-    });
-  }
 }
 
 function Field({
@@ -283,7 +245,7 @@ function Field({
   value,
 }: {
   error?: string;
-  hint: string;
+  hint?: string;
   id: string;
   label: string;
   max: number;
@@ -291,7 +253,7 @@ function Field({
   step?: string;
   value: string;
 }) {
-  const hintId = `${id}-hint`;
+  const hintId = hint ? `${id}-hint` : undefined;
   const errorId = `${id}-error`;
 
   return (
@@ -308,9 +270,9 @@ function Field({
         value={value}
         onChange={onChange}
         aria-invalid={error ? true : undefined}
-        aria-describedby={`${hintId}${error ? ` ${errorId}` : ""}`}
+        aria-describedby={error ? `${hintId ? `${hintId} ` : ""}${errorId}` : hintId}
       />
-      <small id={hintId}>{hint}</small>
+      {hint && <small id={hintId}>{hint}</small>}
       {error && <small id={errorId} className={styles.error} role="alert">{error}</small>}
     </div>
   );
@@ -322,10 +284,6 @@ function parseInput(value: string): number {
 
 function formatCurrency(value: number): string {
   return currencyFormatter.format(value);
-}
-
-function formatRate(value: number): string {
-  return value.toLocaleString("es-GT", { maximumFractionDigits: 4 });
 }
 
 function formatTerm(months: number): string {

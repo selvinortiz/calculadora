@@ -14,12 +14,15 @@
   --accent: #4f46e5;
   --accent-strong: #3730a3;
   --accent-soft: #eef2ff;
+  --primary-hover: #4338ca;
+  --primary-hover-shadow: 0 0.38rem 1rem rgb(79 70 229 / 22%);
   --success: #087f5b;
   --success-soft: #ecfdf5;
   --danger: #a72f2a;
   --danger-soft: #fff1f0;
   --focus: #6366f1;
   --shadow: 0 1.2rem 3.5rem rgb(30 41 59 / 8%);
+  --app-sidebar-width: clamp(15.5rem, 16vw, 22.5rem);
 }
 
 * {
@@ -41,10 +44,30 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
 .appShell {
   display: grid;
   min-height: 100vh;
-  grid-template-columns: 13.75rem minmax(0, 1fr);
+  grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr);
+  transition: grid-template-columns 160ms ease;
+}
+
+html[data-sidebar-resizing="true"] {
+  cursor: col-resize;
+  user-select: none;
+}
+
+html[data-sidebar-resizing="true"] .appShell {
+  transition: none;
 }
 
 .appWorkspace {
@@ -67,6 +90,60 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+button {
+  --button-hover-color: var(--text-strong);
+  --button-hover-background: color-mix(in srgb, var(--surface) 72%, var(--accent-soft));
+  --button-hover-border: color-mix(in srgb, var(--border-strong) 78%, var(--accent));
+  --button-hover-shadow: none;
+
+  appearance: none;
+  min-height: 2.35rem;
+  padding: 0.5rem 0.8rem;
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 780;
+  cursor: pointer;
+  transition: 140ms ease;
+  transition-property: color, background-color, border-color, box-shadow, transform;
+}
+
+button:hover:not(:disabled) {
+  color: var(--button-hover-color);
+  background: var(--button-hover-background);
+  border-color: var(--button-hover-border);
+  box-shadow: var(--button-hover-shadow);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+  color: var(--text-strong);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  border-radius: 0.55rem;
 }
 
 button,
@@ -166,6 +243,8 @@ a {
     --accent: #a5b4fc;
     --accent-strong: #e0e7ff;
     --accent-soft: #2e3157;
+    --primary-hover: #6366f1;
+    --primary-hover-shadow: 0 0.38rem 1rem rgb(0 0 0 / 24%);
     --success: #6ee7a5;
     --success-soft: #183c31;
     --danger: #ffaaa4;
@@ -188,6 +267,26 @@ a {
 @media print {
   :root {
     color-scheme: light;
+    --background: #fff;
+    --sidebar: #fff;
+    --surface: #fff;
+    --surface-subtle: #f3f4f6;
+    --surface-raised: #fff;
+    --text: #343b49;
+    --text-strong: #111827;
+    --text-muted: #4b5563;
+    --text-subtle: #6b7280;
+    --border: #d1d5db;
+    --border-strong: #9ca3af;
+    --accent: #4338ca;
+    --accent-strong: #312e81;
+    --accent-soft: #eef2ff;
+    --success: #087f5b;
+    --success-soft: #ecfdf5;
+    --danger: #a72f2a;
+    --danger-soft: #fff1f0;
+    --focus: #4f46e5;
+    --shadow: none;
   }
 
   @page {
@@ -197,23 +296,30 @@ a {
 
   body {
     min-height: auto;
+    margin: 0;
     color: #111827;
     background: #fff;
   }
 
-  body * {
-    visibility: hidden;
+  .appShell,
+  .appWorkspace {
+    display: block;
+    min-height: 0;
   }
 
-  [data-print-document],
-  [data-print-document] * {
-    visibility: visible;
+  .appPage {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body > :not(:has([data-print-document])):not([data-print-document]),
+  body :has([data-print-document]) > :not(:has([data-print-document])):not([data-print-document]) {
+    display: none !important;
   }
 
   [data-print-document] {
-    position: absolute !important;
-    top: 0;
-    left: 0;
+    position: static !important;
     width: 100% !important;
     margin: 0 !important;
     color: #111827 !important;

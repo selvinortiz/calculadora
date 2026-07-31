@@ -1,0 +1,16 @@
+.bundle {
+  display: grid;
+  gap: 1rem;
+}
+
+@media print {
+  .bundle {
+    display: block;
+    font-family: var(--font-geist-sans, Arial), Helvetica, sans-serif;
+  }
+
+  .bundle > *:not(:last-child) {
+    break-after: page;
+    page-break-after: always;
+  }
+}

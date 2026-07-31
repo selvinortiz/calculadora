@@ -11,11 +11,21 @@
 .inner {
   display: flex;
   height: 100%;
+  min-width: 0;
   flex-direction: column;
 }
 
+.brandRow {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .brand {
-  display: inline-flex;
+  display: flex;
+  min-width: 0;
+  flex: 1;
   align-items: center;
   gap: 0.6rem;
   padding: 0.25rem;
@@ -37,19 +47,52 @@
   box-shadow: 0 0.4rem 1.2rem rgb(79 70 229 / 20%);
 }
 
-.brand > span:last-child {
+.brandCopy {
   display: grid;
+  min-width: 0;
   gap: 0.05rem;
 }
 
-.brand strong {
+.brandCopy strong,
+.brandCopy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brandCopy strong {
   font-size: 0.78rem;
   letter-spacing: -0.01em;
 }
 
-.brand small {
+.brandCopy small {
   color: var(--text-muted);
   font-size: 0.58rem;
+}
+
+.collapseButton {
+  display: grid;
+  width: 1.9rem;
+  min-width: 1.9rem;
+  min-height: 1.9rem;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border-color: transparent;
+}
+
+.collapseButton svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  stroke-width: 2;
+}
+
+.collapseButton:hover:not(:disabled) {
+  color: var(--text-strong);
+  background: var(--surface-subtle);
+  border-color: var(--border);
 }
 
 .navigationArea {
@@ -73,30 +116,40 @@
 
 .navLink {
   display: flex;
+  min-width: 0;
   min-height: 2.5rem;
   align-items: center;
   gap: 0.7rem;
   padding: 0.45rem 0.55rem;
+  overflow: hidden;
   color: var(--text-muted);
   border: 1px solid transparent;
   border-radius: 0.65rem;
   font-size: 0.72rem;
   font-weight: 700;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .navIcon {
-  display: grid;
-  width: 1.5rem;
-  height: 1.5rem;
+  display: inline-flex;
+  width: 1.2rem;
+  height: 1.2rem;
   flex: 0 0 auto;
-  place-items: center;
+  align-items: center;
+  justify-content: center;
   color: var(--text-muted);
-  background: var(--surface-subtle);
-  border: 1px solid var(--border);
-  border-radius: 0.45rem;
-  font-size: 0.65rem;
-  font-weight: 850;
+}
+
+.navIcon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  stroke-width: 1.85;
+}
+
+.navText {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .navLink:hover {
@@ -111,26 +164,41 @@
 }
 
 .navLink[aria-current="page"] .navIcon {
-  color: #fff;
-  background: var(--accent);
-  border-color: var(--accent);
+  color: var(--accent);
 }
 
-.methodCard {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
+.accountArea {
+  display: grid;
+  gap: 0.35rem;
   margin-top: auto;
-  padding: 0.65rem;
+  padding: 0.35rem;
   background: var(--surface-subtle);
   border: 1px solid var(--border);
-  border-radius: 0.7rem;
+  border-radius: 0.8rem;
+}
+
+.profileLink {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem;
+  color: inherit;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  text-decoration: none;
+}
+
+.profileLink:hover,
+.profileLink[aria-current="page"] {
+  background: var(--surface);
+  border-color: var(--border);
 }
 
 .operatorAvatar {
   display: grid;
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 2rem;
+  height: 2rem;
   flex: 0 0 auto;
   place-items: center;
   color: var(--accent-strong);
@@ -140,63 +208,161 @@
   font-weight: 850;
 }
 
-.methodCard div {
+.profileCopy {
   display: grid;
-  gap: 0.12rem;
+  min-width: 0;
+  flex: 1;
+  gap: 0.08rem;
 }
 
-.methodCard small {
-  color: var(--text-muted);
-  font-size: 0.6rem;
-}
-
-.methodCard strong {
-  max-width: 7rem;
+.profileCopy small,
+.profileCopy strong,
+.profileCopy > span {
   overflow: hidden;
-  color: var(--text-strong);
-  font-size: 0.72rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.methodCard div > span {
-  max-width: 7rem;
-  overflow: hidden;
+.profileCopy small {
+  color: var(--text-muted);
+  font-size: 0.57rem;
+  font-weight: 700;
+}
+
+.profileCopy strong {
+  color: var(--text-strong);
+  font-size: 0.7rem;
+}
+
+.profileCopy > span {
   color: var(--text-muted);
   font-size: 0.58rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.methodCard form {
-  margin-left: auto;
+.profileChevron {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: 0 0 auto;
+  color: var(--text-subtle);
+  stroke-width: 2;
 }
 
-.methodCard button {
-  padding: 0.25rem 0.4rem;
+.signOutForm {
+  border-top: 1px solid var(--border);
+}
+
+.signOutButton {
+  display: flex;
+  width: 100%;
+  min-height: 2.2rem;
+  align-items: center;
+  gap: 0.55rem;
+  justify-content: flex-start;
+  margin-top: 0.3rem;
+  padding: 0.35rem 0.45rem;
   color: var(--text-muted);
   background: transparent;
-  border: 0;
-  border-radius: 0.35rem;
-  font-size: 0.62rem;
-  font-weight: 750;
-  cursor: pointer;
+  border-color: transparent;
+  font-size: 0.66rem;
 }
 
-.methodCard button:hover {
+.signOutButton svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  stroke-width: 1.9;
+}
+
+.signOutButton:hover:not(:disabled) {
   color: var(--danger);
   background: var(--danger-soft);
+  border-color: transparent;
+}
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: -0.25rem;
+  width: 0.5rem;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.resizeHandle::after {
+  position: absolute;
+  top: 0;
+  right: 0.2rem;
+  width: 2px;
+  height: 100%;
+  background: transparent;
+  content: "";
+  transition: background-color 140ms ease;
+}
+
+.resizeHandle:hover::after,
+.resizeHandle:focus-visible::after {
+  background: var(--accent);
+}
+
+.resizeHandle:focus-visible {
+  outline: 0;
 }
 
 .brand:focus-visible,
 .navLink:focus-visible,
-.methodCard button:focus-visible {
+.profileLink:focus-visible,
+.signOutButton:focus-visible,
+.collapseButton:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
+.sidebar[data-collapsed="true"] {
+  padding-inline: 0.65rem;
+}
+
+.sidebar[data-collapsed="true"] .brandRow {
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.sidebar[data-collapsed="true"] .brand {
+  flex: 0;
+  padding: 0;
+}
+
+.sidebar[data-collapsed="true"] .brandCopy,
+.sidebar[data-collapsed="true"] .navLabel,
+.sidebar[data-collapsed="true"] .navText,
+.sidebar[data-collapsed="true"] .profileCopy,
+.sidebar[data-collapsed="true"] .profileChevron,
+.sidebar[data-collapsed="true"] .signOutButton span {
+  display: none;
+}
+
+.sidebar[data-collapsed="true"] .navigationArea {
+  margin-top: 1.2rem;
+}
+
+.sidebar[data-collapsed="true"] .navLink {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.sidebar[data-collapsed="true"] .accountArea {
+  padding: 0.25rem;
+}
+
+.sidebar[data-collapsed="true"] .profileLink,
+.sidebar[data-collapsed="true"] .signOutButton {
+  justify-content: center;
+  padding-inline: 0;
+}
+
 @media (max-width: 52rem) {
-  .sidebar {
+  .sidebar,
+  .sidebar[data-collapsed="true"] {
     position: static;
     height: auto;
     padding: 0;
@@ -212,11 +378,31 @@
     align-items: center;
   }
 
-  .brand {
+  .brandRow,
+  .sidebar[data-collapsed="true"] .brandRow {
+    display: block;
+  }
+
+  .brand,
+  .sidebar[data-collapsed="true"] .brand {
+    display: flex;
     padding: 0.75rem 1rem 0.6rem;
   }
 
-  .navigationArea {
+  .brandCopy,
+  .sidebar[data-collapsed="true"] .brandCopy,
+  .navText,
+  .sidebar[data-collapsed="true"] .navText {
+    display: grid;
+  }
+
+  .collapseButton,
+  .resizeHandle {
+    display: none;
+  }
+
+  .navigationArea,
+  .sidebar[data-collapsed="true"] .navigationArea {
     grid-column: 1 / -1;
     margin-top: 0;
   }
@@ -225,19 +411,42 @@
     display: none;
   }
 
-  .methodCard {
+  .accountArea,
+  .sidebar[data-collapsed="true"] .accountArea {
+    display: flex;
+    gap: 0.15rem;
     margin: 0 0.75rem 0 0;
-    padding: 0.35rem;
+    padding: 0;
     background: transparent;
     border: 0;
   }
 
-  .methodCard div {
+  .profileLink,
+  .sidebar[data-collapsed="true"] .profileLink {
+    justify-content: center;
+    padding: 0.25rem;
+  }
+
+  .profileCopy,
+  .profileChevron {
     display: none;
   }
 
-  .methodCard form {
+  .signOutForm {
+    border-top: 0;
+  }
+
+  .signOutButton,
+  .sidebar[data-collapsed="true"] .signOutButton {
+    width: 2.35rem;
+    min-height: 2.35rem;
+    justify-content: center;
     margin: 0;
+    padding: 0;
+  }
+
+  .signOutButton span {
+    display: none;
   }
 
   .nav {
@@ -247,7 +456,8 @@
     overflow-x: auto;
   }
 
-  .navLink {
+  .navLink,
+  .sidebar[data-collapsed="true"] .navLink {
     min-height: 2.3rem;
     flex: 1 0 auto;
     justify-content: center;
@@ -261,7 +471,8 @@
 }
 
 @media (prefers-color-scheme: dark) and (max-width: 52rem) {
-  .sidebar {
+  .sidebar,
+  .sidebar[data-collapsed="true"] {
     background: rgb(24 27 34 / 94%);
   }
 }

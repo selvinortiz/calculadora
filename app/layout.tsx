@@ -111,14 +111,12 @@ export default async function RootLayout({
             <AppHeader
               operatorCompany={session.company}
               operatorName={session.name}
+              role={session.role}
             />
           )}
           <div className="appWorkspace">
             {children}
             <footer className="appFooter" data-print-hidden>
-              <p>
-                Interés simple · Abonos a capital · Ajustes de pago
-              </p>
               <p>
                 <a
                   href="https://wa.me/16128078475?text=Hola%2C%20necesito%20ayuda%20con%20la%20calculadora."

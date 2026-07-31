@@ -1,0 +1,676 @@
+.overviewGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+  margin-block: 1rem;
+}
+
+.summary,
+.timeline,
+.expandedPlan {
+  padding: clamp(1rem, 2.5vw, 1.35rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: 0 0.75rem 2rem rgb(30 41 59 / 4%);
+}
+
+.summary {
+  min-width: 0;
+}
+
+.timeline,
+.expandedPlan {
+  margin-block: 1rem;
+}
+
+.summary h2,
+.sectionHeading h2,
+.expandedPlanHeading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1rem;
+  letter-spacing: -0.015em;
+}
+
+.cardTitle,
+.expandedPlanHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cardTitle > span,
+.expandedPlanHeading > span {
+  flex: 0 0 auto;
+  padding: 0.28rem 0.45rem;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  font-size: 0.56rem;
+  font-weight: 820;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.summary dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0 0;
+}
+
+.summary dl div {
+  display: grid;
+  align-content: start;
+  gap: 0.22rem;
+}
+
+.summary dt {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.summary dd {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.9rem;
+  font-weight: 780;
+}
+
+.disclosureButton,
+.expandAllButton {
+  color: var(--accent-strong);
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+
+.disclosureButton {
+  display: inline-flex;
+  min-height: 2.1rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.64rem;
+}
+
+.expandAllButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.expandAllButton svg,
+.secondaryButton svg,
+.dangerButton svg,
+.replacementLink svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 auto;
+  stroke-width: 1.9;
+}
+
+.summary .currentMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.currentMetric {
+  display: grid;
+  align-content: start;
+  gap: 0.22rem;
+}
+
+.currentMetric span {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.currentMetric strong {
+  color: var(--text-strong);
+  font-size: 0.9rem;
+  font-weight: 780;
+}
+
+.scheduleAction {
+  display: flex !important;
+  grid-column: 3;
+  align-items: end;
+  justify-content: flex-end;
+}
+
+.scheduleAction .disclosureButton {
+  width: auto;
+}
+
+.chevronIcon {
+  display: inline-block;
+  width: 0.78rem;
+  height: 0.78rem;
+  flex: 0 0 auto;
+  transition: transform 150ms ease;
+}
+
+.disclosureButton[aria-expanded="true"] .chevronIcon {
+  transform: rotate(180deg);
+}
+
+.disclosureButton:hover:not(:disabled),
+.expandAllButton:hover:not(:disabled) {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.expandedPlan {
+  animation: reveal 160ms ease-out;
+}
+
+.expandedPlanHeading > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.expandedPlanHeading p {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.58rem;
+  font-weight: 830;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.adjustmentStatus {
+  display: flex;
+  align-items: start;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+  padding: 0.7rem;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-radius: 0.65rem;
+}
+
+.adjustmentStatus > svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+  margin-top: 0.08rem;
+  stroke-width: 1.9;
+}
+
+.adjustmentStatus > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+}
+
+.adjustmentStatus span {
+  font-size: 0.55rem;
+  font-weight: 820;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.adjustmentStatus strong {
+  color: var(--text-strong);
+  font-size: 0.7rem;
+}
+
+.adjustmentStatus p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.64rem;
+  line-height: 1.4;
+}
+
+.table {
+  margin-top: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.table th,
+.table td {
+  padding: 0.65rem;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table th {
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  font-size: 0.64rem;
+  font-weight: 800;
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.table th:first-child,
+.table td:first-child {
+  text-align: left;
+}
+
+.timeline {
+  display: grid;
+  gap: 1rem;
+}
+
+.timelineHeading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sectionHeading {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.sectionHeading p,
+.sectionHeading span {
+  margin: 0;
+}
+
+.sectionHeading p {
+  color: var(--accent);
+  font-size: 0.58rem;
+  font-weight: 830;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sectionHeading span {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.expandAllButton {
+  min-height: 2.15rem;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.64rem;
+}
+
+.timelineList {
+  position: relative;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.timelineList::before {
+  position: absolute;
+  top: 1.35rem;
+  bottom: 1.35rem;
+  left: 1.35rem;
+  width: 2px;
+  background: var(--border);
+  content: "";
+}
+
+.transaction {
+  position: relative;
+  padding: 0.85rem 0.9rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+}
+
+.transactionHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.transactionMain {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.timelineStep {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--border);
+  font-size: 0.62rem;
+  font-weight: 850;
+}
+
+.transactionIdentity {
+  display: grid;
+  min-width: 0;
+  gap: 0.18rem;
+}
+
+.transactionIdentity > div {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.transactionIdentity strong {
+  color: var(--text-strong);
+  font-size: 0.8rem;
+}
+
+.transactionIdentity > div span {
+  color: var(--accent-strong);
+  font-size: 0.62rem;
+  font-weight: 760;
+}
+
+.transactionIdentity > p {
+  overflow: hidden;
+  margin: 0;
+  color: var(--text);
+  font-size: 0.7rem;
+  font-weight: 680;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transactionIdentity > span {
+  color: var(--text-muted);
+  font-size: 0.61rem;
+}
+
+.transactionActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.transactionDetail {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+  animation: reveal 160ms ease-out;
+}
+
+.secondaryButton,
+.dangerButton,
+.replacementLink,
+.transactionActions .disclosureButton {
+  display: inline-flex;
+  min-height: 2.2rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.72rem;
+  border-radius: 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 780;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.secondaryButton {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+.secondaryButton:hover {
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent-soft) 75%, var(--accent) 25%);
+  border-color: transparent;
+}
+
+.dangerButton,
+.replacementLink {
+  color: var(--danger);
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--danger) 28%, transparent);
+}
+
+.dangerButton:hover,
+.replacementLink:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+
+.replacementLink {
+  color: var(--accent-strong);
+  border-color: var(--border-strong);
+}
+
+.replacementLink:hover {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.secondaryButton:focus-visible,
+.dangerButton:focus-visible,
+.replacementLink:focus-visible,
+.disclosureButton:focus-visible,
+.expandAllButton:focus-visible,
+.dialog button:focus-visible,
+.dialog textarea:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-0.2rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.voidReason {
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0.75rem;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-radius: 0.55rem;
+  font-size: 0.68rem;
+}
+
+.alert {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.85rem;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
+  border-radius: 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.dialogBackdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(17 24 39 / 58%);
+  backdrop-filter: blur(3px);
+}
+
+.dialog {
+  display: grid;
+  width: min(100%, 28rem);
+  gap: 0.65rem;
+  padding: 1.25rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: 0 1.5rem 5rem rgb(15 23 42 / 28%);
+}
+
+.dialogEyebrow {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dialog h2,
+.dialog p {
+  margin: 0;
+}
+
+.dialog h2 {
+  color: var(--text-strong);
+  font-size: 1.15rem;
+}
+
+.dialog > p:not(.dialogEyebrow) {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+.dialog label {
+  margin-top: 0.25rem;
+  color: var(--text-strong);
+  font-size: 0.7rem;
+  font-weight: 780;
+}
+
+.dialog textarea {
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  resize: vertical;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.6rem;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+}
+
+.confirmDangerButton {
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.confirmDangerButton:hover:not(:disabled) {
+  color: #fff;
+  background: color-mix(in srgb, var(--danger) 82%, #000);
+  border-color: color-mix(in srgb, var(--danger) 82%, #000);
+}
+
+@media (max-width: 40rem) {
+  .overviewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary .currentMetrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scheduleAction {
+    grid-column: 2;
+  }
+
+  .timelineHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .transactionHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .transactionActions {
+    justify-content: stretch;
+  }
+
+  .transactionActions > * {
+    flex: 1;
+  }
+
+  .transactionIdentity > p {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .dialogActions {
+    flex-direction: column-reverse;
+  }
+
+  .dialogActions button {
+    width: 100%;
+  }
+}
+
+@media print {
+  .summary,
+  .overviewGrid,
+  .expandedPlan,
+  .dialogBackdrop {
+    display: none !important;
+  }
+
+  .timeline {
+    display: block;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .timelineHeading,
+  .timelineList::before,
+  .transaction:not([data-print-transaction="true"]),
+  .transactionHeader,
+  .voidReason {
+    display: none !important;
+  }
+
+  .transaction[data-print-transaction="true"],
+  .transactionDetail {
+    display: block;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+  }
+}

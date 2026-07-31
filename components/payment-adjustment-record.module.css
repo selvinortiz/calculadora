@@ -347,8 +347,11 @@
 
 @media print {
   .document {
+    display: flex;
+    min-height: 9.95in;
+    flex-direction: column;
     padding: 0;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-geist-sans, Arial), Helvetica, sans-serif;
   }
 
   .header,
@@ -438,7 +441,7 @@
   }
 
   .documentFooter {
-    margin-top: 7pt;
+    margin-top: auto;
     padding-top: 5pt;
   }
 }

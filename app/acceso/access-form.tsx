@@ -9,7 +9,7 @@ export function AccessForm({
   nextPath: string;
 }) {
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,7 +22,7 @@ export function AccessForm({
       const response = await fetch("/api/auth/sign-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ email, password }),
       });
       const result = (await response.json()) as { message?: string };
 
@@ -57,15 +57,15 @@ export function AccessForm({
       </div>
 
       <div className={styles.field}>
-        <label htmlFor="access-code">Código de acceso</label>
+        <label htmlFor="access-password">Contraseña</label>
         <input
-          id="access-code"
-          name="code"
+          id="access-password"
+          name="password"
           type="password"
           autoComplete="current-password"
-          value={code}
-          onChange={(event) => setCode(event.target.value)}
-          minLength={4}
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          minLength={8}
           maxLength={128}
           required
         />
@@ -73,9 +73,10 @@ export function AccessForm({
 
       {error && <p className={styles.error} role="alert">{error}</p>}
 
-      <button type="submit" disabled={isSubmitting || !email.trim() || code.length < 4}>
+      <button type="submit" disabled={isSubmitting || !email.trim() || password.length < 8}>
         {isSubmitting ? "Verificando…" : "Ingresar"}
       </button>
+      <small className={styles.recoveryHint}>¿Olvidaste tu contraseña? Solicita una temporal al propietario.</small>
     </form>
   );
 }

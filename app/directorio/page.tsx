@@ -14,11 +14,7 @@ export default async function DirectoryPage() {
   return (
     <main className="appPage">
       <header className="pageHeader">
-        <p className="pageEyebrow">Datos guardados</p>
         <h1 className="pageTitle">Directorio</h1>
-        <p className="pageIntro">
-          Reutiliza los datos de clientes y financiamientos en tus documentos.
-        </p>
       </header>
       <PersistenceDirectory
         operatorCompany={session?.company ?? ""}

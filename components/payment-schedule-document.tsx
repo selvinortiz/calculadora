@@ -8,6 +8,7 @@ type PaymentScheduleDocumentProps = {
   capitalPayment?: number;
   creditorName: string;
   debtorName: string;
+  documentNumber?: string;
   downPayment: number;
   finalPayment: number;
   interestTotal: number;
@@ -21,6 +22,7 @@ type PaymentScheduleDocumentProps = {
   rows: PaymentScheduleRow[];
   scheduledTotal: number;
   variant: "original" | "updated";
+  unposted?: boolean;
 };
 
 const currencyFormatter = new Intl.NumberFormat("es-GT", {
@@ -37,6 +39,7 @@ export function PaymentScheduleDocument({
   capitalPayment,
   creditorName,
   debtorName,
+  documentNumber,
   downPayment,
   finalPayment,
   interestTotal,
@@ -50,6 +53,7 @@ export function PaymentScheduleDocument({
   rows,
   scheduledTotal,
   variant,
+  unposted = false,
 }: PaymentScheduleDocumentProps) {
   const isUpdated = variant === "updated";
   const firstRow = rows[0];
@@ -78,7 +82,7 @@ export function PaymentScheduleDocument({
                 <h2>{title}</h2>
               </div>
               <div className={styles.documentMeta}>
-                <span>{isFirstPage ? "EMITIDO" : "CONTINUACIÓN"}</span>
+                <span>{unposted ? "BORRADOR" : isFirstPage ? documentNumber || "EMITIDO" : "CONTINUACIÓN"}</span>
                 <strong>{formatDate(issueDate)}</strong>
                 <small>Página {pageNumber} de {pages.length}</small>
               </div>

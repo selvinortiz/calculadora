@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const isDevelopment = process.env.NODE_ENV === "development";
+const supabaseOrigin = (() => {
+  try {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL
+      ? ` ${new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin}`
+      : "";
+  } catch {
+    return "";
+  }
+})();
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -8,7 +17,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  `connect-src 'self'${isDevelopment ? " ws: http: https:" : ""}`,
+  `connect-src 'self'${supabaseOrigin}${isDevelopment ? " ws: http: https:" : ""}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

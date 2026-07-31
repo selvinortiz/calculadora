@@ -1,118 +1,105 @@
 # Calculadora de Créditos
 
-Aplicación operativa para acreedores construida con Next.js y enfocada en
-financiamientos con **interés simple** en quetzales. Permite cotizar un crédito,
-registrar un abono a capital, aplicar saldos a favor y preparar recibos, planes
-de pago y constancias imprimibles.
+Portal operativo en Next.js para modelar créditos de interés simple en quetzales. Next.js se despliega en Vercel; Supabase aporta Postgres durable, Auth y Row Level Security.
 
-**Aplicación:** [calculacuota.com](https://calculacuota.com)
+La aplicación registra tres operaciones: originación de un financiamiento, abono a capital y ajuste de un pago con saldo a favor. Las cotizaciones siguen siendo editables hasta usar una acción explícita de registro. Cada operación registrada recibe un número transaccional y un snapshot estructurado e inmutable para reimpresión.
 
-El portal requiere el correo y código de acceso de cada operador. Cada perfil
-incluye nombre, correo, empresa y un código almacenado como hash. No incluye un
-sistema formal de cuentas: los operadores se configuran en el servidor y reciben
-una sesión firmada de 12 horas.
+> No es un libro mayor completo de cuotas. Las cuotas ordinarias no se registran aquí, por lo que el sistema solicita el número de cuota o un capital de estado de cuenta y no afirma mora, saldo exigible ni monto al día.
 
-Los cálculos se ejecutan localmente en el navegador. El directorio opcional
-guarda organizaciones, clientes y perfiles de financiamiento en el
-almacenamiento local del navegador, separado por correo de acceso. Estos datos
-no se sincronizan con otros dispositivos ni se transmiten al servidor.
+## Rutas principales
 
-## Flujos
+- `/acceso`: inicio de sesión con correo y contraseña de Supabase.
+- `/financiamiento`: cotización y registro atómico de un financiamiento.
+- `/abono-capital`: recálculo desde el plan vigente y registro de un abono.
+- `/ajustes`: crédito de una sola cuota sin cambiar el plan de capital.
+- `/directorio`: organización, numeración, clientes y financiamientos registrados.
+- `/financiamientos/[id]`: condiciones originales, plan vigente, cronología y reimpresión de snapshots.
+- `/configuracion/accesos`: administración de operadores, solo para propietarios.
 
-- `/`: portal de operaciones del acreedor.
-- `/acceso`: inicio de sesión por correo y código.
-- `/financiamiento`: cotización de capital, interés total y cuotas, con un plan
-  de pagos fechado para entregar al deudor.
-- `/abono-capital`: flujo de cuatro pasos para:
-  1. cargar las condiciones del crédito;
-  2. registrar un abono independiente o una cuota acompañada de abono;
-  3. verificar capital, interés y saldo antes y después;
-  4. emitir una simulación o recibo para firma y un plan actualizado de las
-     cuotas futuras.
-- `/ajustes`: aplica el excedente de un pago a la cuota siguiente sin modificar
-  el capital, el interés, la cuota regular ni la fecha final, y genera una
-  constancia para el expediente.
-- `/directorio`: datos reutilizables de la organización, clientes y condiciones
-  originales de financiamientos. Los perfiles completan los formularios, pero
-  no representan saldos ni historiales de pago.
+## Desarrollo local
 
-Las fechas del abono se conservan como parte del registro. El cálculo utiliza
-meses completos según el número de cuota indicado; no calcula interés diario.
-
-> Los resultados son estimaciones informativas. Una simulación no constituye
-> comprobante de pago. Un recibo debe ser revisado y firmado por las partes.
-
-## Desarrollo
-
-Requiere Node.js 20.9 o posterior y npm.
+Requiere Node.js 20.9+, npm, Docker y Supabase CLI (incluida como dependencia de desarrollo).
 
 ```bash
 npm ci
+npm run supabase:start
+npm run supabase:reset
+npx supabase status
+```
+
+Copia `.env.example` a `.env.local`. Usa la URL, publishable/anon key y service-role key mostradas por `supabase status`. La service-role key es exclusivamente de servidor y nunca debe tener el prefijo `NEXT_PUBLIC_`.
+
+Después de `supabase:reset`, el seed local permite entrar con `owner@local.test` y `Local-demo-12345`. El seed no se aplica al proyecto hospedado durante el flujo normal de migraciones.
+
+```bash
+npm run supabase:bootstrap-owner -- \
+  --email owner@example.com \
+  --password 'una-clave-larga-123' \
+  --name 'Nombre del propietario' \
+  --organization 'Nombre de la organización'
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000).
+El bootstrap es intencionalmente de una sola ejecución para proyectos sin seed, especialmente producción: crea la organización, el propietario y las series `FIN`, `REC` y `AJU`. Después, el propietario crea operadores desde `/configuracion/accesos`.
 
-Sin variables de entorno, el modo de desarrollo habilita únicamente:
+### Base de datos
 
-- Correo: `demo@creditos.local`
-- Código: `1234`
+- Las migraciones versionadas están en `supabase/migrations/`.
+- `npm run supabase:reset` reconstruye la base desde cero.
+- `npm run supabase:test` ejecuta las pruebas pgTAP de restricciones, RLS y RPC.
+- `npm run supabase:types` regenera `lib/database.types.ts` contra la pila local.
+- El seed no importa datos del antiguo `localStorage`.
 
-## Configurar operadores
+El dinero se persiste como centavos enteros; las tasas como `numeric(9,6)`. La versión inicial de cálculo es `simple-interest-v2-cents`, con redondeo decimal explícito half-up. Los registros publicados son inmutables. Las correcciones requieren anular en orden inverso y registrar un reemplazo; los números anulados no se reutilizan.
 
-1. Agrega o actualiza un operador:
+## Acceso sin correo transaccional
 
-   ```bash
-   npm run portal:hash-code
-   ```
+El signup público (`auth.enable_signup = false`), la confirmación, el cambio seguro basado en correo y la notificación de contraseña cambiada están desactivados. El proveedor de correo permanece habilitado únicamente para autenticar correo + contraseña; no existen invitaciones, magic links, verificación ni recuperación por correo.
 
-   El asistente solicita correo, nombre, empresa y código. Solo el correo es
-   obligatorio: si omites el código, genera cuatro palabras; si omites nombre o
-   empresa, usa valores adecuados para identificar la sesión. El registro se
-   guarda en `.env.local` y el comando imprime el valor listo para pegar en
-   Vercel. Si el correo ya existe, solicita confirmación antes de reemplazarlo.
+1. El propietario crea al operador.
+2. La pantalla muestra una contraseña temporal una sola vez.
+3. El operador debe cambiarla al primer inicio de sesión.
+4. Un usuario autenticado puede cambiar su propia contraseña sin correo.
+5. Si la olvida, el propietario genera otra contraseña temporal desde la página de accesos.
 
-   Para generar únicamente el hash de un código definido por ti, ejecuta
-   `npm run portal:hash-code -- codigo-secreto`.
+Desactiva usuarios en lugar de eliminar identidades históricas. Archiva clientes referenciados en lugar de borrarlos.
 
-2. Copia `.env.example` a `.env.local` y configura un secreto de sesión de al
-   menos 32 caracteres.
-3. En Vercel, agrega el valor impreso por el asistente a `PORTAL_USERS`:
+## Vercel y producción
 
-   ```dotenv
-   PORTAL_USERS=[{"name":"Ana López","email":"ana@empresa.gt","company":"Créditos del Lago","codeHash":"scrypt$..."}]
-   ```
+Configura estas variables únicamente en Production:
 
-Los correos deben ser únicos. Los códigos no se guardan directamente: el
-servidor compara hashes `scrypt`. En producción, la aplicación no inicia una
-sesión si falta `PORTAL_USERS` o `PORTAL_SESSION_SECRET`.
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+SUPABASE_SERVICE_ROLE_KEY=...
+NEXT_PUBLIC_SITE_URL=https://calculacuota.com
+```
 
-La URL pública usada para enlaces canónicos, sitemap y vistas previas sociales
-es `https://calculacuota.com`. Para usar otro dominio en una instalación
-distinta, configura `NEXT_PUBLIC_SITE_URL` con su origen completo.
+No copies las credenciales de producción a Vercel Preview. Sin ellas, las rutas protegidas redirigen a `/acceso` y muestran que el almacenamiento durable no está disponible; no recurren a almacenamiento temporal.
+
+Antes del corte:
+
+1. crea un único proyecto Supabase de producción y aplica todas las migraciones;
+   en Auth, conserva desactivados signup público, confirmación, cambio seguro basado en correo y la notificación de contraseña cambiada;
+2. ejecuta el bootstrap del propietario contra ese proyecto;
+3. prueba inicio, cambio de contraseña, operador y propietario;
+4. prueba los tres registros, recarga en otra sesión y reimprime snapshots;
+5. configura Production en Vercel y despliega;
+6. conserva el `localStorage` antiguo para consulta manual; la aplicación no lo importa ni lo elimina.
+
+Si el corte falla, vuelve al deployment anterior de Vercel. No elimines operaciones ya escritas en Supabase: consérvalas para conciliación.
+
+### Backups
+
+Usa el nivel gratuito solo durante desarrollo. Pasa producción a un plan pagado antes de depender de estos registros y confirma la política de backups administrados del proyecto. Restaurar y conciliar datos sigue siendo responsabilidad operativa del propietario. PITR no forma parte de esta versión inicial.
 
 ## Verificación
 
 ```bash
+npm run supabase:reset
+npm run supabase:test
 npm run check
 npm audit --omit=dev
 ```
 
-`npm run check` ejecuta lint, comprobación estricta de tipos, pruebas y build de
-producción. El mismo conjunto se ejecuta en GitHub Actions para cada pull
-request y cada push a `main`.
-
-## Estructura
-
-- `app/`: rutas, metadatos, navegación y estilos globales.
-- `components/loan-calculator.tsx`: cotizador de interés simple.
-- `components/capital-payment-workflow.tsx`: flujo de abono y recálculo.
-- `components/payment-adjustment-workflow.tsx`: flujo de aplicación de saldo a
-  favor.
-- `components/payment-record.tsx`: documento imprimible.
-- `components/payment-adjustment-record.tsx`: constancia imprimible del ajuste.
-- `components/payment-schedule-document.tsx`: plan de pagos original o
-  actualizado, con fechas de vencimiento.
-- `lib/finance.ts`: cálculos financieros puros y validación.
-- `lib/finance.test.ts`: pruebas de fórmulas, límites y redondeo.
-- `next.config.ts`: cabeceras de seguridad y configuración de Next.js.
+CI inicia Supabase, reconstruye migraciones, ejecuta pgTAP/RLS y luego lint, TypeScript, Vitest, build y auditoría de dependencias de producción.

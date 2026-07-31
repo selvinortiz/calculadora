@@ -369,6 +369,11 @@
 
 .continueButton,
 .printButton {
+  --button-hover-color: #fff;
+  --button-hover-background: var(--primary-hover);
+  --button-hover-border: var(--primary-hover);
+  --button-hover-shadow: var(--primary-hover-shadow);
+
   color: #fff;
   background: var(--accent);
   border: 1px solid var(--accent);

@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   calculatePaymentCreditAdjustment,
   type PaymentCreditAdjustment,
 } from "@/lib/finance";
-import { useLocalPersistence } from "@/lib/use-local-persistence";
+import { notifyDurableDirectoryChanged, useDurableDirectory } from "@/lib/use-durable-directory";
+import type { DirectoryLoan, MutationResult, PostedTransaction } from "@/lib/domain";
 import {
   SavedCustomerPicker,
   SavedFinancingPicker,
@@ -16,6 +17,7 @@ import {
   type PaymentAdjustmentRecordDetails,
 } from "./payment-adjustment-record";
 import styles from "./payment-adjustment-workflow.module.css";
+import { printElement } from "../lib/print-preview";
 
 type Step = 1 | 2 | 3;
 type PaymentErrors = Partial<
@@ -62,17 +64,19 @@ export function PaymentAdjustmentWorkflow({
   operatorName: string;
   storageScope: string;
 }) {
-  const { data } = useLocalPersistence(storageScope);
+  const { data } = useDurableDirectory();
+  const idempotencyKey = useRef<string | null>(null);
   const [step, setStep] = useState<Step>(1);
   const [maxStep, setMaxStep] = useState<Step>(1);
   const [attemptedStep, setAttemptedStep] = useState<Step | null>(null);
   const [selectedFinancingId, setSelectedFinancingId] = useState("");
+  const [selectedLoan, setSelectedLoan] = useState<DirectoryLoan | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
 
-  const [paymentNumber, setPaymentNumber] = useState("7");
+  const [paymentNumber, setPaymentNumber] = useState("");
   const [paymentDate, setPaymentDate] = useState(getTodayIso);
-  const [scheduledPayment, setScheduledPayment] = useState("993.56");
-  const [receivedPayment, setReceivedPayment] = useState("1035");
+  const [scheduledPayment, setScheduledPayment] = useState("");
+  const [receivedPayment, setReceivedPayment] = useState("");
   const [nextPaymentDate, setNextPaymentDate] = useState(getNextMonthIso);
 
   const [details, setDetails] = useState<PaymentAdjustmentRecordDetails>(() => ({
@@ -80,6 +84,9 @@ export function PaymentAdjustmentWorkflow({
   }));
   const [issueDate, setIssueDate] = useState(getTodayIso);
   const [showDocumentErrors, setShowDocumentErrors] = useState(false);
+  const [posting, setPosting] = useState(false);
+  const [postMessage, setPostMessage] = useState("");
+  const [posted, setPosted] = useState<PostedTransaction | null>(null);
 
   const resolvedCreditorName =
     details.creditorName || data.organization?.name || operatorCompany;
@@ -172,9 +179,7 @@ export function PaymentAdjustmentWorkflow({
       accountReference: details.accountReference.trim()
         ? undefined
         : "Indica el lote o número de cuenta.",
-      documentNumber: details.documentNumber.trim()
-        ? undefined
-        : "Asigna un número a la constancia.",
+      documentNumber: undefined,
       adjustedBy: resolvedAdjustedBy.trim()
         ? undefined
         : "Indica quién autoriza el ajuste.",
@@ -186,7 +191,7 @@ export function PaymentAdjustmentWorkflow({
 
   function continueWorkflow() {
     setAttemptedStep(step);
-    if (step === 1 && !paymentIsValid) return;
+    if (step === 1 && (!selectedLoan || !paymentIsValid)) return;
     if (step === 3) return;
 
     const nextStep = (step + 1) as Step;
@@ -209,10 +214,13 @@ export function PaymentAdjustmentWorkflow({
 
   function applySavedFinancing(selection: SavedFinancingSelection | null) {
     setSelectedFinancingId(selection?.financing.id ?? "");
+    setSelectedLoan(selection?.financing ?? null);
     if (!selection) return;
 
     const { customer, financing, organization } = selection;
     setSelectedCustomerId(customer.id);
+    setPaymentNumber(String(financing.nextPaymentNumber));
+    setScheduledPayment(String(financing.currentPayment));
     setDetails((current) => ({
       ...current,
       debtorName: customer.name,
@@ -221,6 +229,28 @@ export function PaymentAdjustmentWorkflow({
       adjustedBy:
         organization?.defaultRecipient || current.adjustedBy || operatorName,
     }));
+  }
+
+  async function postAdjustment() {
+    setShowDocumentErrors(true);
+    if (!selectedLoan || !adjustment || posting) {
+      setPostMessage(!selectedLoan ? "Selecciona un financiamiento registrado." : "Revisa los datos del ajuste.");
+      return;
+    }
+    idempotencyKey.current ||= crypto.randomUUID();
+    setPosting(true); setPostMessage("");
+    try {
+      const response = await fetch("/api/transactions/payment-adjustments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idempotencyKey: idempotencyKey.current, loanId: selectedLoan.id, expectedLoanVersion: selectedLoan.version, paymentNumber: parsedPaymentNumber, paymentDate, nextPaymentDate, receivedPayment: parsedReceivedPayment, paymentReference: details.paymentReference, adjustedBy: resolvedAdjustedBy, notes: details.notes, replacesTransactionId: new URLSearchParams(window.location.search).get("reemplaza") || undefined }) });
+      const responseBody = await response.json() as MutationResult<PostedTransaction>;
+      if (!responseBody.ok) setPostMessage(responseBody.message);
+      else {
+        setPosted(responseBody.data);
+        setDetails((current) => ({ ...current, documentNumber: responseBody.data.documentNumber }));
+        setPostMessage(`Ajuste ${responseBody.data.documentNumber} registrado.`);
+        notifyDurableDirectoryChanged();
+      }
+    } catch { setPostMessage("No fue posible registrar el ajuste."); }
+    finally { setPosting(false); }
   }
 
   function updateDetails(
@@ -234,11 +264,16 @@ export function PaymentAdjustmentWorkflow({
   function printDocument() {
     setShowDocumentErrors(true);
     if (hasDocumentErrors) return;
-    window.print();
+    if (posted) {
+      window.location.assign(`/financiamientos/${posted.loanId}`);
+      return;
+    }
+    const target = document.querySelector<HTMLElement>("[data-print-document]");
+    if (target) void printElement(target, "Constancia de ajuste de pago");
   }
 
   return (
-    <section className={styles.workflow} aria-label="Flujo de ajuste de pago">
+    <section className={styles.workflow} aria-label="Ajuste de pago">
       <ol className={styles.stepper} data-print-hidden>
         {STEPS.map((item) => (
           <li key={item.number}>
@@ -262,7 +297,7 @@ export function PaymentAdjustmentWorkflow({
             <StepHeading
               eyebrow="Paso 1 de 3"
               title="Pago recibido"
-              description="Compara la cuota vigente con el monto que recibió el acreedor."
+              description="Compara la cuota con el pago recibido."
               id="payment-step-title"
             />
 
@@ -270,8 +305,8 @@ export function PaymentAdjustmentWorkflow({
               scope={storageScope}
               value={selectedFinancingId}
               onSelect={applySavedFinancing}
-              hint="Completa el cliente, acreedor y lote de la constancia."
             />
+            {attemptedStep === 1 && !selectedLoan && <p role="status">Selecciona un financiamiento.</p>}
 
             <form className={styles.formGrid} onSubmit={(event) => event.preventDefault()} noValidate>
               <Field
@@ -295,7 +330,6 @@ export function PaymentAdjustmentWorkflow({
                 label="Cuota programada"
                 value={scheduledPayment}
                 onChange={(event) => setScheduledPayment(event.target.value)}
-                hint="Usa la cuota vigente en esa fecha."
                 error={attemptedStep === 1 ? paymentErrors.scheduledPayment : undefined}
               />
               <Field
@@ -303,7 +337,6 @@ export function PaymentAdjustmentWorkflow({
                 label="Pago recibido"
                 value={receivedPayment}
                 onChange={(event) => setReceivedPayment(event.target.value)}
-                hint="Monto que realmente se recibió."
                 error={attemptedStep === 1 ? paymentErrors.receivedPayment : undefined}
               />
               <DateField
@@ -331,7 +364,7 @@ export function PaymentAdjustmentWorkflow({
             <StepHeading
               eyebrow="Paso 2 de 3"
               title="Aplicación del saldo a favor"
-              description={`El excedente de la cuota ${adjustment.paymentNumber} se aplicará únicamente a la cuota ${adjustment.nextPaymentNumber}.`}
+              description={`El saldo se aplicará a la cuota ${adjustment.nextPaymentNumber}.`}
               id="result-step-title"
             />
 
@@ -379,8 +412,7 @@ export function PaymentAdjustmentWorkflow({
             <aside className={styles.unchangedNote}>
               <span aria-hidden="true">✓</span>
               <div>
-                <strong>El plan conserva sus condiciones.</strong>
-                <p>El capital, el interés, la cuota regular y la fecha final no cambian.</p>
+                <strong>El capital, el interés y el plazo no cambian.</strong>
               </div>
             </aside>
           </section>
@@ -391,7 +423,7 @@ export function PaymentAdjustmentWorkflow({
             <StepHeading
               eyebrow="Paso 3 de 3"
               title="Constancia del ajuste"
-              description="Completa los datos, revisa el documento y entrégalo al deudor."
+              description="Completa y revisa la constancia."
               id="document-step-title"
             />
 
@@ -436,8 +468,8 @@ export function PaymentAdjustmentWorkflow({
                   <TextField
                     id="adjustment-document-number"
                     label="Número de constancia"
-                    value={details.documentNumber}
-                    onChange={(value) => updateDetails("documentNumber", value)}
+                    value={details.documentNumber || "Se asigna al registrar"}
+                    onChange={() => undefined}
                     error={showDocumentErrors ? documentErrors.documentNumber : undefined}
                   />
                   <TextField
@@ -471,9 +503,8 @@ export function PaymentAdjustmentWorkflow({
                 </form>
 
                 <div className={styles.documentActions}>
-                  <p>La constancia acompaña el plan vigente; no lo reemplaza.</p>
                   <button type="button" className={styles.printButton} onClick={printDocument}>
-                    Imprimir o guardar PDF
+                    {posted ? "Ver documento" : "Imprimir borrador"}
                   </button>
                 </div>
               </aside>
@@ -487,6 +518,7 @@ export function PaymentAdjustmentWorkflow({
                     issueDate={issueDate}
                     nextPaymentDate={nextPaymentDate}
                     paymentDate={paymentDate}
+                    unposted
                   />
                 </div>
               </section>
@@ -503,10 +535,13 @@ export function PaymentAdjustmentWorkflow({
             <span />
           )}
           {step < 3 && (
-            <button type="button" className={styles.continueButton} onClick={continueWorkflow}>
+            <button type="button" className={styles.continueButton} onClick={continueWorkflow} disabled={step === 1 && !selectedLoan}>
               {step === 1 ? "Revisar ajuste" : "Preparar constancia"}
             </button>
           )}
+          {step === 3 && !posted && <button type="button" className={styles.continueButton} onClick={postAdjustment} disabled={posting}>{posting ? "Registrando…" : "Registrar ajuste"}</button>}
+          {step === 3 && posted && <a href={`/financiamientos/${posted.loanId}`}>Ver financiamiento {posted.documentNumber}</a>}
+          {step === 3 && postMessage && <p role="status">{postMessage}</p>}
         </div>
       </div>
     </section>

@@ -15,7 +15,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -29,6 +29,25 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.111.0
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Rebuild database from migrations
+        run: supabase db reset
+
+      - name: Test database and RLS
+        run: supabase test db
+
+      - name: Verify generated database types
+        run: |
+          supabase gen types typescript --local > /tmp/database.types.ts
+          diff -u lib/database.types.ts /tmp/database.types.ts
 
       - name: Lint
         run: npm run lint
@@ -44,3 +63,7 @@ jobs:
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup

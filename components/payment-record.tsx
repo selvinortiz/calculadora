@@ -30,6 +30,7 @@ type PaymentRecordProps = {
   termMonths: number;
   transactionDate: string;
   transactionMode: TransactionMode;
+  unposted?: boolean;
 };
 
 const currencyFormatter = new Intl.NumberFormat("es-GT", {
@@ -54,8 +55,9 @@ export function PaymentRecord({
   termMonths,
   transactionDate,
   transactionMode,
+  unposted = false,
 }: PaymentRecordProps) {
-  const isRecord = details.documentType === "record";
+  const isRecord = details.documentType === "record" && !unposted;
   const transactionTotal =
     transactionMode === "combined"
       ? result.regularPayment + capitalPayment
@@ -80,8 +82,7 @@ export function PaymentRecord({
 
       {!isRecord && (
         <p className={styles.warning}>
-          Documento informativo. No constituye comprobante de pago ni confirma la
-          recepción de fondos.
+          Documento informativo. No constituye comprobante de pago ni confirma la recepción de fondos.
         </p>
       )}
 
@@ -116,9 +117,7 @@ export function PaymentRecord({
       <section className={styles.capitalApplication} aria-label="Aplicación del abono">
         <div>
           <span>Aplicación directa a capital</span>
-          <small>
-            El abono se aplica únicamente al capital pendiente.
-          </small>
+          <small>El abono se aplica únicamente al capital pendiente.</small>
         </div>
         <div className={styles.capitalFormula}>
           <FormulaValue label="Capital anterior" value={formatCurrency(result.currentCapital)} />
@@ -194,9 +193,7 @@ export function PaymentRecord({
           Precio {formatCurrency(price)} · Enganche {formatCurrency(downPayment)} · {" "}
           Tasa anual {formatRate(annualRate)}% · Plazo original {termMonths} meses.
           Capital pendiente: {balanceSource === "statement" ? "saldo ingresado" : "cálculo con las cuotas pagadas"}. {" "}
-          El interés futuro se calcula como nuevo capital × tasa anual × tiempo
-          restante. La última cuota es {formatCurrency(result.newFinalPayment)} para
-          reconciliar el redondeo.
+          El interés futuro se calcula como nuevo capital × tasa anual × tiempo restante. La última cuota es {formatCurrency(result.newFinalPayment)} para reconciliar el redondeo.
         </p>
         <p className={styles.definitionNote}>
           <strong>Saldo de capital</strong> es el principal pendiente. {" "}

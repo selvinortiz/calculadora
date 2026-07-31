@@ -36,7 +36,7 @@ describe("PaymentScheduleDocument", () => {
     expect(markup).toContain("Cuotas 25–48");
     expect(markup).toContain("Cuotas 49–60");
     expect(markup.match(/Totales/g)).toHaveLength(1);
-    expect(markup.match(/Condiciones de este plan/g)).toHaveLength(1);
+    expect(markup.match(/Preparado con Calculadora de Créditos/g)).toHaveLength(3);
     expect(markup).toContain("Página 3 de 3");
   });
 });

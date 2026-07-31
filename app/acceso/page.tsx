@@ -84,9 +84,9 @@ const structuredData = {
 export default async function AccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ siguiente?: string }>;
+  searchParams: Promise<{ siguiente?: string; no_disponible?: string }>;
 }) {
-  const { siguiente } = await searchParams;
+  const { siguiente, no_disponible } = await searchParams;
   const nextPath = isSafePortalPath(siguiente) ? siguiente : "/";
 
   return (
@@ -107,15 +107,12 @@ export default async function AccessPage({
             </div>
           </div>
           <div className={styles.contextCopy}>
-            <p>Portal para prestamistas</p>
-            <h1>Créditos y pagos, en orden.</h1>
-            <span>
-              Cotiza préstamos, registra abonos y entrega documentos claros.
-            </span>
+            <h1>Créditos y pagos, <span className={styles.noWrap}>en orden.</span></h1>
+            <span>Cotiza, registra y entrega documentos claros.</span>
           </div>
           <ul>
             <li>Cotizar</li>
-            <li>Recalcular</li>
+            <li>Registrar</li>
             <li>Imprimir</li>
           </ul>
         </aside>
@@ -124,7 +121,9 @@ export default async function AccessPage({
           <div className={styles.formHeading}>
             <p>Acceso seguro</p>
             <h2>Iniciar sesión</h2>
-            <span>Ingresa tu correo y código de acceso.</span>
+            {no_disponible === "1" && (
+              <p role="alert">El servicio no está disponible.</p>
+            )}
           </div>
           <AccessForm nextPath={nextPath} />
         </div>

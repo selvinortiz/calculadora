@@ -54,6 +54,21 @@ describe("calculatePaymentCreditAdjustment", () => {
   });
 });
 
+describe("decimal rounding", () => {
+  it("rounds exact half-cent values away from zero", () => {
+    expect(roundCurrency(1.005)).toBe(1.01);
+    expect(roundCurrency(10.125)).toBe(10.13);
+  });
+
+  it("reconciles tiny schedules using integer cents", () => {
+    const rows = calculatePaymentSchedule({ principal: 0.02, interestTotal: 0.01, months: 2, firstDueDate: "2026-08-31" });
+    expect(rows.map((row) => row.payment)).toEqual([0.02, 0.01]);
+    expect(sum(rows.map((row) => row.payment))).toBe(0.03);
+    expect(sum(rows.map((row) => row.principal))).toBe(0.02);
+    expect(sum(rows.map((row) => row.interest))).toBe(0.01);
+  });
+});
+
 describe("calculatePaymentSchedule", () => {
   it("creates and reconciles a complete new-loan schedule", () => {
     const rows = calculatePaymentSchedule({

@@ -14,11 +14,7 @@ export default async function PaymentAdjustmentPage() {
   return (
     <main className="appPage">
       <header className="pageHeader">
-        <p className="pageEyebrow">Ajustes</p>
-        <h1 className="pageTitle">Ajustar un pago</h1>
-        <p className="pageIntro">
-          Aplica un saldo a favor a la próxima cuota y deja constancia del cambio.
-        </p>
+        <h1 className="pageTitle">Ajuste de pago</h1>
       </header>
       <PaymentAdjustmentWorkflow
         operatorCompany={session?.company ?? ""}

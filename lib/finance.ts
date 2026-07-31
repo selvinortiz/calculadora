@@ -1,3 +1,5 @@
+import Decimal from "decimal.js";
+
 export const LOAN_LIMITS = {
   price: { min: 0, max: 1_000_000_000 },
   annualRate: { min: 0, max: 100 },
@@ -98,7 +100,7 @@ export function roundCurrency(value: number): number {
     throw new RangeError("Currency values must be finite.");
   }
 
-  return Math.round(value * 100) / 100;
+  return new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
 }
 
 export function validateLoanInputs(inputs: LoanInputs): LoanInputErrors {
@@ -142,15 +144,20 @@ export function calculateSimpleInterestQuote(
 ): SimpleInterestQuote {
   assertCalculationInputs(principal, annualRate, months);
 
-  const exactInterest = principal * (annualRate / 100) * (months / 12);
-  const total = roundCurrency(principal + exactInterest);
-  const monthly = roundCurrency((principal + exactInterest) / months);
-  const finalPayment = roundCurrency(total - monthly * (months - 1));
+  const principalValue = new Decimal(principal);
+  const exactInterest = principalValue
+    .mul(new Decimal(annualRate).div(100))
+    .mul(new Decimal(months).div(12));
+  const total = roundCurrency(principalValue.add(exactInterest).toNumber());
+  const monthly = roundCurrency(principalValue.add(exactInterest).div(months).toNumber());
+  const finalPayment = roundCurrency(
+    new Decimal(total).minus(new Decimal(monthly).mul(months - 1)).toNumber(),
+  );
 
   return {
     months,
     principal: roundCurrency(principal),
-    interestTotal: roundCurrency(total - principal),
+    interestTotal: roundCurrency(new Decimal(total).minus(principalValue).toNumber()),
     total,
     monthly,
     finalPayment,
@@ -194,35 +201,35 @@ export function calculatePaymentSchedule({
   }
 
   const firstDate = parseIsoDate(firstDueDate);
-  const total = roundCurrency(principal + interestTotal);
-  const regularPayment = roundCurrency(total / months);
-  const finalPayment = roundCurrency(
-    total - regularPayment * (months - 1),
-  );
-  const regularPrincipal = roundCurrency(principal / months);
-  let principalPaid = 0;
-  let interestPaid = 0;
+  const principalCents = toIntegerCents(principal);
+  const interestCents = toIntegerCents(interestTotal);
+  const totalCents = principalCents + interestCents;
+  const regularPaymentCents = divideCentsHalfUp(totalCents, months);
+  const finalPaymentCents = totalCents - regularPaymentCents * (months - 1);
+  const regularPrincipalCents = divideCentsHalfUp(principalCents, months);
+  let principalPaidCents = 0;
+  let interestPaidCents = 0;
 
   return Array.from({ length: months }, (_, index) => {
     const isLast = index === months - 1;
-    const payment = isLast ? finalPayment : regularPayment;
-    const principalPortion = isLast
-      ? roundCurrency(principal - principalPaid)
-      : regularPrincipal;
-    const interestPortion = isLast
-      ? roundCurrency(interestTotal - interestPaid)
-      : roundCurrency(payment - principalPortion);
+    const paymentCents = isLast ? finalPaymentCents : regularPaymentCents;
+    const principalPortionCents = isLast
+      ? principalCents - principalPaidCents
+      : regularPrincipalCents;
+    const interestPortionCents = isLast
+      ? interestCents - interestPaidCents
+      : paymentCents - principalPortionCents;
 
-    principalPaid = roundCurrency(principalPaid + principalPortion);
-    interestPaid = roundCurrency(interestPaid + interestPortion);
+    principalPaidCents += principalPortionCents;
+    interestPaidCents += interestPortionCents;
 
     return {
       paymentNumber: firstPaymentNumber + index,
       dueDate: addMonthsToIsoDate(firstDate, index),
-      principal: principalPortion,
-      interest: interestPortion,
-      payment,
-      remainingPrincipal: roundCurrency(Math.max(0, principal - principalPaid)),
+      principal: fromIntegerCents(principalPortionCents),
+      interest: fromIntegerCents(interestPortionCents),
+      payment: fromIntegerCents(paymentCents),
+      remainingPrincipal: fromIntegerCents(Math.max(0, principalCents - principalPaidCents)),
     };
   });
 }
@@ -259,8 +266,10 @@ export function calculatePaymentCreditAdjustment({
     );
   }
 
-  const creditBalance = roundCurrency(receivedPayment - scheduledPayment);
-  if (creditBalance >= scheduledPayment) {
+  const scheduledCents = toIntegerCents(scheduledPayment);
+  const receivedCents = toIntegerCents(receivedPayment);
+  const creditCents = receivedCents - scheduledCents;
+  if (creditCents >= scheduledCents) {
     throw new RangeError(
       "The credit balance must be smaller than the next scheduled installment.",
     );
@@ -270,11 +279,11 @@ export function calculatePaymentCreditAdjustment({
     paymentNumber,
     nextPaymentNumber: paymentNumber + 1,
     followingPaymentNumber: paymentNumber + 2,
-    scheduledPayment: roundCurrency(scheduledPayment),
-    receivedPayment: roundCurrency(receivedPayment),
-    creditBalance,
-    adjustedNextPayment: roundCurrency(scheduledPayment - creditBalance),
-    regularPaymentAfterAdjustment: roundCurrency(scheduledPayment),
+    scheduledPayment: fromIntegerCents(scheduledCents),
+    receivedPayment: fromIntegerCents(receivedCents),
+    creditBalance: fromIntegerCents(creditCents),
+    adjustedNextPayment: fromIntegerCents(scheduledCents - creditCents),
+    regularPaymentAfterAdjustment: fromIntegerCents(scheduledCents),
   };
 }
 
@@ -320,64 +329,66 @@ export function calculateSimpleInterestRecalculation({
     );
   }
 
-  const annualRateDecimal = annualRate / 100;
-  const originalInterest =
-    principal * annualRateDecimal * (totalMonths / 12);
-  const exactRegularPayment = (principal + originalInterest) / totalMonths;
-  const principalPerPayment = principal / totalMonths;
-  const interestPerPayment = originalInterest / totalMonths;
+  const principalDecimal = new Decimal(principal);
+  const annualRateDecimal = new Decimal(annualRate).div(100);
+  const originalInterest = principalDecimal.mul(annualRateDecimal).mul(new Decimal(totalMonths).div(12));
+  const exactRegularPayment = principalDecimal.add(originalInterest).div(totalMonths);
+  const principalPerPayment = principalDecimal.div(totalMonths);
+  const interestPerPayment = originalInterest.div(totalMonths);
   const remainingMonths = totalMonths - applyAfterPayment;
-  const calculatedCurrentCapital =
-    principal - principalPerPayment * applyAfterPayment;
-  const exactCurrentCapital = currentCapital ?? calculatedCurrentCapital;
+  const calculatedCurrentCapital = principalDecimal.minus(principalPerPayment.mul(applyAfterPayment));
+  const exactCurrentCapital = currentCapital === undefined ? calculatedCurrentCapital : new Decimal(currentCapital);
 
-  if (capitalPayment - exactCurrentCapital > 1e-7) {
+  if (new Decimal(capitalPayment).greaterThan(exactCurrentCapital)) {
     throw new RangeError("The capital payment cannot exceed the current capital.");
   }
 
-  const exactNewCapital = Math.max(0, exactCurrentCapital - capitalPayment);
-  const originalFutureInterest =
-    originalInterest * (remainingMonths / totalMonths);
-  const recalculatedInterestBeforeCapitalPayment =
-    exactCurrentCapital * annualRateDecimal * (remainingMonths / 12);
-  const newFutureInterest =
-    exactNewCapital * annualRateDecimal * (remainingMonths / 12);
-  const originalScheduledBalance =
-    exactCurrentCapital + originalFutureInterest;
-  const newScheduledBalance = exactNewCapital + newFutureInterest;
-  const roundedNewScheduledBalance = roundCurrency(newScheduledBalance);
-  const newMonthlyPayment = roundCurrency(
-    newScheduledBalance / remainingMonths,
-  );
-  const newFinalPayment = roundCurrency(
-    roundedNewScheduledBalance - newMonthlyPayment * (remainingMonths - 1),
-  );
+  const exactNewCapital = Decimal.max(0, exactCurrentCapital.minus(capitalPayment));
+  const remainingYearFraction = new Decimal(remainingMonths).div(12);
+  const originalFutureInterest = originalInterest.mul(new Decimal(remainingMonths).div(totalMonths));
+  const recalculatedInterestBeforeCapitalPayment = exactCurrentCapital.mul(annualRateDecimal).mul(remainingYearFraction);
+  const newFutureInterest = exactNewCapital.mul(annualRateDecimal).mul(remainingYearFraction);
+  const originalScheduledBalance = exactCurrentCapital.add(originalFutureInterest);
+  const newScheduledBalance = exactNewCapital.add(newFutureInterest);
+  const roundedNewScheduledBalance = roundDecimalCurrency(newScheduledBalance);
+  const newMonthlyPayment = roundDecimalCurrency(newScheduledBalance.div(remainingMonths));
+  const newFinalPayment = roundDecimalCurrency(new Decimal(roundedNewScheduledBalance).minus(new Decimal(newMonthlyPayment).mul(remainingMonths - 1)));
 
   return {
     applyAfterPayment,
     remainingMonths,
-    regularPayment: roundCurrency(exactRegularPayment),
-    paymentThisMonth: roundCurrency(exactRegularPayment + capitalPayment),
-    principalAppliedByRegularPayment: roundCurrency(principalPerPayment),
-    interestAppliedByRegularPayment: roundCurrency(interestPerPayment),
-    currentCapital: roundCurrency(exactCurrentCapital),
-    newCapital: roundCurrency(exactNewCapital),
-    originalFutureInterest: roundCurrency(originalFutureInterest),
-    interestAdjustmentFromRecalculation: roundCurrency(
-      originalFutureInterest - recalculatedInterestBeforeCapitalPayment,
-    ),
-    interestReductionFromCapitalPayment: roundCurrency(
-      recalculatedInterestBeforeCapitalPayment - newFutureInterest,
-    ),
-    newFutureInterest: roundCurrency(newFutureInterest),
-    originalScheduledBalance: roundCurrency(originalScheduledBalance),
+    regularPayment: roundDecimalCurrency(exactRegularPayment),
+    paymentThisMonth: roundDecimalCurrency(exactRegularPayment.add(capitalPayment)),
+    principalAppliedByRegularPayment: roundDecimalCurrency(principalPerPayment),
+    interestAppliedByRegularPayment: roundDecimalCurrency(interestPerPayment),
+    currentCapital: roundDecimalCurrency(exactCurrentCapital),
+    newCapital: roundDecimalCurrency(exactNewCapital),
+    originalFutureInterest: roundDecimalCurrency(originalFutureInterest),
+    interestAdjustmentFromRecalculation: roundDecimalCurrency(originalFutureInterest.minus(recalculatedInterestBeforeCapitalPayment)),
+    interestReductionFromCapitalPayment: roundDecimalCurrency(recalculatedInterestBeforeCapitalPayment.minus(newFutureInterest)),
+    newFutureInterest: roundDecimalCurrency(newFutureInterest),
+    originalScheduledBalance: roundDecimalCurrency(originalScheduledBalance),
     newScheduledBalance: roundedNewScheduledBalance,
-    totalInterestReduction: roundCurrency(
-      originalFutureInterest - newFutureInterest,
-    ),
+    totalInterestReduction: roundDecimalCurrency(originalFutureInterest.minus(newFutureInterest)),
     newMonthlyPayment,
     newFinalPayment,
   };
+}
+
+function toIntegerCents(value: number): number {
+  return new Decimal(value).mul(100).toDecimalPlaces(0, Decimal.ROUND_HALF_UP).toNumber();
+}
+
+function fromIntegerCents(value: number): number {
+  return new Decimal(value).div(100).toNumber();
+}
+
+function divideCentsHalfUp(cents: number, divisor: number): number {
+  return new Decimal(cents).div(divisor).toDecimalPlaces(0, Decimal.ROUND_HALF_UP).toNumber();
+}
+
+function roundDecimalCurrency(value: Decimal.Value): number {
+  return new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
 }
 
 function assertCalculationInputs(

@@ -17,6 +17,7 @@ type PaymentAdjustmentRecordProps = {
   issueDate: string;
   nextPaymentDate: string;
   paymentDate: string;
+  unposted?: boolean;
 };
 
 const currencyFormatter = new Intl.NumberFormat("es-GT", {
@@ -33,6 +34,7 @@ export function PaymentAdjustmentRecord({
   issueDate,
   nextPaymentDate,
   paymentDate,
+  unposted = false,
 }: PaymentAdjustmentRecordProps) {
   return (
     <article className={styles.document} data-print-document>
@@ -42,9 +44,9 @@ export function PaymentAdjustmentRecord({
           <h2>Constancia de ajuste de pago</h2>
         </div>
         <div className={styles.documentMeta}>
-          <span>AJUSTE</span>
+          <span>{unposted ? "BORRADOR" : "AJUSTE"}</span>
           <strong>
-            {details.documentNumber
+            {!unposted && details.documentNumber
               ? `No. ${details.documentNumber}`
               : "Sin número"}
           </strong>
@@ -53,9 +55,7 @@ export function PaymentAdjustmentRecord({
       </header>
 
       <p className={styles.notice}>
-        Esta constancia registra un saldo a favor y su aplicación a la cuota
-        siguiente. No modifica el capital, el interés ni la fecha final del
-        financiamiento.
+        El saldo a favor se aplica únicamente a la cuota siguiente. No modifica el capital, el interés ni la fecha final del financiamiento.
       </p>
 
       <section className={styles.identityGrid} aria-label="Datos del financiamiento">
@@ -142,7 +142,7 @@ export function PaymentAdjustmentRecord({
       </section>
 
       <section className={styles.unchanged}>
-        <h3>Condiciones que permanecen sin cambios</h3>
+        <h3>Sin cambios</h3>
         <div>
           <span>Capital</span>
           <span>Interés</span>

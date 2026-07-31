@@ -114,8 +114,12 @@
   background: var(--accent-soft);
   border: 1px solid #d7ddff;
   border-radius: 0.55rem;
-  font-size: 0.95rem;
-  font-weight: 850;
+}
+
+.operationIcon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  stroke-width: 1.9;
 }
 
 .operationCard p {
@@ -143,10 +147,19 @@
 }
 
 .operationCard > strong {
+  display: inline-flex;
   grid-column: 1 / -1;
   align-self: end;
+  align-items: center;
+  gap: 0.3rem;
   color: var(--accent-strong);
   font-size: 0.72rem;
+}
+
+.operationCard > strong svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  stroke-width: 2;
 }
 
 .primaryCard {

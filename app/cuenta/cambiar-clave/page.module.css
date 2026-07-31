@@ -1,0 +1,125 @@
+.card {
+  width: min(100%, 32rem);
+  padding: clamp(1.1rem, 3vw, 1.5rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.cardHeader > span {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-radius: 0.7rem;
+}
+
+.cardHeader > span svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  stroke-width: 1.9;
+}
+
+.cardHeader h2,
+.cardHeader p {
+  margin: 0;
+}
+
+.cardHeader h2 {
+  color: var(--text-strong);
+  font-size: 1rem;
+}
+
+.cardHeader p {
+  margin-top: 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.form {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field label {
+  color: var(--text-strong);
+  font-size: 0.73rem;
+  font-weight: 760;
+}
+
+.field input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.65rem;
+}
+
+.field input:focus-visible,
+.form button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.form button {
+  --button-hover-color: #fff;
+  --button-hover-background: var(--primary-hover);
+  --button-hover-border: var(--primary-hover);
+  --button-hover-shadow: var(--primary-hover-shadow);
+
+  min-height: 2.75rem;
+  margin-top: 0.15rem;
+  padding: 0.6rem 0.85rem;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 0.65rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.message,
+.messageSuccess {
+  margin: 0;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.message {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.messageSuccess {
+  color: var(--success);
+  background: var(--success-soft);
+}

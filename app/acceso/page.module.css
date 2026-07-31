@@ -79,6 +79,11 @@
   font-size: clamp(1.65rem, 4vw, 2.25rem);
   line-height: 1.08;
   letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.noWrap {
+  white-space: nowrap;
 }
 
 .contextCopy > span {
@@ -171,6 +176,11 @@
 }
 
 .accessForm > button {
+  --button-hover-color: #fff;
+  --button-hover-background: var(--primary-hover);
+  --button-hover-border: var(--primary-hover);
+  --button-hover-shadow: var(--primary-hover-shadow);
+
   min-height: 2.9rem;
   color: #fff;
   background: var(--accent);
@@ -184,6 +194,12 @@
 .accessForm > button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+.recoveryHint {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
 }
 
 .error {

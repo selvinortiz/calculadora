@@ -32,6 +32,7 @@ describe("PaymentAdjustmentRecord", () => {
     expect(markup).toContain("Q 41.44");
     expect(markup).toContain("Q 952.12");
     expect(markup).toContain("Desde la 9");
-    expect(markup).toContain("No modifica el capital, el interés ni la fecha final");
+    expect(markup).toContain("El saldo a favor se aplica únicamente a la cuota siguiente.");
+    expect(markup).toContain("Sin cambios");
   });
 });

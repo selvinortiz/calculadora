@@ -14,11 +14,7 @@ export default async function CapitalPaymentPage() {
   return (
     <main className="appPage">
       <header className="pageHeader">
-        <p className="pageEyebrow">Abonos a capital</p>
-        <h1 className="pageTitle">Registrar un abono</h1>
-        <p className="pageIntro">
-          Actualiza el saldo y prepara los documentos del pago.
-        </p>
+        <h1 className="pageTitle">Abono a capital</h1>
       </header>
       <CapitalPaymentWorkflow
         operatorCompany={session?.company ?? ""}

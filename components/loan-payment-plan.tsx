@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   calculatePaymentSchedule,
   type SimpleInterestQuote,
 } from "@/lib/finance";
 import { PaymentScheduleDocument } from "./payment-schedule-document";
+import { printElement } from "../lib/print-preview";
 import { SavedCustomerPicker } from "./saved-profile-picker";
-import { useLocalPersistence } from "@/lib/use-local-persistence";
+import { notifyDurableDirectoryChanged, useDurableDirectory } from "@/lib/use-durable-directory";
+import type { MutationResult, PostedTransaction } from "@/lib/domain";
 import styles from "./loan-payment-plan.module.css";
 
 type LoanPaymentPlanProps = {
@@ -45,7 +47,8 @@ export function LoanPaymentPlan({
   initialDetails,
   storageScope,
 }: LoanPaymentPlanProps) {
-  const { data } = useLocalPersistence(storageScope);
+  const { data } = useDurableDirectory();
+  const idempotencyKey = useRef<string | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState(
     initialDetails.customerId,
   );
@@ -57,6 +60,9 @@ export function LoanPaymentPlan({
     issueDate: getTodayIso(),
   }));
   const [showErrors, setShowErrors] = useState(false);
+  const [posting, setPosting] = useState(false);
+  const [postMessage, setPostMessage] = useState("");
+  const [posted, setPosted] = useState<PostedTransaction | null>(null);
   const creditorName =
     details.creditorName || data.organization?.name || operatorCompany;
 
@@ -75,8 +81,11 @@ export function LoanPaymentPlan({
       firstDueDate: details.firstDueDate
         ? undefined
         : "Indica la fecha de la primera cuota.",
+      customer: selectedCustomerId
+        ? undefined
+        : "Selecciona un cliente registrado.",
     }),
-    [creditorName, details],
+    [creditorName, details, selectedCustomerId],
   );
   const hasErrors = Object.values(errors).some(Boolean);
   const rows = useMemo(
@@ -99,7 +108,37 @@ export function LoanPaymentPlan({
   function printPlan() {
     setShowErrors(true);
     if (hasErrors) return;
-    window.print();
+    if (posted) {
+      window.location.assign(`/financiamientos/${posted.loanId}`);
+      return;
+    }
+    const target = document.querySelector<HTMLElement>("[data-print-document]");
+    if (target) void printElement(target, "Plan de pagos");
+  }
+
+  async function postLoan() {
+    setShowErrors(true);
+    if (hasErrors || posting) {
+      if (errors.customer) setPostMessage(errors.customer);
+      return;
+    }
+    idempotencyKey.current ||= crypto.randomUUID();
+    setPosting(true); setPostMessage("");
+    try {
+      const response = await fetch("/api/transactions/loans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idempotencyKey: idempotencyKey.current, customerId: selectedCustomerId, accountReference: details.accountReference, price, downPayment, annualRate, termMonths: quote.months, firstDueDate: details.firstDueDate, issueDate: details.issueDate, replacesTransactionId: new URLSearchParams(window.location.search).get("reemplaza") || undefined }),
+      });
+      const result = await response.json() as MutationResult<PostedTransaction>;
+      if (!result.ok) setPostMessage(result.message);
+      else {
+        setPosted(result.data);
+        setPostMessage("");
+        notifyDurableDirectoryChanged();
+      }
+    } catch { setPostMessage("No fue posible registrar el financiamiento."); }
+    finally { setPosting(false); }
   }
 
   return (
@@ -120,8 +159,7 @@ export function LoanPaymentPlan({
         <aside className={styles.editor} aria-label="Datos del plan de pagos">
           <div className={styles.heading}>
             <div>
-              <p>Datos del documento</p>
-              <h3>Identifica el préstamo</h3>
+              <h3>Datos del préstamo</h3>
             </div>
           </div>
 
@@ -179,9 +217,11 @@ export function LoanPaymentPlan({
           </form>
 
           <div className={styles.actions}>
-            <p>El plan no acredita pagos recibidos.</p>
+            <p>{posted ? `Financiamiento ${posted.documentNumber} registrado.` : "Borrador sin registrar."}</p>
+            {postMessage && <p role="status">{postMessage}</p>}
+            {!posted && <button type="button" onClick={postLoan} disabled={posting}>{posting ? "Registrando…" : "Registrar financiamiento"}</button>}
             <button type="button" onClick={printPlan}>
-              Imprimir o guardar PDF
+              {posted ? "Ver documento" : "Imprimir borrador"}
             </button>
           </div>
         </aside>
@@ -198,6 +238,7 @@ export function LoanPaymentPlan({
                 annualRate={annualRate}
                 creditorName={creditorName}
                 debtorName={details.debtorName}
+                documentNumber={posted?.documentNumber}
                 downPayment={downPayment}
                 finalPayment={quote.finalPayment}
                 interestTotal={quote.interestTotal}
@@ -209,6 +250,7 @@ export function LoanPaymentPlan({
                 rows={rows}
                 scheduledTotal={quote.total}
                 variant="original"
+                unposted
               />
             ) : (
               <div className={styles.emptyPreview}>
