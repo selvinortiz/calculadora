@@ -2,7 +2,7 @@
 
 Portal operativo en Next.js para modelar créditos de interés simple en quetzales. Next.js se despliega en Vercel; Supabase aporta Postgres durable, Auth y Row Level Security.
 
-La aplicación registra tres operaciones: originación de un financiamiento, abono a capital y ajuste de un pago con saldo a favor. Las cotizaciones siguen siendo editables hasta usar una acción explícita de registro. Cada operación registrada recibe un número transaccional y un snapshot estructurado e inmutable para reimpresión.
+La aplicación registra tres operaciones: originación de un financiamiento, abono a capital y ajuste de un pago con saldo a favor. Las cotizaciones siguen siendo editables hasta usar una acción explícita de registro. Cada operación registrada recibe un número transaccional y un snapshot estructurado para reimpresión.
 
 > No es un libro mayor completo de cuotas. Las cuotas ordinarias no se registran aquí, por lo que el sistema solicita el número de cuota o un capital de estado de cuenta y no afirma mora, saldo exigible ni monto al día.
 
@@ -50,7 +50,7 @@ El bootstrap es intencionalmente de una sola ejecución para proyectos sin seed,
 - `npm run supabase:types` regenera `lib/database.types.ts` contra la pila local.
 - El seed no importa datos del antiguo `localStorage`.
 
-El dinero se persiste como centavos enteros; las tasas como `numeric(9,6)`. La versión inicial de cálculo es `simple-interest-v2-cents`, con redondeo decimal explícito half-up. Los registros publicados son inmutables. Las correcciones requieren anular en orden inverso y registrar un reemplazo; los números anulados no se reutilizan.
+El dinero se persiste como centavos enteros; las tasas como `numeric(9,6)`. La versión inicial de cálculo es `simple-interest-v2-cents`, con redondeo decimal explícito half-up. El propietario puede corregir un financiamiento, abono o ajuste conservando su número; la corrección regenera el snapshot y queda registrada con su estado anterior y posterior en auditoría. La anulación y el reemplazo permanecen disponibles para operaciones que deban cancelarse, y los números anulados no se reutilizan.
 
 ## Acceso sin correo transaccional
 

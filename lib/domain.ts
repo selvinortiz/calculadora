@@ -153,6 +153,36 @@ export type PostedTransaction = {
   idempotentReplay: boolean;
 };
 
+export type EditLoanCommand = Omit<PostLoanCommand, "idempotencyKey" | "organizationId" | "customerId" | "replacesTransactionId"> & {
+  transactionId: string;
+  transactionType: "loan_origination";
+  organizationId: string;
+  expectedLoanVersion: number;
+};
+
+export type EditCapitalPaymentCommand = Omit<PostCapitalPaymentCommand, "idempotencyKey" | "organizationId" | "loanId" | "expectedLoanVersion" | "replacesTransactionId"> & {
+  transactionId: string;
+  transactionType: "capital_payment";
+  organizationId: string;
+  expectedLoanVersion: number;
+};
+
+export type EditPaymentAdjustmentCommand = Omit<PostPaymentAdjustmentCommand, "idempotencyKey" | "organizationId" | "loanId" | "expectedLoanVersion" | "replacesTransactionId"> & {
+  transactionId: string;
+  transactionType: "payment_adjustment";
+  organizationId: string;
+  expectedLoanVersion: number;
+};
+
+export type EditTransactionCommand =
+  | EditLoanCommand
+  | EditCapitalPaymentCommand
+  | EditPaymentAdjustmentCommand;
+
+export type EditedTransaction = Omit<PostedTransaction, "idempotentReplay"> & {
+  edited: true;
+};
+
 export type MutationErrorCode =
   | "validation"
   | "unauthorized"

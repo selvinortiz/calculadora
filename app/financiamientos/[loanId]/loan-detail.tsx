@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import {
   AdjustmentsHorizontalIcon,
   ArrowPathIcon,
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
   NoSymbolIcon,
+  PencilSquareIcon,
   PrinterIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
@@ -15,6 +16,7 @@ import {
   type PostedSnapshotDocument,
 } from "../../../components/posted-document-bundle";
 import type { OrganizationRole } from "@/lib/domain";
+import { PAYMENT_METHODS } from "../../../lib/payment-methods";
 import { printElement } from "../../../lib/print-preview";
 import styles from "./page.module.css";
 
@@ -32,6 +34,9 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
   const [pendingVoid, setPendingVoid] = useState<Transaction | null>(null);
   const [voidReason, setVoidReason] = useState("");
   const [voiding, setVoiding] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [editError, setEditError] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(() => hasExtendedHistory ? new Set() : new Set([CURRENT_PLAN_KEY, ...historySectionKeys]));
   const allHistoryExpanded = historySectionKeys.length > 0 && historySectionKeys.every((key) => expandedSections.has(key));
   function sectionIsOpen(key: string) { return expandedSections.has(key); }
@@ -76,6 +81,35 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
     if (!response.ok) {
       setMessage(result.message || "No fue posible anular el registro.");
       setVoiding(false);
+      return;
+    }
+    window.location.reload();
+  }
+  function requestEdit(transaction: Transaction) {
+    setMessage("");
+    setEditError("");
+    setEditingTransaction(transaction);
+  }
+  function closeEditDialog() {
+    if (savingEdit) return;
+    setEditingTransaction(null);
+    setEditError("");
+  }
+  async function saveEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingTransaction) return;
+    setSavingEdit(true);
+    setEditError("");
+    const body = Object.fromEntries(new FormData(event.currentTarget));
+    const response = await fetch(`/api/transactions/${editingTransaction.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, type: editingTransaction.type, expectedLoanVersion: loan.version }),
+    });
+    const result = await response.json() as { message?: string };
+    if (!response.ok) {
+      setEditError(result.message || "No fue posible guardar los cambios.");
+      setSavingEdit(false);
       return;
     }
     window.location.reload();
@@ -137,6 +171,7 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
           </div>
           <div className={styles.transactionActions}>
             {transaction.documents.length > 0 && <button className={styles.disclosureButton} type="button" aria-expanded={sectionIsOpen(transaction.id)} aria-controls={`transaction-${transaction.id}`} onClick={() => toggleSection(transaction.id)}><span>{sectionIsOpen(transaction.id) ? "Ocultar detalle" : "Ver detalle"}</span><ChevronDownIcon className={styles.chevronIcon} aria-hidden="true" /></button>}
+            {role === "owner" && transaction.status === "posted" && <button className={styles.secondaryButton} type="button" onClick={() => requestEdit(transaction)}><PencilSquareIcon aria-hidden="true" /><span>Editar</span></button>}
             {transaction.documents.length > 0 && <button className={styles.secondaryButton} type="button" onClick={() => printDocument(transaction.id)}><PrinterIcon aria-hidden="true" /><span>Reimprimir</span></button>}
             {role === "owner" && transaction.status === "posted" && <button className={styles.dangerButton} type="button" onClick={() => requestVoid(transaction)}><NoSymbolIcon aria-hidden="true" /><span>Anular</span></button>}
             {role === "owner" && transaction.status === "voided" && !loan.transactions.some((candidate) => candidate.replacesTransactionId === transaction.id) && <a className={styles.replacementLink} href={`${replacementPath(transaction.type)}?reemplaza=${transaction.id}`}><ArrowPathIcon aria-hidden="true" /><span>Reemplazar</span></a>}
@@ -160,7 +195,75 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
         </div>
       </section>
     </div>}
+    {editingTransaction && <div className={styles.dialogBackdrop} role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) closeEditDialog(); }}>
+      <EditDialog transaction={editingTransaction} loan={loan} error={editError} saving={savingEdit} onCancel={closeEditDialog} onSubmit={saveEdit} />
+    </div>}
   </>;
+}
+
+function EditDialog({ transaction, loan, error, saving, onCancel, onSubmit }: { transaction: Transaction; loan: Loan; error: string; saving: boolean; onCancel: () => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+  const snapshot = asRecord(transaction.documents[0]?.snapshot);
+  const payload = asRecord(snapshot.payload);
+  const details = asRecord(payload.details);
+  const adjustment = asRecord(payload.adjustment);
+  return <section className={`${styles.dialog} ${styles.editDialog}`} role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title">
+    <p className={styles.editEyebrow}>Editar registro</p>
+    <h2 id="edit-dialog-title">{transaction.documentNumber}</h2>
+    <p>Corrige el registro y su documento sin cambiar el número.</p>
+    <form className={styles.editForm} onSubmit={onSubmit}>
+      <div className={styles.editGrid}>
+        {transaction.type === "loan_origination" && <>
+          <EditField label="Referencia" name="accountReference" defaultValue={loan.accountReference} required autoFocus />
+          <EditField label="Fecha del financiamiento" name="issueDate" type="date" defaultValue={transaction.effectiveDate} required />
+          <EditField label="Precio" name="price" type="number" step="0.01" min="0.01" defaultValue={loan.price} required />
+          <EditField label="Enganche" name="downPayment" type="number" step="0.01" min="0" defaultValue={loan.downPayment} required />
+          <EditField label="Tasa anual" name="annualRate" type="number" step="0.000001" min="0" max="100" defaultValue={loan.annualRate} required />
+          <EditField label="Plazo en meses" name="termMonths" type="number" step="1" min="2" max="360" defaultValue={loan.termMonths} required />
+          <EditField label="Primera cuota" name="firstDueDate" type="date" defaultValue={loan.firstDueDate} required />
+        </>}
+        {transaction.type === "capital_payment" && <>
+          <EditSelect label="Modalidad" name="transactionMode" defaultValue={stringValue(details.transactionMode) || "standalone"} options={[{ value: "standalone", label: "Solo abono" }, { value: "combined", label: "Cuota y abono" }]} />
+          <EditField label="Cuota aplicada" name="paymentNumber" type="number" step="1" min="1" defaultValue={numberValue(details.paymentNumber)} required autoFocus />
+          <EditField label="Fecha del abono" name="transactionDate" type="date" defaultValue={dateValue(details.transactionDate) || transaction.effectiveDate} required />
+          <EditField label="Último pago" name="lastPaymentDate" type="date" defaultValue={dateValue(details.lastPaymentDate)} />
+          <EditField label="Próxima cuota" name="nextPaymentDate" type="date" defaultValue={dateValue(details.nextPaymentDate)} required />
+          <EditField label="Abono a capital" name="capitalPayment" type="number" step="0.01" min="0.01" defaultValue={numberValue(details.capitalPayment)} required />
+          <EditSelect label="Origen del saldo" name="balanceSource" defaultValue={stringValue(details.balanceSource) || "calculated"} options={[{ value: "calculated", label: "Calculado" }, { value: "statement", label: "Estado de cuenta" }]} />
+          <EditField label="Capital pendiente" name="statementCapital" type="number" step="0.01" min="0" defaultValue={numberValue(details.currentCapital)} required />
+          <EditSelect label="Medio de pago" name="paymentMethod" defaultValue={stringValue(details.paymentMethod)} options={paymentMethodOptions(stringValue(details.paymentMethod))} />
+          <EditField label="Referencia del pago" name="paymentReference" defaultValue={stringValue(details.paymentReference)} />
+          <EditField label="Recibido por" name="receivedBy" defaultValue={stringValue(details.receivedBy)} />
+          <EditTextArea label="Notas" name="notes" defaultValue={stringValue(details.notes)} />
+        </>}
+        {transaction.type === "payment_adjustment" && <>
+          <EditField label="Cuota ajustada" name="paymentNumber" type="number" step="1" min="1" defaultValue={numberValue(adjustment.paymentNumber)} required autoFocus />
+          <EditField label="Fecha del pago" name="paymentDate" type="date" defaultValue={dateValue(payload.paymentDate) || transaction.effectiveDate} required />
+          <EditField label="Próxima cuota" name="nextPaymentDate" type="date" defaultValue={dateValue(payload.nextPaymentDate)} required />
+          <EditField label="Pago recibido" name="receivedPayment" type="number" step="0.01" min="0.01" defaultValue={numberValue(adjustment.receivedPayment)} required />
+          <EditField label="Referencia del pago" name="paymentReference" defaultValue={stringValue(payload.paymentReference)} />
+          <EditField label="Ajustado por" name="adjustedBy" defaultValue={stringValue(payload.adjustedBy)} />
+          <EditTextArea label="Notas" name="notes" defaultValue={stringValue(payload.notes)} />
+        </>}
+      </div>
+      {error && <p className={styles.editError} role="alert">{error}</p>}
+      <div className={styles.dialogActions}>
+        <button type="button" onClick={onCancel} disabled={saving}>Cancelar</button>
+        <button className={styles.saveButton} type="submit" disabled={saving}>{saving ? "Guardando…" : "Guardar cambios"}</button>
+      </div>
+    </form>
+  </section>;
+}
+
+function EditField({ label, name, defaultValue, ...props }: { label: string; name: string; defaultValue: string | number; type?: string; step?: string; min?: string; max?: string; required?: boolean; autoFocus?: boolean }) {
+  return <label className={styles.editField}><span>{label}</span><input name={name} defaultValue={defaultValue} {...props} /></label>;
+}
+
+function EditSelect({ label, name, defaultValue, options }: { label: string; name: string; defaultValue: string; options: Array<{ value: string; label: string }> }) {
+  return <label className={styles.editField}><span>{label}</span><select name={name} defaultValue={defaultValue}>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>;
+}
+
+function EditTextArea({ label, name, defaultValue }: { label: string; name: string; defaultValue: string }) {
+  return <label className={`${styles.editField} ${styles.fullEditField}`}><span>{label}</span><textarea name={name} rows={3} maxLength={1000} defaultValue={defaultValue} /></label>;
 }
 
 function Schedule({ rows }: { rows: Installment[] }) { return <div className={styles.table}><table><thead><tr><th>Cuota</th><th>Vence</th><th>Capital</th><th>Interés</th><th>Total</th><th>Capital pendiente</th></tr></thead><tbody>{rows.map((row) => <tr key={row.paymentNumber}><td>{row.paymentNumber}</td><td>{date(row.dueDate)}</td><td>{money(row.principal)}</td><td>{money(row.interest)}</td><td>{money(row.payment)}</td><td>{money(row.remainingPrincipal)}</td></tr>)}</tbody></table></div>; }
@@ -203,3 +306,11 @@ function latestAdjustmentStatus(transactions: Transaction[]) {
 function replacementPath(type: string) { return ({ loan_origination: "/financiamiento", capital_payment: "/abono-capital", payment_adjustment: "/ajustes" } as Record<string, string>)[type] || "/"; }
 function asRecord(value: unknown): Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {}; }
 function moneyValue(value: unknown) { return typeof value === "number" && Number.isFinite(value) ? money(value) : "—"; }
+function stringValue(value: unknown) { return typeof value === "string" ? value : ""; }
+function numberValue(value: unknown) { const number = Number(value); return Number.isFinite(number) ? number : 0; }
+function dateValue(value: unknown) { return typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : ""; }
+function paymentMethodOptions(current: string) {
+  const options: string[] = ["", ...PAYMENT_METHODS];
+  if (current && !options.includes(current)) options.splice(1, 0, current);
+  return options.map((value) => ({ value, label: value || "Seleccionar" }));
+}

@@ -68,7 +68,7 @@ select is(
 );
 reset role;
 select is(
-  (select count(*) from public.audit_events where action = 'profile.updated'),
+  (select count(*) from public.audit_events where action = 'profile.updated' and organization_id = '40000000-1000-4000-8000-000000000001'),
   2::bigint,
   'profile changes are audited'
 );

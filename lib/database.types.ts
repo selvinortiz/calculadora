@@ -848,6 +848,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      edit_transaction: { Args: { command: Json }; Returns: Json }
       post_capital_payment: { Args: { command: Json }; Returns: Json }
       post_loan: { Args: { command: Json }; Returns: Json }
       post_payment_adjustment: { Args: { command: Json }; Returns: Json }

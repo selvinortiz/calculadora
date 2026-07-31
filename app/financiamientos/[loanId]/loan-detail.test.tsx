@@ -57,6 +57,7 @@ describe("LoanDetail", () => {
     expect(markup).toContain("Cuota 8: recibir");
     expect(markup).toContain("Próxima cuota");
     expect(markup).toContain("Mostrar todo");
+    expect(markup.match(/>Editar</g)).toHaveLength(3);
     expect(markup).not.toContain("<table");
   });
 
@@ -68,5 +69,15 @@ describe("LoanDetail", () => {
     expect(markup).toContain("Ocultar cuotas");
     expect(markup).toContain("Ocultar detalle");
     expect(markup).toContain("<table");
+  });
+
+  it("keeps history editing owner-only", () => {
+    const markup = renderToStaticMarkup(<LoanDetail role="operator" loan={loan([
+      transaction("origination", "loan_origination", "FIN-000002", { principal: 52_000, termMonths: 60, schedule: [installment] }),
+      transaction("capital", "capital_payment", "REC-000002", { details: { capitalPayment: 6_000, newCapital: 40_799.98 }, revisedSchedule: [installment] }),
+    ])} />);
+
+    expect(markup).not.toContain(">Editar<");
+    expect(markup).not.toContain(">Anular<");
   });
 });
