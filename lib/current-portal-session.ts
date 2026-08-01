@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "./supabase/server";
 import type { OrganizationRole } from "./domain";
+import { cache } from "react";
 
 export type PortalSession = {
   userId: string;
@@ -7,11 +8,12 @@ export type PortalSession = {
   name: string;
   email: string;
   company: string;
+  defaultRecipient: string;
   role: OrganizationRole;
   mustChangePassword: boolean;
 };
 
-export async function getCurrentPortalSession(): Promise<PortalSession | null> {
+export const getCurrentPortalSession = cache(async function getCurrentPortalSession(): Promise<PortalSession | null> {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return null;
 
@@ -36,7 +38,7 @@ export async function getCurrentPortalSession(): Promise<PortalSession | null> {
   if (!profile || !membership || !membership.active) return null;
   const { data: organization } = await supabase
     .from("organizations")
-    .select("name")
+    .select("name,default_recipient")
     .eq("id", membership.organization_id)
     .maybeSingle();
   if (!organization) return null;
@@ -47,10 +49,11 @@ export async function getCurrentPortalSession(): Promise<PortalSession | null> {
     name: profile.display_name,
     email: user.email,
     company: organization.name,
+    defaultRecipient: organization.default_recipient,
     role: membership.role as OrganizationRole,
     mustChangePassword: profile.must_change_password,
   };
-}
+});
 
 export async function requirePortalSession(): Promise<PortalSession> {
   const session = await getCurrentPortalSession();

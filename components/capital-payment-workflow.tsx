@@ -23,7 +23,6 @@ import {
 } from "./payment-record";
 import { PaymentScheduleDocument } from "./payment-schedule-document";
 import {
-  SavedCustomerPicker,
   SavedFinancingPicker,
   type SavedFinancingSelection,
 } from "./saved-profile-picker";
@@ -93,7 +92,6 @@ export function CapitalPaymentWorkflow({
   const [attemptedStep, setAttemptedStep] = useState<Step | null>(null);
   const [selectedFinancingId, setSelectedFinancingId] = useState("");
   const [selectedLoan, setSelectedLoan] = useState<DirectoryLoan | null>(null);
-  const [selectedCustomerId, setSelectedCustomerId] = useState("");
 
   const [price, setPrice] = useState("65000");
   const [downPayment, setDownPayment] = useState("13000");
@@ -173,6 +171,11 @@ export function CapitalPaymentWorkflow({
   const scheduleFirstPaymentNumber = selectedLoan?.nextPaymentNumber ?? 1;
   const scheduleLastPaymentNumber = scheduleFirstPaymentNumber + scheduleMonths - 1;
   const effectivePaymentNumber = parsedPaymentNumber - scheduleFirstPaymentNumber + 1;
+  const persistedInstallment = selectedLoan?.installments.find(
+    (installment) => installment.paymentNumber === parsedPaymentNumber,
+  );
+  const calculatedCurrentCapital = persistedInstallment?.remainingPrincipal
+    ?? schedulePrincipal * ((scheduleMonths - effectivePaymentNumber) / scheduleMonths);
 
   const movementErrors = useMemo<MovementErrors>(() => {
     const errors: MovementErrors = {};
@@ -232,8 +235,7 @@ export function CapitalPaymentWorkflow({
       const currentCapital =
         balanceSource === "statement"
           ? parsedStatementCapital
-          : schedulePrincipal *
-            ((scheduleMonths - effectivePaymentNumber) / scheduleMonths);
+          : calculatedCurrentCapital;
 
       if (parsedCapitalPayment - currentCapital > 1e-7) {
         errors.capitalPayment = "El abono no puede superar el capital pendiente.";
@@ -251,9 +253,8 @@ export function CapitalPaymentWorkflow({
     parsedStatementCapital,
     scheduleFirstPaymentNumber,
     scheduleLastPaymentNumber,
-    scheduleMonths,
     schedulePrincipal,
-    effectivePaymentNumber,
+    calculatedCurrentCapital,
     transactionDate,
     transactionMode,
   ]);
@@ -270,7 +271,7 @@ export function CapitalPaymentWorkflow({
       applyAfterPayment: effectivePaymentNumber,
       capitalPayment: parsedCapitalPayment,
       currentCapital:
-        balanceSource === "statement" ? parsedStatementCapital : undefined,
+        balanceSource === "statement" ? parsedStatementCapital : calculatedCurrentCapital,
     });
   }, [
     balanceSource,
@@ -280,12 +281,11 @@ export function CapitalPaymentWorkflow({
     parsedStatementCapital,
     scheduleMonths,
     schedulePrincipal,
+    calculatedCurrentCapital,
     effectivePaymentNumber,
   ]);
 
   const recordErrors = useMemo(() => {
-    if (recordDetails.documentType !== "record") return {};
-
     return {
       debtorName: recordDetails.debtorName.trim()
         ? undefined
@@ -361,7 +361,6 @@ export function CapitalPaymentWorkflow({
   }
 
   function updateRecordDetails(field: keyof RecordDetails, value: string) {
-    if (field === "debtorName") setSelectedCustomerId("");
     setRecordDetails((current) => ({ ...current, [field]: value }));
   }
 
@@ -371,13 +370,12 @@ export function CapitalPaymentWorkflow({
     if (!selection) return;
 
     const { customer, financing, organization } = selection;
-    setSelectedCustomerId(customer.id);
     setPrice(String(financing.price));
     setDownPayment(String(financing.downPayment));
     setAnnualRate(String(financing.annualRate));
     setTermMonths(String(financing.termMonths));
     setPaymentNumber(String(financing.nextPaymentNumber));
-    setStatementCapital(String(roundCurrency(financing.currentPrincipal * ((financing.remainingMonths - 1) / financing.remainingMonths))));
+    setStatementCapital(String(financing.installments.find((installment) => installment.paymentNumber === financing.nextPaymentNumber)?.remainingPrincipal ?? financing.currentPrincipal));
     setRecordDetails((current) => ({
       ...current,
       debtorName: customer.name,
@@ -399,7 +397,7 @@ export function CapitalPaymentWorkflow({
 
   async function postCapitalPayment() {
     setShowRecordErrors(true); setShowScheduleErrors(true);
-    if (!selectedLoan || !result || movementErrors.capitalPayment || posting) {
+    if (!selectedLoan || !result || Object.keys(movementErrors).length > 0 || hasRecordErrors || hasScheduleErrors || posting) {
       setPostMessage(!selectedLoan ? "Selecciona un financiamiento registrado." : "Revisa los datos del abono.");
       return;
     }
@@ -694,19 +692,6 @@ export function CapitalPaymentWorkflow({
             {documentView === "payment-record" ? (
               <div className={styles.documentWorkspace}>
                 <div className={styles.documentEditor}>
-                  <SavedCustomerPicker
-                    scope={storageScope}
-                    value={selectedCustomerId}
-                    onSelect={(customer) => {
-                      setSelectedCustomerId(customer?.id ?? "");
-                      if (customer) {
-                        setRecordDetails((current) => ({
-                          ...current,
-                          debtorName: customer.name,
-                        }));
-                      }
-                    }}
-                  />
                   <fieldset className={styles.documentTypeFieldset}>
                     <legend>Tipo de comprobante</legend>
                     <div className={styles.segmentedControl}>
@@ -728,14 +713,14 @@ export function CapitalPaymentWorkflow({
                   </fieldset>
 
                   <form className={styles.recordForm} onSubmit={(event) => event.preventDefault()} noValidate>
-                    <TextField required={recordDetails.documentType === "record"} label="Deudor" id="debtor-name" value={recordDetails.debtorName} onChange={(value) => updateRecordDetails("debtorName", value)} error={showRecordErrors ? recordErrors.debtorName : undefined} />
-                    <TextField required={recordDetails.documentType === "record"} label="Acreedor o vendedor" id="creditor-name" value={creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showRecordErrors ? recordErrors.creditorName : undefined} />
-                    <TextField required={recordDetails.documentType === "record"} label="Lote o cuenta" id="lot-reference" value={recordDetails.lotReference} onChange={(value) => updateRecordDetails("lotReference", value)} error={showRecordErrors ? recordErrors.lotReference : undefined} />
-                    <TextField required={false} label="Número de recibo" id="receipt-number" value={recordDetails.receiptNumber || "Se asigna al registrar"} onChange={() => undefined} />
-                    <SelectField required={recordDetails.documentType === "record"} label="Medio de pago" id="payment-method" value={recordDetails.paymentMethod} options={PAYMENT_METHODS} onChange={(value) => updateRecordDetails("paymentMethod", value)} error={showRecordErrors ? recordErrors.paymentMethod : undefined} />
-                    <TextField label="Referencia" id="payment-reference" value={recordDetails.paymentReference} onChange={(value) => updateRecordDetails("paymentReference", value)} />
-                    <TextField required={recordDetails.documentType === "record"} label="Recibido por" id="received-by" value={receivedBy} onChange={(value) => updateRecordDetails("receivedBy", value)} error={showRecordErrors ? recordErrors.receivedBy : undefined} />
-                    <TextField label="Observaciones" id="record-notes" value={recordDetails.notes} onChange={(value) => updateRecordDetails("notes", value)} />
+                    <TextField readOnly required label="Deudor" id="debtor-name" value={recordDetails.debtorName} onChange={(value) => updateRecordDetails("debtorName", value)} error={showRecordErrors ? recordErrors.debtorName : undefined} />
+                    <TextField readOnly required label="Acreedor o vendedor" id="creditor-name" value={creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showRecordErrors ? recordErrors.creditorName : undefined} />
+                    <TextField readOnly required label="Lote o cuenta" id="lot-reference" value={recordDetails.lotReference} onChange={(value) => updateRecordDetails("lotReference", value)} error={showRecordErrors ? recordErrors.lotReference : undefined} />
+                    <TextField readOnly required={false} label="Número de recibo" id="receipt-number" value={recordDetails.receiptNumber || "Se asigna al registrar"} onChange={() => undefined} />
+                    <SelectField required label="Medio de pago" id="payment-method" value={recordDetails.paymentMethod} options={PAYMENT_METHODS} onChange={(value) => updateRecordDetails("paymentMethod", value)} error={showRecordErrors ? recordErrors.paymentMethod : undefined} />
+                    <TextField maxLength={120} label="Referencia" id="payment-reference" value={recordDetails.paymentReference} onChange={(value) => updateRecordDetails("paymentReference", value)} />
+                    <TextField maxLength={80} required label="Recibido por" id="received-by" value={receivedBy} onChange={(value) => updateRecordDetails("receivedBy", value)} error={showRecordErrors ? recordErrors.receivedBy : undefined} />
+                    <TextField maxLength={1000} label="Observaciones" id="record-notes" value={recordDetails.notes} onChange={(value) => updateRecordDetails("notes", value)} />
                   </form>
 
                   <div className={styles.recordActions}>
@@ -767,23 +752,10 @@ export function CapitalPaymentWorkflow({
             ) : (
               <div className={styles.documentWorkspace}>
                 <div className={styles.documentEditor}>
-                  <SavedCustomerPicker
-                    scope={storageScope}
-                    value={selectedCustomerId}
-                    onSelect={(customer) => {
-                      setSelectedCustomerId(customer?.id ?? "");
-                      if (customer) {
-                        setRecordDetails((current) => ({
-                          ...current,
-                          debtorName: customer.name,
-                        }));
-                      }
-                    }}
-                  />
                   <form className={styles.recordForm} onSubmit={(event) => event.preventDefault()} noValidate>
-                    <TextField required label="Deudor" id="schedule-debtor-name" value={recordDetails.debtorName} onChange={(value) => updateRecordDetails("debtorName", value)} error={showScheduleErrors ? scheduleErrors.debtorName : undefined} />
-                    <TextField required label="Acreedor o vendedor" id="schedule-creditor-name" value={creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showScheduleErrors ? scheduleErrors.creditorName : undefined} />
-                    <TextField required label="Lote o cuenta" id="schedule-lot-reference" value={recordDetails.lotReference} onChange={(value) => updateRecordDetails("lotReference", value)} error={showScheduleErrors ? scheduleErrors.lotReference : undefined} />
+                    <TextField readOnly required label="Deudor" id="schedule-debtor-name" value={recordDetails.debtorName} onChange={(value) => updateRecordDetails("debtorName", value)} error={showScheduleErrors ? scheduleErrors.debtorName : undefined} />
+                    <TextField readOnly required label="Acreedor o vendedor" id="schedule-creditor-name" value={creditorName} onChange={(value) => updateRecordDetails("creditorName", value)} error={showScheduleErrors ? scheduleErrors.creditorName : undefined} />
+                    <TextField readOnly required label="Lote o cuenta" id="schedule-lot-reference" value={recordDetails.lotReference} onChange={(value) => updateRecordDetails("lotReference", value)} error={showScheduleErrors ? scheduleErrors.lotReference : undefined} />
                   </form>
 
                   <div className={styles.recordActions}>
@@ -884,11 +856,11 @@ function DateField({ error, id, label, onChange, value }: { error?: string; id: 
   );
 }
 
-function TextField({ error, id, label, onChange, placeholder, required = false, value }: { error?: string; id: string; label: string; onChange: (value: string) => void; placeholder?: string; required?: boolean; value: string }) {
+function TextField({ error, id, label, maxLength, onChange, placeholder, readOnly = false, required = false, value }: { error?: string; id: string; label: string; maxLength?: number; onChange: (value: string) => void; placeholder?: string; readOnly?: boolean; required?: boolean; value: string }) {
   return (
     <div className={styles.field}>
       <label htmlFor={id}>{label}{required ? " *" : ""}</label>
-      <input id={id} type="text" value={value} placeholder={placeholder} required={required} onChange={(event) => onChange(event.target.value)} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} />
+      <input id={id} type="text" value={value} maxLength={maxLength} placeholder={placeholder} readOnly={readOnly} required={required} onChange={(event) => onChange(event.target.value)} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} />
       {error && <small id={`${id}-error`} className={styles.error} role="alert">{error}</small>}
     </div>
   );

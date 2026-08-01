@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getCurrentPortalSession } from "@/lib/current-portal-session";
+import { isSameOrigin } from "@/lib/mutation-response";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function PATCH(request: NextRequest) {
@@ -52,11 +53,6 @@ export async function PATCH(request: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, profile: data }, { headers: { "Cache-Control": "no-store" } });
-}
-
-function isSameOrigin(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  return !origin || origin === request.nextUrl.origin;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

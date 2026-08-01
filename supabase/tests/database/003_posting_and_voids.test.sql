@@ -1,5 +1,5 @@
 begin;
-select plan(15);
+select plan(16);
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values ('30000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated', 'void-owner@example.test', '', now(), '{}', '{}', now(), now());
@@ -16,11 +16,10 @@ insert into public.document_counters (organization_id, kind, prefix) values
 insert into public.customers (id, organization_id, name, created_by)
 values ('30000000-3000-4000-8000-000000000001', '30000000-1000-4000-8000-000000000001', 'Cliente de ejemplo', '30000000-0000-4000-8000-000000000001');
 
-set local role authenticated;
-select set_config('request.jwt.claim.sub', '30000000-0000-4000-8000-000000000001', true);
+set local role service_role;
 
 select lives_ok(
-  $$ select public.post_loan($json$
+  $$ select public.server_post_loan('30000000-0000-4000-8000-000000000001', $json$
   {
     "idempotencyKey":"70000000-0000-4000-8000-000000000001",
     "organizationId":"30000000-1000-4000-8000-000000000001",
@@ -40,8 +39,18 @@ select lives_ok(
   'posts an origination'
 );
 
+select throws_ok(
+  $$ select public.server_update_customer(
+    '30000000-0000-4000-8000-000000000001',
+    '30000000-1000-4000-8000-000000000001',
+    '30000000-3000-4000-8000-000000000001', true
+  ) $$,
+  'P0001', 'active_loans_prevent_customer_archive',
+  'customers with active financing cannot be archived'
+);
+
 select lives_ok(
-  $$ select public.post_capital_payment(jsonb_build_object(
+  $$ select public.server_post_capital_payment('30000000-0000-4000-8000-000000000001', jsonb_build_object(
     'idempotencyKey','70000000-0000-4000-8000-000000000002',
     'organizationId','30000000-1000-4000-8000-000000000001',
     'loanId',(select id from public.loans where account_reference='VOID-FLOW'),
@@ -62,7 +71,7 @@ select lives_ok(
 );
 
 select lives_ok(
-  $$ select public.post_payment_adjustment(jsonb_build_object(
+  $$ select public.server_post_payment_adjustment('30000000-0000-4000-8000-000000000001', jsonb_build_object(
     'idempotencyKey','70000000-0000-4000-8000-000000000003',
     'organizationId','30000000-1000-4000-8000-000000000001',
     'loanId',(select id from public.loans where account_reference='VOID-FLOW'),
@@ -75,16 +84,16 @@ select lives_ok(
 );
 
 select throws_ok(
-  $$ select public.void_transaction((select id from public.transactions where document_number='TRC-000001'), 'Out of order') $$,
+  $$ select public.server_void_transaction('30000000-0000-4000-8000-000000000001', (select id from public.transactions where document_number='TRC-000001'), 'Out of order') $$,
   'P0001','dependent_transactions_must_be_voided_first',
   'cannot void a capital payment while an adjustment depends on it'
 );
 select lives_ok(
-  $$ select public.void_transaction((select id from public.transactions where document_number='TAJ-000001'), 'Reverse order') $$,
+  $$ select public.server_void_transaction('30000000-0000-4000-8000-000000000001', (select id from public.transactions where document_number='TAJ-000001'), 'Reverse order') $$,
   'voids the dependent adjustment first'
 );
 select lives_ok(
-  $$ select public.void_transaction((select id from public.transactions where document_number='TRC-000001'), 'Restore prior schedule') $$,
+  $$ select public.server_void_transaction('30000000-0000-4000-8000-000000000001', (select id from public.transactions where document_number='TRC-000001'), 'Restore prior schedule') $$,
   'then voids the capital payment'
 );
 select is(
@@ -95,7 +104,7 @@ select is((select version from public.loans where account_reference='VOID-FLOW')
 select is((select count(*) from public.transactions where document_number in ('TRC-000001','TAJ-000001') and status='voided'),2::bigint,'historical transactions remain and are marked voided');
 
 select lives_ok(
-  $$ select public.post_capital_payment(jsonb_build_object(
+  $$ select public.server_post_capital_payment('30000000-0000-4000-8000-000000000001', jsonb_build_object(
     'idempotencyKey','70000000-0000-4000-8000-000000000004',
     'organizationId','30000000-1000-4000-8000-000000000001',
     'loanId',(select id from public.loans where account_reference='VOID-FLOW'),
@@ -119,7 +128,12 @@ select is((select document_number from public.transactions where idempotency_key
 select is((select replaced.document_number from public.transactions replacement join public.transactions replaced on replaced.id=replacement.replaces_transaction_id where replacement.document_number='TRC-000002'),'TRC-000001','replacement relationship is retained');
 select is((select snapshot->>'documentNumber' from public.documents document join public.transactions transaction on transaction.id=document.transaction_id where transaction.document_number='TRC-000001'),'TRC-000001','voiding does not alter the historical snapshot');
 select lives_ok(
-  $$ update public.organizations set name='Renamed Later' where id='30000000-1000-4000-8000-000000000001' $$,
+  $$ select public.server_update_organization_settings(
+    '30000000-0000-4000-8000-000000000001',
+    '30000000-1000-4000-8000-000000000001',
+    'Renamed Later', '',
+    '{"financing":"TFL","receipt":"TRC","adjustment":"TAJ"}'::jsonb
+  ) $$,
   'owner changes future organization settings'
 );
 select is((select snapshot->>'organizationName' from public.documents document join public.transactions transaction on transaction.id=document.transaction_id where transaction.document_number='TFL-000001'),'Créditos Local','later settings do not alter issued snapshots');

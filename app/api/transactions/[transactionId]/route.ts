@@ -30,6 +30,7 @@ import {
   mutationError,
 } from "@/lib/mutation-response";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function PATCH(
   request: NextRequest,
@@ -38,7 +39,8 @@ export async function PATCH(
   if (!isSameOrigin(request)) return mutationError("forbidden", "Solicitud no permitida.");
   const session = await getCurrentPortalSession();
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return mutationError("unavailable", "El servicio no está disponible.");
+  const admin = createSupabaseAdminClient();
+  if (!supabase || !admin) return mutationError("unavailable", "El servicio no está disponible.");
   if (!session) return mutationError("unauthorized", "Inicia sesión nuevamente.");
   if (session.role !== "owner") return mutationError("forbidden", "Solo el propietario puede editar registros.");
 
@@ -60,13 +62,23 @@ export async function PATCH(
 
   const { data: transaction } = await supabase
     .from("transactions")
-    .select("id,loan_id,type,status,document_number,depends_on_transaction_id")
+    .select("id,loan_id,type,status,document_number,depends_on_transaction_id,ledger_sequence,created_at")
     .eq("id", transactionId)
     .eq("organization_id", session.organizationId)
     .maybeSingle();
   if (!transaction || transaction.status !== "posted" || body.type !== transaction.type) {
     return mutationError("validation", "Este registro ya no se puede editar.");
   }
+  const { data: laterTransaction } = await supabase
+    .from("transactions")
+    .select("id")
+    .eq("organization_id", session.organizationId)
+    .eq("status", "posted")
+    .eq("loan_id", transaction.loan_id)
+    .gt("ledger_sequence", transaction.ledger_sequence)
+    .limit(1)
+    .maybeSingle();
+  if (laterTransaction) return mutationError("conflict", "Anula primero las operaciones posteriores, en orden inverso.");
 
   const [{ data: loan }, { data: document }] = await Promise.all([
     supabase
@@ -107,7 +119,7 @@ export async function PATCH(
   }
 
   if (!command) return mutationError("validation", validationMessage(transaction.type));
-  const { data, error } = await supabase.rpc("edit_transaction", { command });
+  const { data, error } = await admin.rpc("server_edit_transaction", { actor_id: session.userId, command });
   if (error) return mapDatabaseMutationError(error);
   return NextResponse.json<MutationResult<EditedTransaction>>(
     { ok: true, data: data as EditedTransaction },
@@ -138,6 +150,7 @@ function buildLoanEdit({
     || !accountReference
     || !isIsoDate(firstDueDate)
     || !isIsoDate(issueDate)
+    || firstDueDate <= issueDate
   ) return null;
 
   const principal = price - downPayment;
@@ -213,18 +226,30 @@ async function buildCapitalPaymentEdit({
     .eq("source_transaction_id", transactionId)
     .maybeSingle();
   if (!revisedSchedule?.previous_version_id) return null;
-  const { data: installments } = await supabase
-    .from("installments")
-    .select("payment_number,payment_cents,interest_cents,remaining_principal_cents")
-    .eq("schedule_version_id", revisedSchedule.previous_version_id)
-    .order("payment_number");
+  const [{ data: previousSchedule }, { data: installments }] = await Promise.all([
+    supabase
+      .from("schedule_versions")
+      .select("principal_cents")
+      .eq("id", revisedSchedule.previous_version_id)
+      .maybeSingle(),
+    supabase
+      .from("installments")
+      .select("payment_number,payment_cents,interest_cents,remaining_principal_cents")
+      .eq("schedule_version_id", revisedSchedule.previous_version_id)
+      .order("payment_number"),
+  ]);
   const appliedRow = installments?.find((row) => row.payment_number === paymentNumber);
   const futureRows = installments?.filter((row) => row.payment_number > paymentNumber) || [];
-  if (!appliedRow || futureRows.length === 0) return null;
+  if (!previousSchedule || !appliedRow || futureRows.length === 0) return null;
 
   const statementCapital = Number(body.statementCapital);
   const currentCapital = balanceSource === "statement" ? statementCapital : centsToMoney(appliedRow.remaining_principal_cents);
-  if (!Number.isFinite(currentCapital) || currentCapital < 0 || new Decimal(capitalPayment).greaterThan(currentCapital)) return null;
+  if (
+    !Number.isFinite(currentCapital)
+    || currentCapital < 0
+    || (balanceSource === "statement" && moneyToCents(currentCapital) > previousSchedule.principal_cents)
+    || new Decimal(capitalPayment).greaterThan(currentCapital)
+  ) return null;
   const newCapital = new Decimal(currentCapital).minus(capitalPayment).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
   const remainingMonths = futureRows.length;
   const quote = calculateSimpleInterestQuote(newCapital, Number(loan.annual_rate), remainingMonths);
@@ -240,6 +265,7 @@ async function buildCapitalPaymentEdit({
   const paymentReference = text(body.paymentReference, 120);
   const receivedBy = text(body.receivedBy, 80);
   const notes = text(body.notes, 1000);
+  if (!paymentMethod || !receivedBy) return null;
   const details = {
     transactionMode,
     paymentNumber,
@@ -353,6 +379,7 @@ async function buildAdjustmentEdit({
   const paymentReference = text(body.paymentReference, 120);
   const adjustedBy = text(body.adjustedBy, 80);
   const notes = text(body.notes, 1000);
+  if (!adjustedBy) return null;
   const snapshot: DocumentSnapshotV1 = {
     version: DOCUMENT_SNAPSHOT_VERSION,
     calculationVersion: CALCULATION_VERSION,
@@ -396,7 +423,9 @@ type LoanRow = {
 type SupabaseClient = NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>;
 
 function text(value: unknown, max: number) {
-  return typeof value === "string" ? value.trim().slice(0, max) : "";
+  const result = typeof value === "string" ? value.trim() : "";
+  if (result.length > max) throw new RangeError("text_too_long");
+  return result;
 }
 
 function stringValue(value: unknown, fallback: string) {

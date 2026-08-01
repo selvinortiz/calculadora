@@ -9,6 +9,7 @@ import {
   ChevronDoubleRightIcon,
   ChevronRightIcon,
   Cog6ToothIcon,
+  ClipboardDocumentListIcon,
   DocumentTextIcon,
   HomeIcon,
   UserGroupIcon,
@@ -26,6 +27,7 @@ const NAVIGATION = [
 const ADMINISTRATION = [
   { href: "/configuracion", label: "Configuración", icon: Cog6ToothIcon },
   { href: "/configuracion/accesos", label: "Accesos", icon: UserGroupIcon },
+  { href: "/configuracion/auditoria", label: "Auditoría", icon: ClipboardDocumentListIcon },
 ] as const;
 
 const LEGACY_DEFAULT_WIDTH = 220;

@@ -21,17 +21,19 @@ import {
 import type { OrganizationRole } from "@/lib/domain";
 import { PAYMENT_METHODS } from "../../../lib/payment-methods";
 import { printElement } from "../../../lib/print-preview";
+import { ModalDialog } from "../../../components/modal-dialog";
 import styles from "./page.module.css";
 
 type Installment = { paymentNumber: number; dueDate: string; principal: number; interest: number; payment: number; remainingPrincipal: number };
-type Transaction = { id: string; type: string; status: string; effectiveDate: string; documentNumber: string; createdAt: string; voidedAt: string | null; voidReason: string | null; replacesTransactionId: string | null; documents: PostedSnapshotDocument[] };
-type Loan = { id: string; accountReference: string; price: number; downPayment: number; originalPrincipal: number; annualRate: number; termMonths: number; firstDueDate: string; status: string; version: number; customer: { name?: string; phone?: string; email?: string }; schedule: null | { versionNumber: number; reason: string; calculationVersion: string; principal: number; futureInterest: number; remainingMonths: number; regularPayment: number; finalPayment: number; firstPaymentNumber: number; firstDueDate: string }; installments: Installment[]; transactions: Transaction[] };
+type Transaction = { id: string; type: string; status: string; effectiveDate: string; documentNumber: string; dependsOnTransactionId: string | null; ledgerSequence: number; createdAt: string; voidedAt: string | null; voidReason: string | null; replacesTransactionId: string | null; documents: PostedSnapshotDocument[] };
+type Loan = { id: string; accountReference: string; price: number; downPayment: number; originalPrincipal: number; annualRate: number; termMonths: number; firstDueDate: string; status: string; version: number; customer: { name?: string; phone?: string; email?: string }; schedule: null | { sourceTransactionId: string; versionNumber: number; reason: string; calculationVersion: string; principal: number; futureInterest: number; remainingMonths: number; regularPayment: number; finalPayment: number; firstPaymentNumber: number; firstDueDate: string }; installments: Installment[]; transactions: Transaction[] };
 const CURRENT_PLAN_KEY = "current-plan";
 
 export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole }) {
   const hasExtendedHistory = loan.transactions.length > 1;
   const historySectionKeys = loan.transactions.filter((transaction) => transaction.documents.length > 0).map((transaction) => transaction.id);
-  const currentAdjustment = latestAdjustmentStatus(loan.transactions);
+  const currentAdjustment = latestAdjustmentStatus(loan.transactions, loan.schedule?.sourceTransactionId);
+  const latestPostedTransactionId = [...loan.transactions].reverse().find((transaction) => transaction.status === "posted")?.id;
   const [printing, setPrinting] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [pendingVoid, setPendingVoid] = useState<Transaction | null>(null);
@@ -79,14 +81,16 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
   async function voidTransaction() {
     if (!pendingVoid || !voidReason.trim()) return;
     setVoiding(true);
-    const response = await fetch(`/api/transactions/${pendingVoid.id}/void`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason: voidReason.trim() }) });
-    const result = await response.json() as { message?: string };
-    if (!response.ok) {
-      setMessage(result.message || "No fue posible anular el registro.");
-      setVoiding(false);
-      return;
-    }
-    window.location.reload();
+    try {
+      const response = await fetch(`/api/transactions/${pendingVoid.id}/void`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason: voidReason.trim() }) });
+      const result = await response.json() as { message?: string };
+      if (!response.ok) {
+        setMessage(result.message || "No fue posible anular el registro.");
+        return;
+      }
+      window.location.reload();
+    } catch { setMessage("No fue posible anular el registro. Revisa tu conexión."); }
+    finally { setVoiding(false); }
   }
   function requestEdit(transaction: Transaction) {
     setMessage("");
@@ -104,18 +108,20 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
     setSavingEdit(true);
     setEditError("");
     const body = Object.fromEntries(new FormData(event.currentTarget));
-    const response = await fetch(`/api/transactions/${editingTransaction.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, type: editingTransaction.type, expectedLoanVersion: loan.version }),
-    });
-    const result = await response.json() as { message?: string };
-    if (!response.ok) {
-      setEditError(result.message || "No fue posible guardar los cambios.");
-      setSavingEdit(false);
-      return;
-    }
-    window.location.reload();
+    try {
+      const response = await fetch(`/api/transactions/${editingTransaction.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...body, type: editingTransaction.type, expectedLoanVersion: loan.version }),
+      });
+      const result = await response.json() as { message?: string };
+      if (!response.ok) {
+        setEditError(result.message || "No fue posible guardar los cambios.");
+        return;
+      }
+      window.location.reload();
+    } catch { setEditError("No fue posible guardar los cambios. Revisa tu conexión."); }
+    finally { setSavingEdit(false); }
   }
   return <>
     <header className={styles.loanHeader}>
@@ -181,7 +187,7 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
           </div>
           <div className={styles.transactionActions}>
             {transaction.documents.length > 0 && <button className={styles.disclosureButton} type="button" aria-expanded={sectionIsOpen(transaction.id)} aria-controls={`transaction-${transaction.id}`} onClick={() => toggleSection(transaction.id)}><span>{sectionIsOpen(transaction.id) ? "Ocultar detalle" : "Ver detalle"}</span><ChevronDownIcon className={styles.chevronIcon} aria-hidden="true" /></button>}
-            {role === "owner" && transaction.status === "posted" && <button className={styles.secondaryButton} type="button" onClick={() => requestEdit(transaction)}><PencilSquareIcon aria-hidden="true" /><span>Editar</span></button>}
+            {role === "owner" && transaction.status === "posted" && transaction.id === latestPostedTransactionId && <button className={styles.secondaryButton} type="button" onClick={() => requestEdit(transaction)}><PencilSquareIcon aria-hidden="true" /><span>Editar</span></button>}
             {transaction.documents.length > 0 && <button className={styles.secondaryButton} type="button" onClick={() => printDocument(transaction.id)}><PrinterIcon aria-hidden="true" /><span>Reimprimir</span></button>}
             {role === "owner" && transaction.status === "posted" && <button className={styles.dangerButton} type="button" onClick={() => requestVoid(transaction)}><NoSymbolIcon aria-hidden="true" /><span>Anular</span></button>}
             {role === "owner" && transaction.status === "voided" && !loan.transactions.some((candidate) => candidate.replacesTransactionId === transaction.id) && <a className={styles.replacementLink} href={`${replacementPath(transaction.type)}?reemplaza=${transaction.id}`}><ArrowPathIcon aria-hidden="true" /><span>Reemplazar</span></a>}
@@ -192,8 +198,7 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
       </article>)}
       </div>
     </section>
-    {pendingVoid && <div className={styles.dialogBackdrop} role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) closeVoidDialog(); }}>
-      <section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="void-dialog-title">
+    {pendingVoid && <ModalDialog backdropClassName={styles.dialogBackdrop} dialogClassName={styles.dialog} labelledBy="void-dialog-title" busy={voiding} onClose={closeVoidDialog}>
         <p className={styles.dialogEyebrow}>Anular movimiento</p>
         <h2 id="void-dialog-title">{pendingVoid.documentNumber}</h2>
         <p>Indica por qué se anula este movimiento.</p>
@@ -203,11 +208,10 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
           <button type="button" onClick={closeVoidDialog} disabled={voiding}>Cancelar</button>
           <button className={styles.confirmDangerButton} type="button" onClick={voidTransaction} disabled={voiding || !voidReason.trim()}>{voiding ? "Anulando…" : "Anular movimiento"}</button>
         </div>
-      </section>
-    </div>}
-    {editingTransaction && <div className={styles.dialogBackdrop} role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) closeEditDialog(); }}>
+    </ModalDialog>}
+    {editingTransaction && <ModalDialog backdropClassName={styles.dialogBackdrop} dialogClassName={`${styles.dialog} ${styles.editDialog}`} labelledBy="edit-dialog-title" busy={savingEdit} onClose={closeEditDialog}>
       <EditDialog transaction={editingTransaction} loan={loan} error={editError} saving={savingEdit} onCancel={closeEditDialog} onSubmit={saveEdit} />
-    </div>}
+    </ModalDialog>}
   </>;
 }
 
@@ -216,7 +220,7 @@ function EditDialog({ transaction, loan, error, saving, onCancel, onSubmit }: { 
   const payload = asRecord(snapshot.payload);
   const details = asRecord(payload.details);
   const adjustment = asRecord(payload.adjustment);
-  return <section className={`${styles.dialog} ${styles.editDialog}`} role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title">
+  return <>
     <p className={styles.editEyebrow}>Editar registro</p>
     <h2 id="edit-dialog-title">{transaction.documentNumber}</h2>
     <p>Corrige el registro y su documento sin cambiar el número.</p>
@@ -261,7 +265,7 @@ function EditDialog({ transaction, loan, error, saving, onCancel, onSubmit }: { 
         <button className={styles.saveButton} type="submit" disabled={saving}>{saving ? "Guardando…" : "Guardar cambios"}</button>
       </div>
     </form>
-  </section>;
+  </>;
 }
 
 function EditField({ label, name, defaultValue, ...props }: { label: string; name: string; defaultValue: string | number; type?: string; step?: string; min?: string; max?: string; required?: boolean; autoFocus?: boolean }) {
@@ -299,8 +303,8 @@ function transactionOverview(transaction: Transaction) {
   }
   return transaction.documentNumber;
 }
-function latestAdjustmentStatus(transactions: Transaction[]) {
-  const transaction = [...transactions].reverse().find((candidate) => candidate.type === "payment_adjustment" && candidate.status === "posted");
+function latestAdjustmentStatus(transactions: Transaction[], currentScheduleSource?: string) {
+  const transaction = [...transactions].reverse().find((candidate) => candidate.type === "payment_adjustment" && candidate.status === "posted" && candidate.dependsOnTransactionId === currentScheduleSource);
   if (!transaction) return null;
   const snapshot = asRecord(transaction.documents[0]?.snapshot);
   const payload = asRecord(snapshot.payload);

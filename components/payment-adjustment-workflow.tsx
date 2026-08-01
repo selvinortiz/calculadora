@@ -8,7 +8,6 @@ import {
 import { notifyDurableDirectoryChanged, useDurableDirectory } from "@/lib/use-durable-directory";
 import type { DirectoryLoan, MutationResult, PostedTransaction } from "@/lib/domain";
 import {
-  SavedCustomerPicker,
   SavedFinancingPicker,
   type SavedFinancingSelection,
 } from "./saved-profile-picker";
@@ -73,18 +72,16 @@ export function PaymentAdjustmentWorkflow({
   const [attemptedStep, setAttemptedStep] = useState<Step | null>(null);
   const [selectedFinancingId, setSelectedFinancingId] = useState("");
   const [selectedLoan, setSelectedLoan] = useState<DirectoryLoan | null>(null);
-  const [selectedCustomerId, setSelectedCustomerId] = useState("");
 
   const [paymentNumber, setPaymentNumber] = useState("");
   const [paymentDate, setPaymentDate] = useState(getTodayIso);
-  const [scheduledPayment, setScheduledPayment] = useState("");
   const [receivedPayment, setReceivedPayment] = useState("");
   const [nextPaymentDate, setNextPaymentDate] = useState(getNextMonthIso);
 
   const [details, setDetails] = useState<PaymentAdjustmentRecordDetails>(() => ({
     ...INITIAL_DETAILS,
   }));
-  const [issueDate, setIssueDate] = useState(getTodayIso);
+  const issueDate = paymentDate;
   const [showDocumentErrors, setShowDocumentErrors] = useState(false);
   const [posting, setPosting] = useState(false);
   const [postMessage, setPostMessage] = useState("");
@@ -101,6 +98,10 @@ export function PaymentAdjustmentWorkflow({
   };
 
   const parsedPaymentNumber = parseInput(paymentNumber);
+  const selectedInstallment = selectedLoan?.installments.find(
+    (installment) => installment.paymentNumber === parsedPaymentNumber,
+  );
+  const scheduledPayment = selectedInstallment ? String(selectedInstallment.payment) : "";
   const parsedScheduledPayment = parseInput(scheduledPayment);
   const parsedReceivedPayment = parseInput(receivedPayment);
 
@@ -220,9 +221,8 @@ export function PaymentAdjustmentWorkflow({
     if (!selection) return;
 
     const { customer, financing, organization } = selection;
-    setSelectedCustomerId(customer.id);
     setPaymentNumber(String(financing.nextPaymentNumber));
-    setScheduledPayment(String(financing.currentPayment));
+    setNextPaymentDate(financing.installments.find((installment) => installment.paymentNumber === financing.nextPaymentNumber + 1)?.dueDate ?? financing.nextDueDate);
     setDetails((current) => ({
       ...current,
       debtorName: customer.name,
@@ -244,7 +244,7 @@ export function PaymentAdjustmentWorkflow({
 
   async function postAdjustment() {
     setShowDocumentErrors(true);
-    if (!selectedLoan || !adjustment || posting) {
+    if (!selectedLoan || !adjustment || hasDocumentErrors || posting) {
       setPostMessage(!selectedLoan ? "Selecciona un financiamiento registrado." : "Revisa los datos del ajuste.");
       return;
     }
@@ -268,7 +268,6 @@ export function PaymentAdjustmentWorkflow({
     field: keyof PaymentAdjustmentRecordDetails,
     value: string,
   ) {
-    if (field === "debtorName") setSelectedCustomerId("");
     setDetails((current) => ({ ...current, [field]: value }));
   }
 
@@ -340,7 +339,8 @@ export function PaymentAdjustmentWorkflow({
                 id="adjustment-scheduled-payment"
                 label="Cuota programada"
                 value={scheduledPayment}
-                onChange={(event) => setScheduledPayment(event.target.value)}
+                onChange={() => undefined}
+                readOnly
                 error={attemptedStep === 1 ? paymentErrors.scheduledPayment : undefined}
               />
               <Field
@@ -440,26 +440,13 @@ export function PaymentAdjustmentWorkflow({
 
             <div className={styles.documentWorkspace}>
               <aside className={styles.documentEditor} aria-label="Datos de la constancia">
-                <SavedCustomerPicker
-                  scope={storageScope}
-                  value={selectedCustomerId}
-                  onSelect={(customer) => {
-                    setSelectedCustomerId(customer?.id ?? "");
-                    if (customer) {
-                      setDetails((current) => ({
-                        ...current,
-                        debtorName: customer.name,
-                      }));
-                    }
-                  }}
-                />
-
                 <form className={styles.documentForm} onSubmit={(event) => event.preventDefault()} noValidate>
                   <TextField
                     id="adjustment-debtor-name"
                     label="Deudor"
                     value={details.debtorName}
                     onChange={(value) => updateDetails("debtorName", value)}
+                    readOnly
                     error={showDocumentErrors ? documentErrors.debtorName : undefined}
                   />
                   <TextField
@@ -467,6 +454,7 @@ export function PaymentAdjustmentWorkflow({
                     label="Acreedor"
                     value={resolvedCreditorName}
                     onChange={(value) => updateDetails("creditorName", value)}
+                    readOnly
                     error={showDocumentErrors ? documentErrors.creditorName : undefined}
                   />
                   <TextField
@@ -474,6 +462,7 @@ export function PaymentAdjustmentWorkflow({
                     label="Lote o cuenta"
                     value={details.accountReference}
                     onChange={(value) => updateDetails("accountReference", value)}
+                    readOnly
                     error={showDocumentErrors ? documentErrors.accountReference : undefined}
                   />
                   <TextField
@@ -481,6 +470,7 @@ export function PaymentAdjustmentWorkflow({
                     label="Número de constancia"
                     value={details.documentNumber || "Se asigna al registrar"}
                     onChange={() => undefined}
+                    readOnly
                     error={showDocumentErrors ? documentErrors.documentNumber : undefined}
                   />
                   <TextField
@@ -488,7 +478,8 @@ export function PaymentAdjustmentWorkflow({
                     label="Fecha de emisión"
                     type="date"
                     value={issueDate}
-                    onChange={setIssueDate}
+                    onChange={() => undefined}
+                    readOnly
                     error={showDocumentErrors ? documentErrors.issueDate : undefined}
                   />
                   <TextField
@@ -502,6 +493,7 @@ export function PaymentAdjustmentWorkflow({
                     id="adjustment-payment-reference"
                     label="Referencia del pago"
                     required={false}
+                    maxLength={120}
                     value={details.paymentReference}
                     onChange={(value) => updateDetails("paymentReference", value)}
                   />
@@ -587,6 +579,7 @@ function Field({
   max,
   min = 0,
   onChange,
+  readOnly = false,
   step = "0.01",
   value,
 }: {
@@ -597,6 +590,7 @@ function Field({
   max?: number;
   min?: number;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  readOnly?: boolean;
   step?: string;
   value: string;
 }) {
@@ -611,6 +605,7 @@ function Field({
         max={max}
         step={step}
         value={value}
+        readOnly={readOnly}
         onChange={onChange}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
@@ -654,7 +649,9 @@ function TextField({
   error,
   id,
   label,
+  maxLength,
   onChange,
+  readOnly = false,
   required = true,
   type = "text",
   value,
@@ -662,7 +659,9 @@ function TextField({
   error?: string;
   id: string;
   label: string;
+  maxLength?: number;
   onChange: (value: string) => void;
+  readOnly?: boolean;
   required?: boolean;
   type?: "date" | "text";
   value: string;
@@ -673,7 +672,9 @@ function TextField({
       <input
         id={id}
         type={type}
+        maxLength={maxLength}
         required={required}
+        readOnly={readOnly}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-invalid={error ? true : undefined}
@@ -700,6 +701,7 @@ function TextAreaField({
       <label htmlFor={id}>{label}</label>
       <textarea
         id={id}
+        maxLength={1000}
         rows={3}
         value={value}
         onChange={(event) => onChange(event.target.value)}

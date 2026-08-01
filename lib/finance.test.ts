@@ -62,10 +62,25 @@ describe("decimal rounding", () => {
 
   it("reconciles tiny schedules using integer cents", () => {
     const rows = calculatePaymentSchedule({ principal: 0.02, interestTotal: 0.01, months: 2, firstDueDate: "2026-08-31" });
-    expect(rows.map((row) => row.payment)).toEqual([0.02, 0.01]);
+    expect(rows.map((row) => row.payment)).toEqual([0.01, 0.02]);
     expect(sum(rows.map((row) => row.payment))).toBe(0.03);
     expect(sum(rows.map((row) => row.principal))).toBe(0.02);
     expect(sum(rows.map((row) => row.interest))).toBe(0.01);
+  });
+
+  it("never creates negative components when cents do not divide evenly", () => {
+    const shortRows = calculatePaymentSchedule({ principal: 1, interestTotal: 0.01, months: 3, firstDueDate: "2026-08-31" });
+    const longRows = calculatePaymentSchedule({ principal: 1.8, interestTotal: 0, months: 360, firstDueDate: "2026-08-31" });
+
+    for (const row of [...shortRows, ...longRows]) {
+      expect(row.principal).toBeGreaterThanOrEqual(0);
+      expect(row.interest).toBeGreaterThanOrEqual(0);
+      expect(row.payment).toBeGreaterThanOrEqual(0);
+      expect(row.remainingPrincipal).toBeGreaterThanOrEqual(0);
+    }
+    expect(sum(shortRows.map((row) => row.payment))).toBe(1.01);
+    expect(sum(longRows.map((row) => row.payment))).toBe(1.8);
+    expect(calculateSimpleInterestQuote(1.8, 0, 360).finalPayment).toBe(1.8);
   });
 });
 
@@ -82,10 +97,10 @@ describe("calculatePaymentSchedule", () => {
     expect(rows[0]).toEqual({
       paymentNumber: 1,
       dueDate: "2026-08-20",
-      principal: 866.67,
-      interest: 303.33,
+      principal: 866.66,
+      interest: 303.34,
       payment: 1_170,
-      remainingPrincipal: 51_133.33,
+      remainingPrincipal: 51_133.34,
     });
     expect(rows.at(-1)).toMatchObject({
       paymentNumber: 60,

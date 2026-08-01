@@ -11,6 +11,6 @@ export default async function SettingsPage() {
   if (session.role !== "owner") redirect("/");
   return <main className="appPage">
     <header className="pageHeader"><p className="pageEyebrow">Administración</p><h1 className="pageTitle">Configuración</h1><p className="pageIntro">Datos de la organización y numeración de documentos.</p></header>
-    <OrganizationSettings company={session.company} recipient={session.name} />
+    <OrganizationSettings company={session.company} recipient={session.defaultRecipient} />
   </main>;
 }

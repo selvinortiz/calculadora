@@ -2,7 +2,9 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getCurrentPortalSession } from "@/lib/current-portal-session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { centsToMoney } from "@/lib/domain";
+import { isSameOrigin } from "@/lib/mutation-response";
 
 export async function GET() {
   const session = await getCurrentPortalSession();
@@ -12,19 +14,35 @@ export async function GET() {
 
   const [organizationResult, countersResult, customersResult, loansResult, schedulesResult] = await Promise.all([
     supabase.from("organizations").select("id,name,default_recipient").eq("id", session.organizationId).single(),
-    supabase.from("document_counters").select("kind,prefix").eq("organization_id", session.organizationId),
-    supabase.from("customers").select("id,name,phone,email,updated_at").eq("organization_id", session.organizationId).is("archived_at", null).order("name"),
+    supabase.from("document_counters").select("kind,prefix,next_value").eq("organization_id", session.organizationId),
+    supabase.from("customers").select("id,name,phone,email,archived_at,updated_at").eq("organization_id", session.organizationId).order("name"),
     supabase.from("loans").select("id,customer_id,account_reference,price_cents,down_payment_cents,original_principal_cents,annual_rate,term_months,first_due_date,version,current_schedule_version_id,updated_at").eq("organization_id", session.organizationId).eq("status", "active").order("updated_at", { ascending: false }),
     supabase.from("schedule_versions").select("id,principal_cents,remaining_months,regular_payment_cents,final_payment_cents,first_payment_number,first_due_date").eq("organization_id", session.organizationId).eq("status", "active"),
   ]);
   const error = organizationResult.error || countersResult.error || customersResult.error || loansResult.error || schedulesResult.error;
   if (error || !organizationResult.data) return jsonError("No fue posible cargar el directorio.", 503);
 
-  const customers = (customersResult.data || []).map((customer) => ({
+  const scheduleIds = (schedulesResult.data || []).map((schedule) => schedule.id);
+  type InstallmentRow = { schedule_version_id: string; payment_number: number; due_date: string; payment_cents: number; remaining_principal_cents: number };
+  let installmentRows: InstallmentRow[] = [];
+  if (scheduleIds.length > 0) {
+    const installmentsResult = await supabase.from("installments").select("schedule_version_id,payment_number,due_date,payment_cents,remaining_principal_cents").in("schedule_version_id", scheduleIds).order("payment_number");
+    if (installmentsResult.error) return jsonError("No fue posible cargar los planes de pago.", 503);
+    installmentRows = installmentsResult.data || [];
+  }
+
+  const activeLoanCustomerIds = new Set((loansResult.data || []).map((loan) => loan.customer_id));
+  const customers = (customersResult.data || []).filter((customer) => !customer.archived_at || activeLoanCustomerIds.has(customer.id)).map((customer) => ({
     id: customer.id, name: customer.name, phone: customer.phone, email: customer.email, updatedAt: customer.updated_at,
   }));
   const customerNames = new Map(customers.map((customer) => [customer.id, customer.name]));
   const schedules = new Map((schedulesResult.data || []).map((schedule) => [schedule.id, schedule]));
+  const installmentsBySchedule = new Map<string, InstallmentRow[]>();
+  for (const installment of installmentRows) {
+    const current = installmentsBySchedule.get(installment.schedule_version_id) || [];
+    current.push(installment);
+    installmentsBySchedule.set(installment.schedule_version_id, current);
+  }
   const prefixes = new Map((countersResult.data || []).map((counter) => [counter.kind, counter.prefix]));
 
   return NextResponse.json({
@@ -35,6 +53,9 @@ export async function GET() {
       financingPrefix: prefixes.get("financing") || "FIN",
       receiptPrefix: prefixes.get("receipt") || "REC",
       adjustmentPrefix: prefixes.get("adjustment") || "AJU",
+      nextFinancingNumber: countersResult.data?.find((counter) => counter.kind === "financing")?.next_value ?? 1,
+      nextReceiptNumber: countersResult.data?.find((counter) => counter.kind === "receipt")?.next_value ?? 1,
+      nextAdjustmentNumber: countersResult.data?.find((counter) => counter.kind === "adjustment")?.next_value ?? 1,
     },
     role: session.role,
     customers,
@@ -61,6 +82,12 @@ export async function GET() {
         currentFinalPayment: centsToMoney(schedule?.final_payment_cents ?? 0),
         nextPaymentNumber: schedule?.first_payment_number ?? 1,
         nextDueDate: schedule?.first_due_date ?? loan.first_due_date,
+        installments: (installmentsBySchedule.get(loan.current_schedule_version_id || "") || []).map((installment) => ({
+          paymentNumber: installment.payment_number,
+          dueDate: installment.due_date,
+          payment: centsToMoney(installment.payment_cents),
+          remainingPrincipal: centsToMoney(installment.remaining_principal_cents),
+        })),
         updatedAt: loan.updated_at,
       };
     }),
@@ -71,7 +98,8 @@ export async function PATCH(request: NextRequest) {
   if (!isSameOrigin(request)) return jsonError("Solicitud no permitida.", 403);
   const session = await getCurrentPortalSession();
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return jsonError("El servicio no está disponible.", 503);
+  const admin = createSupabaseAdminClient();
+  if (!supabase || !admin) return jsonError("El servicio no está disponible.", 503);
   if (!session) return jsonError("Inicia sesión nuevamente.", 401);
   if (session.role !== "owner") return jsonError("Solo el propietario puede cambiar la configuración.", 403);
 
@@ -91,17 +119,19 @@ export async function PATCH(request: NextRequest) {
     receipt: prefixInput.receipt as string,
     adjustment: prefixInput.adjustment as string,
   };
+  if (new Set(Object.values(prefixes)).size !== 3) return jsonError("Cada tipo de documento necesita un prefijo distinto.", 400);
 
-  const { error: organizationError } = await supabase.from("organizations").update({ name, default_recipient: defaultRecipient, updated_at: new Date().toISOString() }).eq("id", session.organizationId);
-  if (organizationError) return jsonError("No fue posible guardar la organización.", 503);
-  for (const kind of ["financing", "receipt", "adjustment"] as const) {
-    const { error } = await supabase.from("document_counters").update({ prefix: prefixes[kind], updated_at: new Date().toISOString() }).eq("organization_id", session.organizationId).eq("kind", kind);
-    if (error) return jsonError("La organización se guardó, pero un prefijo no pudo actualizarse.", 409);
-  }
-  await supabase.rpc("record_audit_event", { target_organization_id: session.organizationId, target_action: "settings.updated", target_entity_type: "organization", target_entity_id: session.organizationId, target_details: { prefixes } });
+  const { error } = await admin.rpc("server_update_organization_settings", {
+    actor_id: session.userId,
+    target_organization_id: session.organizationId,
+    target_name: name,
+    target_default_recipient: defaultRecipient,
+    target_prefixes: prefixes,
+  });
+  if (error?.code === "23505") return jsonError("Cada tipo de documento necesita un prefijo distinto.", 409);
+  if (error) return jsonError("No fue posible guardar la configuración.", 503);
   return NextResponse.json({ ok: true });
 }
 
 function jsonError(message: string, status: number) { return NextResponse.json({ ok: false, message }, { status, headers: { "Cache-Control": "no-store" } }); }
-function isSameOrigin(request: NextRequest) { const origin = request.headers.get("origin"); return !origin || origin === request.nextUrl.origin; }
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null; }

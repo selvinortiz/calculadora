@@ -26,6 +26,16 @@ export type DirectoryOrganization = {
   financingPrefix: string;
   receiptPrefix: string;
   adjustmentPrefix: string;
+  nextFinancingNumber: number;
+  nextReceiptNumber: number;
+  nextAdjustmentNumber: number;
+};
+
+export type DirectoryInstallment = {
+  paymentNumber: number;
+  dueDate: string;
+  payment: number;
+  remainingPrincipal: number;
 };
 
 export type DirectoryCustomer = {
@@ -56,6 +66,7 @@ export type DirectoryLoan = {
   currentFinalPayment: number;
   nextPaymentNumber: number;
   nextDueDate: string;
+  installments: DirectoryInstallment[];
   updatedAt: string;
 };
 

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { generateTemporaryPassphrase, requireOwnerContext } from "@/lib/account-administration";
 import type { Json } from "@/lib/database.types";
 import { normalizeEmailAddress } from "@/lib/email-address";
+import { isSameOrigin } from "@/lib/mutation-response";
 
 export async function GET() {
   const context = await requireOwnerContext();
@@ -15,9 +16,9 @@ export async function GET() {
     .order("created_at");
   if (error) return jsonError("No fue posible cargar los accesos.", 503);
 
-  const { data: authData, error: authError } = await context.admin.auth.admin.listUsers({ perPage: 1000 });
-  if (authError) return jsonError("No fue posible cargar los correos.", 503);
-  const emails = new Map(authData.users.map((user) => [user.id, user.email || ""]));
+  const authUsers = await Promise.all((memberships || []).map((membership) => context.admin.auth.admin.getUserById(membership.user_id)));
+  if (authUsers.some((result) => result.error)) return jsonError("No fue posible cargar los correos.", 503);
+  const emails = new Map(authUsers.flatMap((result) => result.data.user ? [[result.data.user.id, result.data.user.email || ""]] : []));
 
   return NextResponse.json({
     operators: (memberships || []).map((membership) => {
@@ -73,19 +74,27 @@ export async function POST(request: NextRequest) {
     return jsonError("No fue posible completar el acceso.", 503);
   }
 
-  await audit(context, "access.operator_created", created.user.id, { email });
+  const auditError = await audit(context, "access.operator_created", created.user.id, { email });
+  if (auditError) {
+    await context.admin.from("organization_members").delete().eq("organization_id", context.organizationId).eq("user_id", created.user.id);
+    await context.admin.from("profiles").delete().eq("id", created.user.id);
+    await context.admin.auth.admin.deleteUser(created.user.id);
+    return jsonError("No fue posible registrar el acceso de forma segura.", 503);
+  }
   return NextResponse.json({ ok: true, temporaryPassword, userId: created.user.id }, { status: 201, headers: { "Cache-Control": "no-store" } });
 }
 
 async function audit(context: Awaited<ReturnType<typeof requireOwnerContext>> & { organizationId: string }, action: string, id: string, details: Record<string, Json | undefined>) {
-  if (!("supabase" in context)) return;
-  await context.supabase.rpc("record_audit_event", {
+  if (!("admin" in context) || !("user" in context)) return new Error("unavailable");
+  const { error } = await context.admin.rpc("server_record_audit_event", {
+    actor_id: context.user.id,
     target_organization_id: context.organizationId,
     target_action: action,
     target_entity_type: "profile",
     target_entity_id: id,
     target_details: details,
   });
+  return error;
 }
 function contextError(error: "unavailable" | "unauthorized" | "forbidden") {
   if (error === "unavailable") return jsonError("El servicio no está disponible.", 503);
@@ -93,5 +102,4 @@ function contextError(error: "unavailable" | "unauthorized" | "forbidden") {
   return jsonError("Solo el propietario puede administrar accesos.", 403);
 }
 function jsonError(message: string, status: number) { return NextResponse.json({ ok: false, message }, { status, headers: { "Cache-Control": "no-store" } }); }
-function isSameOrigin(request: NextRequest) { const origin = request.headers.get("origin"); return !origin || origin === request.nextUrl.origin; }
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null; }

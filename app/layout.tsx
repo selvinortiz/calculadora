@@ -49,6 +49,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
+    apple: "/app-icon-192.png",
   },
   appleWebApp: {
     capable: true,
@@ -106,6 +107,7 @@ export default async function RootLayout({
   return (
     <html lang="es-GT">
       <body className={geist.variable}>
+        <a className="skipLink" href="#main-content">Saltar al contenido</a>
         <div className={`appShell${session ? "" : " authShell"}`}>
           {session && (
             <AppHeader
@@ -114,7 +116,7 @@ export default async function RootLayout({
               role={session.role}
             />
           )}
-          <div className="appWorkspace">
+          <div className="appWorkspace" id="main-content">
             {children}
             <footer className="appFooter" data-print-hidden>
               <p>

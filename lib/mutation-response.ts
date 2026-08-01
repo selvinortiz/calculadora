@@ -18,7 +18,24 @@ export function mapDatabaseMutationError(error: { message: string; code?: string
 
 export function isSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  return !origin || origin === new URL(request.url).origin;
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (fetchSite && fetchSite !== "same-origin") return false;
+  if (!origin) return fetchSite === "same-origin";
+
+  try {
+    const originUrl = new URL(origin);
+    const forwardedHost = firstForwardedValue(request.headers.get("x-forwarded-host"));
+    const host = forwardedHost || request.headers.get("host") || new URL(request.url).host;
+    const forwardedProtocol = firstForwardedValue(request.headers.get("x-forwarded-proto"));
+    const protocol = forwardedProtocol || new URL(request.url).protocol.replace(":", "");
+    return originUrl.host === host && originUrl.protocol === `${protocol}:`;
+  } catch {
+    return false;
+  }
+}
+
+function firstForwardedValue(value: string | null) {
+  return value?.split(",", 1)[0]?.trim() || "";
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {

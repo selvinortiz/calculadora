@@ -5,12 +5,14 @@ import { CALCULATION_VERSION, DOCUMENT_SNAPSHOT_VERSION, moneyToCents, normalize
 import { getCurrentPortalSession } from "@/lib/current-portal-session";
 import { isIsoDate, isRecord, isSameOrigin, isUuid, mapDatabaseMutationError, mutationError } from "@/lib/mutation-response";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
   if (!isSameOrigin(request)) return mutationError("forbidden", "Solicitud no permitida.");
   const session = await getCurrentPortalSession();
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return mutationError("unavailable", "El servicio no está disponible.");
+  const admin = createSupabaseAdminClient();
+  if (!supabase || !admin) return mutationError("unavailable", "El servicio no está disponible.");
   if (!session) return mutationError("unauthorized", "Inicia sesión nuevamente.");
   let body: unknown;
   try { body = await request.json(); } catch { return mutationError("validation", "Datos inválidos."); }
@@ -20,7 +22,7 @@ export async function POST(request: NextRequest) {
   const price = Number(body.price), downPayment = Number(body.downPayment), annualRate = Number(body.annualRate), termMonths = Number(body.termMonths);
   const accountReference = typeof body.accountReference === "string" ? body.accountReference.trim() : "";
   const firstDueDate = body.firstDueDate, issueDate = body.issueDate;
-  if (Object.keys(validateLoanInputs({ price, downPayment, annualRate })).length || !Number.isInteger(termMonths) || termMonths < 2 || termMonths > 360 || !accountReference || accountReference.length > 80 || !isIsoDate(firstDueDate) || !isIsoDate(issueDate)) return mutationError("validation", "Revisa los datos del financiamiento.");
+  if (Object.keys(validateLoanInputs({ price, downPayment, annualRate })).length || !Number.isInteger(termMonths) || termMonths < 2 || termMonths > 360 || !accountReference || accountReference.length > 80 || !isIsoDate(firstDueDate) || !isIsoDate(issueDate) || firstDueDate <= issueDate) return mutationError("validation", "La primera cuota debe ser posterior a la fecha de emisión.");
 
   const { data: customer } = await supabase.from("customers").select("id,name").eq("id", body.customerId).eq("organization_id", session.organizationId).is("archived_at", null).maybeSingle();
   if (!customer) return mutationError("validation", "Selecciona un cliente activo del directorio.");
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
     },
     ...(replacesTransactionId ? { replacesTransactionId } : {}),
   };
-  const { data, error } = await supabase.rpc("post_loan", { command });
+  const { data, error } = await admin.rpc("server_post_loan", { actor_id: session.userId, command });
   if (error) return mapDatabaseMutationError(error);
   return NextResponse.json<MutationResult<PostedTransaction>>({ ok: true, data: data as PostedTransaction }, { headers: { "Cache-Control": "no-store" } });
 }

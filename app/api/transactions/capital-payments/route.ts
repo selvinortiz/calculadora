@@ -6,12 +6,14 @@ import { CALCULATION_VERSION, DOCUMENT_SNAPSHOT_VERSION, centsToMoney, moneyToCe
 import { getCurrentPortalSession } from "@/lib/current-portal-session";
 import { isIsoDate, isRecord, isSameOrigin, isUuid, mapDatabaseMutationError, mutationError } from "@/lib/mutation-response";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
   if (!isSameOrigin(request)) return mutationError("forbidden", "Solicitud no permitida.");
   const session = await getCurrentPortalSession();
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return mutationError("unavailable", "El servicio no está disponible.");
+  const admin = createSupabaseAdminClient();
+  if (!supabase || !admin) return mutationError("unavailable", "El servicio no está disponible.");
   if (!session) return mutationError("unauthorized", "Inicia sesión nuevamente.");
   let body: unknown;
   try { body = await request.json(); } catch { return mutationError("validation", "Datos inválidos."); }
@@ -20,7 +22,8 @@ export async function POST(request: NextRequest) {
   const paymentNumber = Number(body.paymentNumber), expectedLoanVersion = Number(body.expectedLoanVersion), capitalPayment = Number(body.capitalPayment);
   const transactionMode = body.transactionMode === "combined" ? "combined" : body.transactionMode === "standalone" ? "standalone" : null;
   const balanceSource = body.balanceSource === "statement" ? "statement" : body.balanceSource === "calculated" ? "calculated" : null;
-  if (!Number.isInteger(paymentNumber) || paymentNumber < 1 || !Number.isInteger(expectedLoanVersion) || !Number.isFinite(capitalPayment) || capitalPayment <= 0 || !transactionMode || !balanceSource || !isIsoDate(body.transactionDate) || !isIsoDate(body.nextPaymentDate) || (body.lastPaymentDate !== null && !isIsoDate(body.lastPaymentDate))) return mutationError("validation", "Revisa los datos del abono.");
+  if (!Number.isInteger(paymentNumber) || paymentNumber < 1 || !Number.isInteger(expectedLoanVersion) || !Number.isFinite(capitalPayment) || capitalPayment <= 0 || !transactionMode || !balanceSource || !isIsoDate(body.transactionDate) || !isIsoDate(body.nextPaymentDate) || body.nextPaymentDate <= body.transactionDate || (body.lastPaymentDate !== null && (!isIsoDate(body.lastPaymentDate) || body.lastPaymentDate > body.transactionDate))) return mutationError("validation", "Revisa las fechas y los datos del abono.");
+  if (!validText(body.paymentMethod, 80) || !validText(body.paymentReference, 120) || !validText(body.receivedBy, 80) || !validText(body.notes, 1000)) return mutationError("validation", "Uno de los textos supera la longitud permitida.");
 
   const { data: loan } = await supabase.from("loans").select("id,customer_id,account_reference,annual_rate,version,current_schedule_version_id,customers!loans_customer_id_fkey(name)").eq("id", body.loanId).eq("organization_id", session.organizationId).eq("status", "active").maybeSingle();
   if (!loan || !loan.current_schedule_version_id) return mutationError("validation", "El financiamiento ya no está activo.");
@@ -45,21 +48,26 @@ export async function POST(request: NextRequest) {
   const customerValue = loan.customers as unknown;
   const customer = (Array.isArray(customerValue) ? customerValue[0] : customerValue) as { name?: string } | null;
   const details = { transactionMode, paymentNumber, transactionDate: body.transactionDate, lastPaymentDate: body.lastPaymentDate, nextPaymentDate: body.nextPaymentDate, balanceSource, capitalPayment, currentCapital, newCapital, originalFutureInterest: centsToMoney(originalFutureInterestCents), newFutureInterest: quote.interestTotal, newScheduledBalance: quote.total, regularPayment: centsToMoney(appliedRow.payment_cents) };
+  const paymentMethod = requiredText(body.paymentMethod, 80);
+  const receivedBy = requiredText(body.receivedBy, 80);
+  if (!paymentMethod || !receivedBy) return mutationError("validation", "Indica la forma de pago y quién recibe.");
   const command: PostCapitalPaymentCommand = {
     idempotencyKey: body.idempotencyKey, organizationId: session.organizationId, loanId: loan.id, expectedLoanVersion,
     transactionMode, paymentNumber, transactionDate: body.transactionDate, lastPaymentDate: body.lastPaymentDate, nextPaymentDate: body.nextPaymentDate, balanceSource,
     capitalPaymentCents: moneyToCents(capitalPayment), regularPaymentCents: moneyToCents(centsToMoney(appliedRow.payment_cents)),
     currentCapitalCents: moneyToCents(currentCapital), newCapitalCents: moneyToCents(newCapital), originalFutureInterestCents: moneyToCents(centsToMoney(originalFutureInterestCents)),
     newFutureInterestCents: moneyToCents(quote.interestTotal), newScheduledBalanceCents: moneyToCents(quote.total), newMonthlyPaymentCents: moneyToCents(quote.monthly), newFinalPaymentCents: moneyToCents(quote.finalPayment), remainingMonths,
-    schedule: persistSchedule(rows), paymentMethod: text(body.paymentMethod, 80), paymentReference: text(body.paymentReference, 120), receivedBy: text(body.receivedBy, 80), notes: text(body.notes, 1000),
-    snapshot: { version: DOCUMENT_SNAPSHOT_VERSION, calculationVersion: CALCULATION_VERSION, documentKind: "capital_payment_record", issuedAt: `${body.transactionDate}T00:00:00.000Z`, organizationName: session.company, customerName: customer?.name || "Cliente", accountReference: loan.account_reference, payload: { details: { ...details, paymentMethod: text(body.paymentMethod, 80), paymentReference: text(body.paymentReference, 120), receivedBy: text(body.receivedBy, 80), notes: text(body.notes, 1000) }, revisedQuote: quote, revisedSchedule: rows, notice: "Las cuotas ordinarias se administran por separado." } },
+    schedule: persistSchedule(rows), paymentMethod, paymentReference: text(body.paymentReference, 120), receivedBy, notes: text(body.notes, 1000),
+    snapshot: { version: DOCUMENT_SNAPSHOT_VERSION, calculationVersion: CALCULATION_VERSION, documentKind: "capital_payment_record", issuedAt: `${body.transactionDate}T00:00:00.000Z`, organizationName: session.company, customerName: customer?.name || "Cliente", accountReference: loan.account_reference, payload: { details: { ...details, paymentMethod, paymentReference: text(body.paymentReference, 120), receivedBy, notes: text(body.notes, 1000) }, revisedQuote: quote, revisedSchedule: rows, notice: "Las cuotas ordinarias se administran por separado." } },
     ...(replacesTransactionId ? { replacesTransactionId } : {}),
   };
-  const { data, error } = await supabase.rpc("post_capital_payment", { command });
+  const { data, error } = await admin.rpc("server_post_capital_payment", { actor_id: session.userId, command });
   if (error) return mapDatabaseMutationError(error);
   return NextResponse.json<MutationResult<PostedTransaction>>({ ok: true, data: data as PostedTransaction }, { headers: { "Cache-Control": "no-store" } });
 }
-function text(value: unknown, max: number) { return typeof value === "string" ? value.trim().slice(0, max) : ""; }
+function text(value: unknown, max: number) { const result = typeof value === "string" ? value.trim() : ""; if (result.length > max) throw new RangeError("text_too_long"); return result; }
+function validText(value: unknown, max: number) { return typeof value !== "string" || value.trim().length <= max; }
+function requiredText(value: unknown, max: number) { const result = text(value, max); return result || null; }
 async function validateReplacement(supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>, value: unknown, organizationId: string, loanId: string): Promise<string | null | false> {
   if (value === undefined || value === null || value === "") return null;
   if (!isUuid(value)) return false;

@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { generateTemporaryPassphrase, requireOwnerContext } from "@/lib/account-administration";
 import { normalizeEmailAddress } from "@/lib/email-address";
+import { isSameOrigin } from "@/lib/mutation-response";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   if (!isSameOrigin(request)) return jsonError("Solicitud no permitida.", 403);
@@ -31,13 +32,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
     if (updateError || !updatedUserData.user) return jsonError("No fue posible cambiar el correo. Puede estar en uso.", 409);
 
-    await context.supabase.rpc("record_audit_event", {
+    const { error: auditError } = await context.admin.rpc("server_record_audit_event", {
+      actor_id: context.user.id,
       target_organization_id: context.organizationId,
       target_action: "access.email_updated",
       target_entity_type: "profile",
       target_entity_id: userId,
       target_details: { previous_email: previousEmail, email },
     });
+    if (auditError) return jsonError("El correo cambió, pero no fue posible registrar la auditoría.", 503);
     return NextResponse.json({ ok: true, email: updatedUserData.user.email || email }, { headers: { "Cache-Control": "no-store" } });
   }
 
@@ -48,13 +51,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const active = action === "reactivate";
     const { error } = await context.admin.from("organization_members").update({ active, updated_at: new Date().toISOString() }).eq("organization_id", context.organizationId).eq("user_id", userId);
     if (error) return jsonError("No fue posible actualizar el acceso.", 503);
-    await context.supabase.rpc("record_audit_event", {
+    const { error: auditError } = await context.admin.rpc("server_record_audit_event", {
+      actor_id: context.user.id,
       target_organization_id: context.organizationId,
       target_action: `access.operator_${active ? "reactivated" : "deactivated"}`,
       target_entity_type: "profile",
       target_entity_id: userId,
       target_details: {},
     });
+    if (auditError) return jsonError("El acceso cambió, pero no fue posible registrar la auditoría.", 503);
     return NextResponse.json({ ok: true, active });
   }
 
@@ -64,13 +69,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (passwordError) return jsonError("No fue posible restablecer la contraseña.", 503);
     const { error: profileError } = await context.admin.from("profiles").update({ must_change_password: true, updated_at: new Date().toISOString() }).eq("id", userId);
     if (profileError) return jsonError("La contraseña cambió, pero no pudimos completar el restablecimiento.", 503);
-    await context.supabase.rpc("record_audit_event", {
+    const { error: auditError } = await context.admin.rpc("server_record_audit_event", {
+      actor_id: context.user.id,
       target_organization_id: context.organizationId,
       target_action: "access.password_reset",
       target_entity_type: "profile",
       target_entity_id: userId,
       target_details: {},
     });
+    if (auditError) return jsonError("La contraseña cambió, pero no fue posible registrar la auditoría.", 503);
     return NextResponse.json({ ok: true, temporaryPassword }, { headers: { "Cache-Control": "no-store" } });
   }
 
@@ -78,5 +85,4 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 }
 
 function jsonError(message: string, status: number) { return NextResponse.json({ ok: false, message }, { status, headers: { "Cache-Control": "no-store" } }); }
-function isSameOrigin(request: NextRequest) { const origin = request.headers.get("origin"); return !origin || origin === request.nextUrl.origin; }
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null; }

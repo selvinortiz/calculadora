@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import {
   getSiteUrl,
   PUBLIC_ENTRY_PATH,
@@ -87,11 +88,14 @@ export default async function AccessPage({
   searchParams: Promise<{ siguiente?: string; no_disponible?: string }>;
 }) {
   const { siguiente, no_disponible } = await searchParams;
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const nextPath = isSafePortalPath(siguiente) ? siguiente : "/";
 
   return (
     <main className={styles.authPage}>
       <script
+        nonce={nonce}
+        suppressHydrationWarning
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),

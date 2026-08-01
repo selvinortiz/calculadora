@@ -17,6 +17,7 @@ La aplicación registra tres operaciones: originación de un financiamiento, abo
 - `/configuracion`: organización y numeración de documentos.
 - `/financiamientos/[id]`: condiciones originales, plan vigente, cronología y reimpresión de snapshots.
 - `/configuracion/accesos`: administración de operadores, solo para propietarios.
+- `/configuracion/auditoria`: consulta y exportación CSV de eventos, solo para propietarios.
 
 ## Desarrollo local
 
@@ -52,7 +53,9 @@ El bootstrap es intencionalmente de una sola ejecución para proyectos sin seed,
 - `npm run supabase:types` regenera `lib/database.types.ts` contra la pila local.
 - El seed no importa datos del antiguo `localStorage`.
 
-El dinero se persiste como centavos enteros; las tasas como `numeric(9,6)`. La versión inicial de cálculo es `simple-interest-v2-cents`, con redondeo decimal explícito half-up. El propietario puede corregir un financiamiento, abono o ajuste conservando su número; la corrección regenera el snapshot y queda registrada con su estado anterior y posterior en auditoría. La anulación y el reemplazo permanecen disponibles para operaciones que deban cancelarse, y los números anulados no se reutilizan.
+El dinero se persiste como centavos enteros; las tasas como `numeric(9,6)`. La versión inicial de cálculo es `simple-interest-v2-cents`: los totales usan redondeo decimal half-up y las cuotas ordinarias distribuyen centavos hacia abajo, dejando el residuo positivo en la cuota final. El propietario puede corregir únicamente la operación registrada más reciente, conservando su número; la corrección regenera el snapshot y queda registrada con su estado anterior y posterior en auditoría. Para corregir una operación anterior se anulan primero sus dependencias, en orden inverso. Los números anulados no se reutilizan.
+
+Las operaciones financieras, clientes, configuración y auditoría se escriben mediante RPC exclusivos del servidor. La clave de sesión de un operador conserva acceso de lectura por RLS, pero no puede invocar RPC financieros ni modificar tablas de negocio directamente.
 
 ## Acceso sin correo transaccional
 
@@ -88,12 +91,23 @@ Antes del corte:
 4. prueba los tres registros, recarga en otra sesión y reimprime snapshots;
 5. configura Production en Vercel y despliega;
 6. conserva el `localStorage` antiguo para consulta manual; la aplicación no lo importa ni lo elimina.
+7. confirma en Supabase Auth que el JWT sea de una hora y que los límites de inicio de sesión estén activos;
+8. configura alertas para errores 5xx, fallos de Auth, fallos de base de datos y migraciones;
+9. registra quién revisará `/configuracion/auditoria` y con qué frecuencia.
 
 Si el corte falla, vuelve al deployment anterior de Vercel. No elimines operaciones ya escritas en Supabase: consérvalas para conciliación.
 
 ### Backups
 
-Usa el nivel gratuito solo durante desarrollo. Pasa producción a un plan pagado antes de depender de estos registros y confirma la política de backups administrados del proyecto. Restaurar y conciliar datos sigue siendo responsabilidad operativa del propietario. PITR no forma parte de esta versión inicial.
+Usa el nivel gratuito solo durante desarrollo. Antes de depender de estos registros en producción:
+
+1. activa backups administrados y PITR en el proyecto Supabase;
+2. documenta la retención y las personas autorizadas para restaurar;
+3. ejecuta un simulacro de restauración en un proyecto aislado antes del corte y al menos trimestralmente;
+4. concilia conteos, números documentales, saldos de capital y snapshots después de cada simulacro;
+5. registra el resultado del simulacro fuera de la base restaurada.
+
+El rollback de Vercel no reemplaza una restauración de base de datos y nunca debe eliminar operaciones ya registradas.
 
 ## Verificación
 
@@ -101,6 +115,7 @@ Usa el nivel gratuito solo durante desarrollo. Pasa producción a un plan pagado
 npm run supabase:reset
 npm run supabase:test
 npm run check
+npm run test:e2e
 npm audit --omit=dev
 ```
 

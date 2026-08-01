@@ -55,9 +55,8 @@ export async function loadResourceDirectory(session: PortalSession): Promise<Res
   const [customersResult, loansResult, schedulesResult, transactionsResult] = await Promise.all([
     supabase
       .from("customers")
-      .select("id,name,phone,email,updated_at")
+      .select("id,name,phone,email,archived_at,updated_at")
       .eq("organization_id", session.organizationId)
-      .is("archived_at", null)
       .order("name"),
     supabase
       .from("loans")
@@ -81,8 +80,9 @@ export async function loadResourceDirectory(session: PortalSession): Promise<Res
   const error = customersResult.error || loansResult.error || schedulesResult.error || transactionsResult.error;
   if (error) throw new Error(error.message);
 
-  const customerRows = customersResult.data || [];
   const loanRows = loansResult.data || [];
+  const activeLoanCustomerIds = new Set(loanRows.map((loan) => loan.customer_id));
+  const customerRows = (customersResult.data || []).filter((customer) => !customer.archived_at || activeLoanCustomerIds.has(customer.id));
   const scheduleById = new Map((schedulesResult.data || []).map((schedule) => [schedule.id, schedule]));
   const customerNameById = new Map(customerRows.map((customer) => [customer.id, customer.name]));
   const loanById = new Map(loanRows.map((loan) => [loan.id, loan]));
@@ -107,11 +107,15 @@ export async function loadResourceDirectory(session: PortalSession): Promise<Res
       type: transaction.type as ResourceActivity["type"],
     }];
   });
+  const latestActivityByLoan = new Map<string, ResourceActivity>();
+  for (const activity of activities) {
+    if (!latestActivityByLoan.has(activity.loanId)) latestActivityByLoan.set(activity.loanId, activity);
+  }
 
   const loans: ResourceLoan[] = loanRows.map((loan) => {
     const schedule = scheduleById.get(loan.current_schedule_version_id || "");
     const loanTransactions = transactionsByLoan.get(loan.id) || [];
-    const latest = activities.find((activity) => activity.loanId === loan.id) || null;
+    const latest = latestActivityByLoan.get(loan.id) || null;
     return {
       id: loan.id,
       customerId: loan.customer_id,

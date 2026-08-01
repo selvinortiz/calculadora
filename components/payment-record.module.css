@@ -1,4 +1,6 @@
 .document {
+  width: 100%;
+  min-width: 0;
   padding: clamp(1rem, 3vw, 1.5rem);
   color: var(--text);
   background: var(--surface);

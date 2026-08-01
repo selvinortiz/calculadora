@@ -1,10 +1,14 @@
 .document {
   display: grid;
+  width: 100%;
+  min-width: 0;
   gap: 1rem;
 }
 
 .page {
   display: flex;
+  width: 100%;
+  min-width: 0;
   flex-direction: column;
   padding: clamp(1rem, 3vw, 1.5rem);
   color: var(--text);
@@ -184,6 +188,9 @@
 }
 
 .tableRegion {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: 0.55rem;

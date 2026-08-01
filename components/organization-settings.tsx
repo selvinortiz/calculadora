@@ -21,17 +21,27 @@ export function OrganizationSettings({ company, recipient }: { company: string; 
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    const prefixes = [settings.financingPrefix, settings.receiptPrefix, settings.adjustmentPrefix].map((prefix) => prefix.toUpperCase());
+    if (new Set(prefixes).size !== prefixes.length) {
+      setNotice("Cada tipo de documento necesita un prefijo distinto.");
+      return;
+    }
     setSaving(true);
     setNotice("");
-    const response = await fetch("/api/directory", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: settings.name, defaultRecipient: settings.defaultRecipient, prefixes: { financing: settings.financingPrefix.toUpperCase(), receipt: settings.receiptPrefix.toUpperCase(), adjustment: settings.adjustmentPrefix.toUpperCase() } }),
-    });
-    const result = await response.json() as { message?: string };
-    setNotice(response.ok ? "Configuración guardada." : result.message || "No fue posible guardar los cambios.");
-    if (response.ok) { notifyDurableDirectoryChanged(); await reload(); }
-    setSaving(false);
+    try {
+      const response = await fetch("/api/directory", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: settings.name, defaultRecipient: settings.defaultRecipient, prefixes: { financing: prefixes[0], receipt: prefixes[1], adjustment: prefixes[2] } }),
+      });
+      const result = await response.json() as { message?: string };
+      setNotice(response.ok ? "Configuración guardada." : result.message || "No fue posible guardar los cambios.");
+      if (response.ok) { notifyDurableDirectoryChanged(); await reload(); }
+    } catch {
+      setNotice("No fue posible guardar los cambios. Revisa tu conexión.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return <div className={styles.grid}>
@@ -52,14 +62,18 @@ export function OrganizationSettings({ company, recipient }: { company: string; 
     <aside className={styles.preview}>
       <header><p>Numeración</p><h2>Próximos documentos</h2></header>
       <dl>
-        <div><dt>Financiamiento</dt><dd>{settings.financingPrefix.toUpperCase()}-000001</dd></div>
-        <div><dt>Recibo</dt><dd>{settings.receiptPrefix.toUpperCase()}-000001</dd></div>
-        <div><dt>Ajuste</dt><dd>{settings.adjustmentPrefix.toUpperCase()}-000001</dd></div>
+        <div><dt>Financiamiento</dt><dd>{formatDocumentNumber(settings.financingPrefix, data.organization?.nextFinancingNumber)}</dd></div>
+        <div><dt>Recibo</dt><dd>{formatDocumentNumber(settings.receiptPrefix, data.organization?.nextReceiptNumber)}</dd></div>
+        <div><dt>Ajuste</dt><dd>{formatDocumentNumber(settings.adjustmentPrefix, data.organization?.nextAdjustmentNumber)}</dd></div>
       </dl>
     </aside>
   </div>;
 }
 
 function Field({ label, value, onChange, required }: { label: string; value: string; onChange: (value: string) => void; required?: boolean }) {
-  return <label className={styles.field}><span>{label}</span><input value={value} required={required} onChange={(event) => onChange(event.target.value)} /></label>;
+  return <label className={styles.field}><span>{label}</span><input value={value} maxLength={label === "Nombre" ? 100 : label === "Recibido por" ? 80 : 12} required={required} onChange={(event) => onChange(event.target.value)} /></label>;
+}
+
+function formatDocumentNumber(prefix: string, nextValue = 1) {
+  return `${prefix.toUpperCase()}-${String(nextValue).padStart(6, "0")}`;
 }

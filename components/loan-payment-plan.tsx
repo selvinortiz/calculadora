@@ -79,7 +79,9 @@ export function LoanPaymentPlan({
         : "Indica el lote o número de cuenta.",
       issueDate: details.issueDate ? undefined : "Indica la fecha de emisión.",
       firstDueDate: details.firstDueDate
-        ? undefined
+        ? details.issueDate && details.firstDueDate <= details.issueDate
+          ? "Debe ser posterior a la fecha de emisión."
+          : undefined
         : "Indica la fecha de la primera cuota.",
       customer: selectedCustomerId
         ? undefined
@@ -177,10 +179,8 @@ export function LoanPaymentPlan({
               id="plan-debtor-name"
               label="Deudor"
               value={details.debtorName}
-              onChange={(value) => {
-                setSelectedCustomerId("");
-                updateDetails("debtorName", value);
-              }}
+              onChange={(value) => updateDetails("debtorName", value)}
+              readOnly
               error={showErrors ? errors.debtorName : undefined}
             />
             <PlanField
@@ -188,11 +188,13 @@ export function LoanPaymentPlan({
               label="Acreedor o vendedor"
               value={creditorName}
               onChange={(value) => updateDetails("creditorName", value)}
+              readOnly
               error={showErrors ? errors.creditorName : undefined}
             />
             <PlanField
               id="plan-account-reference"
               label="Lote o cuenta"
+              maxLength={80}
               value={details.accountReference}
               onChange={(value) => updateDetails("accountReference", value)}
               error={showErrors ? errors.accountReference : undefined}
@@ -271,16 +273,20 @@ function PlanField({
   hint,
   id,
   label,
+  maxLength,
   onChange,
   type = "text",
+  readOnly = false,
   value,
 }: {
   error?: string;
   hint?: string;
   id: string;
   label: string;
+  maxLength?: number;
   onChange: (value: string) => void;
   type?: "date" | "text";
+  readOnly?: boolean;
   value: string;
 }) {
   return (
@@ -289,8 +295,10 @@ function PlanField({
       <input
         id={id}
         type={type}
+        maxLength={maxLength}
         value={value}
         required
+        readOnly={readOnly}
         onChange={(event) => onChange(event.target.value)}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}

@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { isSameOrigin } from "@/lib/mutation-response";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
@@ -42,11 +43,6 @@ export async function POST(request: NextRequest) {
     { ok: true },
     { headers: { "Cache-Control": "no-store" } },
   );
-}
-
-function isSameOrigin(request: NextRequest): boolean {
-  const origin = request.headers.get("origin");
-  return !origin || origin === request.nextUrl.origin;
 }
 
 function jsonError(message: string, status: number) {

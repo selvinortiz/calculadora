@@ -14,6 +14,8 @@ function transaction(id: string, type: string, documentNumber: string, payload: 
     status: "posted",
     effectiveDate: "2026-07-31",
     documentNumber,
+    dependsOnTransactionId: type === "loan_origination" ? null : type === "capital_payment" ? "origination" : "capital",
+    ledgerSequence: type === "loan_origination" ? 1 : type === "capital_payment" ? 2 : 3,
     createdAt: "2026-07-31T12:00:00Z",
     voidedAt: null,
     voidReason: null,
@@ -35,7 +37,7 @@ function loan(transactions: Loan["transactions"]): Loan {
     status: "active",
     version: 3,
     customer: { name: "María Ortiz" },
-    schedule: { versionNumber: 2, reason: "capital_payment", calculationVersion: "simple-interest-v2-cents", principal: 40_799.98, futureInterest: 12_851.99, remainingMonths: 54, regularPayment: 993.56, finalPayment: 993.29, firstPaymentNumber: 7, firstDueDate: "2026-08-20" },
+    schedule: { sourceTransactionId: transactions.some((item) => item.id === "capital") ? "capital" : "origination", versionNumber: 2, reason: "capital_payment", calculationVersion: "simple-interest-v2-cents", principal: 40_799.98, futureInterest: 12_851.99, remainingMonths: 54, regularPayment: 993.56, finalPayment: 993.29, firstPaymentNumber: 7, firstDueDate: "2026-08-20" },
     installments: [installment],
     transactions,
   };
@@ -57,7 +59,7 @@ describe("LoanDetail", () => {
     expect(markup).toContain("Cuota 8: recibir");
     expect(markup).toContain("Próxima cuota");
     expect(markup).toContain("Mostrar todo");
-    expect(markup.match(/>Editar</g)).toHaveLength(3);
+    expect(markup.match(/>Editar</g)).toHaveLength(1);
     expect(markup).not.toContain("<table");
   });
 

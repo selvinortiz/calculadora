@@ -734,6 +734,7 @@ export type Database = {
           effective_date: string
           id: string
           idempotency_key: string
+          ledger_sequence: number
           loan_id: string
           organization_id: string
           replaces_transaction_id: string | null
@@ -751,6 +752,7 @@ export type Database = {
           effective_date: string
           id?: string
           idempotency_key: string
+          ledger_sequence?: number
           loan_id: string
           organization_id: string
           replaces_transaction_id?: string | null
@@ -768,6 +770,7 @@ export type Database = {
           effective_date?: string
           id?: string
           idempotency_key?: string
+          ledger_sequence?: number
           loan_id?: string
           organization_id?: string
           replaces_transaction_id?: string | null
@@ -861,6 +864,73 @@ export type Database = {
           target_organization_id: string
         }
         Returns: undefined
+      }
+      server_create_customer: {
+        Args: {
+          actor_id: string
+          target_email: string
+          target_name: string
+          target_organization_id: string
+          target_phone: string
+        }
+        Returns: Json
+      }
+      server_edit_transaction: {
+        Args: { actor_id: string; command: Json }
+        Returns: Json
+      }
+      server_post_capital_payment: {
+        Args: { actor_id: string; command: Json }
+        Returns: Json
+      }
+      server_post_loan: {
+        Args: { actor_id: string; command: Json }
+        Returns: Json
+      }
+      server_post_payment_adjustment: {
+        Args: { actor_id: string; command: Json }
+        Returns: Json
+      }
+      server_record_audit_event: {
+        Args: {
+          actor_id: string
+          target_action: string
+          target_details?: Json
+          target_entity_id: string
+          target_entity_type: string
+          target_organization_id: string
+        }
+        Returns: undefined
+      }
+      server_update_customer: {
+        Args: {
+          actor_id: string
+          target_archive: boolean
+          target_customer_id: string
+          target_email?: string
+          target_name?: string
+          target_organization_id: string
+          target_phone?: string
+        }
+        Returns: Json
+      }
+      server_update_organization_settings: {
+        Args: {
+          actor_id: string
+          target_default_recipient: string
+          target_name: string
+          target_organization_id: string
+          target_prefixes: Json
+        }
+        Returns: Json
+      }
+      server_void_transaction: {
+        Args: {
+          actor_id: string
+          reason: string
+          target_transaction_id: string
+        }
+        Returns: Json
       }
       update_my_profile: {
         Args: { target_display_name: string; target_organization_name?: string }

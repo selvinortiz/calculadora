@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { isSameOrigin } from "@/lib/mutation-response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -35,13 +36,15 @@ export async function POST(request: NextRequest) {
     .eq("active", true)
     .maybeSingle();
   if (membership) {
-    await supabase.rpc("record_audit_event", {
+    const { error: auditError } = await admin.rpc("server_record_audit_event", {
+      actor_id: user.id,
       target_organization_id: membership.organization_id,
       target_action: "access.password_changed",
       target_entity_type: "profile",
       target_entity_id: user.id,
       target_details: {},
     });
+    if (auditError) return jsonError("La contraseña cambió, pero no pudimos registrar la auditoría.", 503);
   }
 
   return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
@@ -49,10 +52,6 @@ export async function POST(request: NextRequest) {
 
 function isStrongEnough(value: string) {
   return value.length >= 12 && value.length <= 128 && /[A-Za-z]/.test(value) && /\d/.test(value);
-}
-function isSameOrigin(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  return !origin || origin === request.nextUrl.origin;
 }
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;

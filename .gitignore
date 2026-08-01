@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/playwright-report/
+/playwright/.auth/
+/test-results/
 /supabase/.temp/
 /supabase/.branches/
 

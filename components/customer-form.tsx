@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { notifyDurableDirectoryChanged } from "@/lib/use-durable-directory";
+import { ModalDialog } from "./modal-dialog";
 import styles from "./resource-pages.module.css";
 
 type CustomerFields = { name: string; phone: string; email: string };
@@ -20,41 +21,52 @@ export function CustomerForm({ customerId, initial }: { customerId?: string; ini
     if (saving) return;
     setSaving(true);
     setMessage("");
-    const response = await fetch(customerId ? `/api/customers/${customerId}` : "/api/customers", {
-      method: customerId ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(fields),
-    });
-    const result = await response.json() as { id?: string; message?: string };
-    if (!response.ok) {
-      setMessage(result.message || "No fue posible guardar el cliente.");
+    try {
+      const response = await fetch(customerId ? `/api/customers/${customerId}` : "/api/customers", {
+        method: customerId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+      const result = await response.json() as { id?: string; message?: string };
+      if (!response.ok) {
+        setMessage(result.message || "No fue posible guardar el cliente.");
+        return;
+      }
+      notifyDurableDirectoryChanged();
+      router.push(`/clientes/${customerId || result.id}`);
+      router.refresh();
+    } catch {
+      setMessage("No fue posible guardar el cliente. Revisa tu conexión.");
+    } finally {
       setSaving(false);
-      return;
     }
-    notifyDurableDirectoryChanged();
-    router.push(`/clientes/${customerId || result.id}`);
-    router.refresh();
   }
 
   async function archive() {
     if (!customerId || saving) return;
     setSaving(true);
     setMessage("");
-    const response = await fetch(`/api/customers/${customerId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ archive: true }),
-    });
-    const result = await response.json() as { message?: string };
-    if (!response.ok) {
-      setMessage(result.message || "No fue posible archivar el cliente.");
-      setSaving(false);
+    try {
+      const response = await fetch(`/api/customers/${customerId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ archive: true }),
+      });
+      const result = await response.json() as { message?: string };
+      if (!response.ok) {
+        setMessage(result.message || "No fue posible archivar el cliente.");
+        setConfirmingArchive(false);
+        return;
+      }
+      notifyDurableDirectoryChanged();
+      router.push("/clientes");
+      router.refresh();
+    } catch {
+      setMessage("No fue posible archivar el cliente. Revisa tu conexión.");
       setConfirmingArchive(false);
-      return;
+    } finally {
+      setSaving(false);
     }
-    notifyDurableDirectoryChanged();
-    router.push("/clientes");
-    router.refresh();
   }
 
   return <>
@@ -85,16 +97,14 @@ export function CustomerForm({ customerId, initial }: { customerId?: string; ini
         <button className={styles.dangerButton} type="button" disabled={saving} onClick={() => setConfirmingArchive(true)}>Archivar</button>
       </div>}
     </section>
-    {confirmingArchive && <div className={styles.dialogBackdrop} role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target && !saving) setConfirmingArchive(false); }}>
-      <section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="archive-customer-title">
+    {confirmingArchive && <ModalDialog backdropClassName={styles.dialogBackdrop} dialogClassName={styles.dialog} labelledBy="archive-customer-title" busy={saving} onClose={() => setConfirmingArchive(false)}>
         <p className={styles.sectionEyebrow}>Archivar cliente</p>
         <h2 id="archive-customer-title">{fields.name}</h2>
-        <p>Sus financiamientos conservarán el historial registrado.</p>
+        <p>Solo se puede archivar cuando no tiene financiamientos activos. El historial registrado se conservará.</p>
         <div className={styles.formActions}>
           <button type="button" disabled={saving} onClick={() => setConfirmingArchive(false)}>Cancelar</button>
           <button className={styles.dangerButton} type="button" disabled={saving} onClick={archive}>{saving ? "Archivando…" : "Archivar cliente"}</button>
         </div>
-      </section>
-    </div>}
+    </ModalDialog>}
   </>;
 }

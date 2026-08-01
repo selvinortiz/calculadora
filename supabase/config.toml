@@ -20,9 +20,14 @@ sql_paths = ["./seed.sql"]
 enabled = true
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["http://127.0.0.1:3000"]
-jwt_expiry = 43200
+jwt_expiry = 3600
 enable_signup = false
 enable_anonymous_sign_ins = false
+
+[auth.rate_limit]
+token_refresh = 150
+sign_in_sign_ups = 30
+token_verifications = 30
 
 [auth.email]
 enable_signup = true

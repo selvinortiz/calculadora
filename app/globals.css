@@ -43,7 +43,23 @@
 html {
   min-width: 20rem;
   background: var(--background);
-  scroll-behavior: smooth;
+}
+
+.skipLink {
+  background: var(--text);
+  border-radius: 0 0 0.5rem 0;
+  color: var(--background);
+  left: 0;
+  padding: 0.75rem 1rem;
+  position: fixed;
+  top: 0;
+  transform: translateY(-120%);
+  transition: transform 120ms ease;
+  z-index: 1000;
+}
+
+.skipLink:focus {
+  transform: translateY(0);
 }
 
 body {
@@ -266,12 +282,6 @@ a {
 
   body {
     background: var(--background);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
   }
 }
 

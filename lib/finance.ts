@@ -148,19 +148,18 @@ export function calculateSimpleInterestQuote(
   const exactInterest = principalValue
     .mul(new Decimal(annualRate).div(100))
     .mul(new Decimal(months).div(12));
-  const total = roundCurrency(principalValue.add(exactInterest).toNumber());
-  const monthly = roundCurrency(principalValue.add(exactInterest).div(months).toNumber());
-  const finalPayment = roundCurrency(
-    new Decimal(total).minus(new Decimal(monthly).mul(months - 1)).toNumber(),
-  );
+  const principalCents = toIntegerCents(principal);
+  const totalCents = toIntegerCents(roundCurrency(principalValue.add(exactInterest).toNumber()));
+  const regularPaymentCents = divideCentsDown(totalCents, months);
+  const finalPaymentCents = totalCents - regularPaymentCents * (months - 1);
 
   return {
     months,
-    principal: roundCurrency(principal),
-    interestTotal: roundCurrency(new Decimal(total).minus(principalValue).toNumber()),
-    total,
-    monthly,
-    finalPayment,
+    principal: fromIntegerCents(principalCents),
+    interestTotal: fromIntegerCents(totalCents - principalCents),
+    total: fromIntegerCents(totalCents),
+    monthly: fromIntegerCents(regularPaymentCents),
+    finalPayment: fromIntegerCents(finalPaymentCents),
   };
 }
 
@@ -204,9 +203,9 @@ export function calculatePaymentSchedule({
   const principalCents = toIntegerCents(principal);
   const interestCents = toIntegerCents(interestTotal);
   const totalCents = principalCents + interestCents;
-  const regularPaymentCents = divideCentsHalfUp(totalCents, months);
+  const regularPaymentCents = divideCentsDown(totalCents, months);
   const finalPaymentCents = totalCents - regularPaymentCents * (months - 1);
-  const regularPrincipalCents = divideCentsHalfUp(principalCents, months);
+  const regularPrincipalCents = divideCentsDown(principalCents, months);
   let principalPaidCents = 0;
   let interestPaidCents = 0;
 
@@ -383,8 +382,8 @@ function fromIntegerCents(value: number): number {
   return new Decimal(value).div(100).toNumber();
 }
 
-function divideCentsHalfUp(cents: number, divisor: number): number {
-  return new Decimal(cents).div(divisor).toDecimalPlaces(0, Decimal.ROUND_HALF_UP).toNumber();
+function divideCentsDown(cents: number, divisor: number): number {
+  return Math.floor(cents / divisor);
 }
 
 function roundDecimalCurrency(value: Decimal.Value): number {

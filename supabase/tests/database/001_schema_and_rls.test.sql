@@ -60,8 +60,9 @@ select results_eq(
   'RLS hides cross-organization settings'
 );
 
+set local role service_role;
 select lives_ok(
-  $$ select public.post_loan($json$
+  $$ select public.server_post_loan('10000000-0000-4000-8000-000000000002', $json$
   {
     "idempotencyKey":"10000000-4000-4000-8000-000000000001",
     "organizationId":"10000000-1000-4000-8000-000000000001",
@@ -89,14 +90,14 @@ select is((select document_number from public.transactions where type = 'loan_or
 select is((select snapshot->>'documentNumber' from public.documents limit 1), 'FIN-000001', 'issued number is frozen in snapshot');
 
 select lives_ok(
-  $$ select public.post_loan($json$
+  $$ select public.server_post_loan('10000000-0000-4000-8000-000000000002', $json$
   {"idempotencyKey":"10000000-4000-4000-8000-000000000001","organizationId":"10000000-1000-4000-8000-000000000001"}
   $json$::jsonb) $$,
   'idempotent retry returns the original posting before validating duplicate command fields'
 );
 select is((select count(*) from public.transactions), 1::bigint, 'idempotent retry created no duplicate transaction');
 select throws_ok(
-  $$ select public.post_loan(jsonb_build_object(
+  $$ select public.server_post_loan('10000000-0000-4000-8000-000000000002', jsonb_build_object(
        'idempotencyKey', '10000000-4000-4000-8000-000000000099',
        'organizationId', '10000000-1000-4000-8000-000000000001',
        'customerId', '10000000-3000-4000-8000-000000000001',
@@ -110,7 +111,7 @@ select throws_ok(
   'a failed posting rolls back the whole RPC'
 );
 select throws_ok(
-  $$ select public.post_loan($json$
+  $$ select public.server_post_loan('10000000-0000-4000-8000-000000000002', $json$
   {
     "idempotencyKey":"10000000-4000-4000-8000-000000000098",
     "organizationId":"10000000-1000-4000-8000-000000000001",
@@ -131,22 +132,23 @@ select throws_ok(
 );
 select is((select next_value from public.document_counters where organization_id = '10000000-1000-4000-8000-000000000001' and kind = 'financing'), 2::bigint, 'retries and rolled-back postings consume no number');
 
-select results_eq(
-  $$ with changed as (
-       update public.organizations set name = 'Operator Must Not Change This'
-       where id = '10000000-1000-4000-8000-000000000001' returning 1
-     ) select count(*)::bigint from changed $$,
-  $$ values (0::bigint) $$,
-  'operator cannot change organization settings'
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000002', true);
+select throws_ok(
+  $$ update public.organizations set name = 'Operator Must Not Change This'
+     where id = '10000000-1000-4000-8000-000000000001' $$,
+  '42501', 'permission denied for table organizations',
+  'operator cannot change organization settings directly'
 );
-select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000001', true);
-select results_eq(
-  $$ with changed as (
-       update public.organizations set name = 'Owner Updated Organization'
-       where id = '10000000-1000-4000-8000-000000000001' returning 1
-     ) select count(*)::bigint from changed $$,
-  $$ values (1::bigint) $$,
-  'owner can change organization settings'
+set local role service_role;
+select lives_ok(
+  $$ select public.server_update_organization_settings(
+    '10000000-0000-4000-8000-000000000001',
+    '10000000-1000-4000-8000-000000000001',
+    'Owner Updated Organization', '',
+    '{"financing":"FIN","receipt":"REC","adjustment":"AJU"}'::jsonb
+  ) $$,
+  'owner can change organization settings through the server boundary'
 );
 
 reset role;
