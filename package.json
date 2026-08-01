@@ -38,7 +38,7 @@
     "supabase:start": "supabase start",
     "supabase:reset": "supabase db reset",
     "supabase:test": "supabase test db",
-    "supabase:types": "supabase gen types typescript --local > lib/database.types.ts",
+    "supabase:types": "supabase gen types typescript --local | sed '${/^$/d;}' > lib/database.types.ts",
     "supabase:bootstrap-owner": "node scripts/bootstrap-owner.mjs",
     "check": "npm run lint && npm run typecheck && npm test && npm run build"
   },
