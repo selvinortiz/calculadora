@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { NavigationFeedback } from "@/components/navigation-feedback";
 import { getCurrentPortalSession } from "@/lib/current-portal-session";
 import {
   getSiteUrl,
@@ -102,12 +105,30 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getCurrentPortalSession();
+  const [session, requestHeaders] = await Promise.all([
+    getCurrentPortalSession(),
+    headers(),
+  ]);
+  const requestPath = requestHeaders.get("x-request-path") || "/";
+  const pathname = requestPath.split("?", 1)[0];
+  const isAccessPage = pathname === "/acceso";
+  const isPasswordPage = pathname === "/cuenta/cambiar-clave";
+
+  if (!session && !isAccessPage) {
+    redirect(`/acceso?siguiente=${encodeURIComponent(requestPath)}`);
+  }
+  if (session?.mustChangePassword && !isPasswordPage) {
+    redirect("/cuenta/cambiar-clave");
+  }
+  if (session && !session.mustChangePassword && isAccessPage) {
+    redirect("/");
+  }
 
   return (
     <html lang="es-GT">
       <body className={geist.variable}>
         <a className="skipLink" href="#main-content">Saltar al contenido</a>
+        <NavigationFeedback />
         <div className={`appShell${session ? "" : " authShell"}`}>
           {session && (
             <AppHeader
@@ -116,7 +137,7 @@ export default async function RootLayout({
               role={session.role}
             />
           )}
-          <div className="appWorkspace" id="main-content">
+          <div className="appWorkspace" id="main-content" tabIndex={-1}>
             {children}
             <footer className="appFooter" data-print-hidden>
               <p>

@@ -8,6 +8,7 @@ type Loan = ComponentProps<typeof LoanDetail>["loan"];
 const installment = { paymentNumber: 7, dueDate: "2026-08-20", principal: 755.56, interest: 238, payment: 993.56, remainingPrincipal: 40_044.42 };
 
 function transaction(id: string, type: string, documentNumber: string, payload: Record<string, unknown>): Loan["transactions"][number] {
+  const completePayload = completePayloadFor(type, payload);
   return {
     id,
     type,
@@ -20,7 +21,32 @@ function transaction(id: string, type: string, documentNumber: string, payload: 
     voidedAt: null,
     voidReason: null,
     replacesTransactionId: null,
-    documents: [{ kind: type === "loan_origination" ? "payment_schedule" : type === "capital_payment" ? "capital_payment_record" : "payment_adjustment_record", snapshot_version: 1, calculation_version: "simple-interest-v2-cents", issued_on: "2026-07-31", snapshot: { organizationName: "Créditos Local", customerName: "María Ortiz", accountReference: "40", payload } }],
+    documents: [{ kind: type === "loan_origination" ? "payment_schedule" : type === "capital_payment" ? "capital_payment_record" : "payment_adjustment_record", snapshot_version: 1, calculation_version: "simple-interest-v2-cents", issued_on: "2026-07-31", snapshot: { organizationName: "Créditos Local", customerName: "María Ortiz", accountReference: "40", payload: completePayload } }],
+  };
+}
+
+function completePayloadFor(type: string, payload: Record<string, unknown>) {
+  if (type === "loan_origination") return { issueDate: "2026-07-31", principal: 52_000, termMonths: 60, schedule: [installment], ...payload };
+  if (type === "capital_payment") return {
+    ...payload,
+    details: {
+      paymentNumber: 6,
+      capitalPayment: 6_000,
+      currentCapital: 46_799.98,
+      newCapital: 40_799.98,
+      transactionDate: "2026-07-31",
+      ...(payload.details as Record<string, unknown> || {}),
+    },
+  };
+  return {
+    paymentDate: "2026-07-31",
+    ...payload,
+    adjustment: {
+      paymentNumber: 7,
+      scheduledPayment: 993.56,
+      receivedPayment: 1_035,
+      ...(payload.adjustment as Record<string, unknown> || {}),
+    },
   };
 }
 
@@ -81,5 +107,16 @@ describe("LoanDetail", () => {
 
     expect(markup).not.toContain(">Editar<");
     expect(markup).not.toContain(">Anular<");
+  });
+
+  it("does not offer a misleading reprint when a historical snapshot is incomplete", () => {
+    const incomplete = transaction("origination", "loan_origination", "FIN-000002", {});
+    incomplete.documents[0].snapshot = {};
+    const markup = renderToStaticMarkup(<LoanDetail role="owner" loan={loan([incomplete])} />);
+
+    expect(markup).toContain("Documento histórico incompleto");
+    expect(markup).toContain("No reimprimible");
+    expect(markup).not.toContain(">Reimprimir<");
+    expect(markup).not.toContain("Q0.00");
   });
 });

@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { PostedDocumentBundle, type PostedSnapshotDocument } from "./posted-document-bundle";
+import { isPostedDocumentComplete, PostedDocumentBundle, type PostedSnapshotDocument } from "./posted-document-bundle";
 
 describe("PostedDocumentBundle", () => {
   it("rebuilds a capital-payment receipt and its explicitly paginated revised plan", () => {
@@ -75,5 +75,30 @@ describe("PostedDocumentBundle", () => {
     expect(markup).toContain("Cuotas 7–30");
     expect(markup).toContain("Cuotas 31–54");
     expect(markup).toContain("Cuotas 55–60");
+  });
+
+  it("flags missing schedule snapshots instead of rendering invented zero values", () => {
+    const document: PostedSnapshotDocument = {
+      kind: "payment_schedule",
+      snapshot_version: 1,
+      calculation_version: "simple-interest-v2-cents",
+      issued_on: "2026-07-31",
+      snapshot: {},
+    };
+
+    const markup = renderToStaticMarkup(
+      <PostedDocumentBundle
+        active
+        document={document}
+        documentNumber="FIN-000002"
+        loan={{ price: 65_000, downPayment: 13_000, originalPrincipal: 52_000, annualRate: 7, termMonths: 60 }}
+        printKey="transaction-1"
+      />,
+    );
+
+    expect(isPostedDocumentComplete(document)).toBe(false);
+    expect(markup).toContain("Documento histórico incompleto");
+    expect(markup).not.toContain("Q0.00");
+    expect(markup).not.toContain("data-posted-document");
   });
 });

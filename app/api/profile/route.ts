@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { getCurrentPortalSession } from "@/lib/current-portal-session";
+import { clearPortalSessionCache, getCurrentPortalSession } from "@/lib/current-portal-session";
 import { isSameOrigin } from "@/lib/mutation-response";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -52,6 +52,7 @@ export async function PATCH(request: NextRequest) {
     return jsonError("No fue posible guardar los cambios.", 503);
   }
 
+  clearPortalSessionCache();
   return NextResponse.json({ ok: true, profile: data }, { headers: { "Cache-Control": "no-store" } });
 }
 

@@ -46,7 +46,7 @@
   justify-content: center;
   gap: 0.4rem;
   border-radius: 0.62rem;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 780;
   text-decoration: none;
   transition: 140ms ease;
@@ -54,7 +54,7 @@
 }
 
 .primaryAction {
-  min-height: 2.55rem;
+  min-height: 2.75rem;
   padding: 0.58rem 0.85rem;
   color: #fff;
   background: var(--accent);
@@ -232,7 +232,7 @@
 .secondaryAction,
 .contextAction,
 .backLink {
-  min-height: 2.15rem;
+  min-height: 2.75rem;
   padding: 0.4rem 0.58rem;
   color: var(--text-muted);
   background: var(--surface);
@@ -249,8 +249,12 @@
 }
 
 .actionIconOnly {
-  width: 2.15rem;
+  width: 2.75rem;
   padding: 0;
+}
+
+.actionLabel {
+  display: none;
 }
 
 .emptyState {
@@ -523,7 +527,7 @@
   }
 
   .actions .contextAction {
-    width: 2.15rem;
+    width: 2.75rem;
     padding: 0;
   }
 }
@@ -605,6 +609,17 @@
 
   .actions {
     justify-content: flex-start;
+  }
+
+  .actions .contextAction,
+  .actionIconOnly {
+    width: auto;
+    padding-inline: 0.7rem;
+  }
+
+  .actions .contextAction span,
+  .actionLabel {
+    display: inline;
   }
 }
 

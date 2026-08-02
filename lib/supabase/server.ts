@@ -20,7 +20,7 @@ export async function createSupabaseServerClient() {
             cookieStore.set(name, value, options);
           });
         } catch {
-          // Server Components cannot set cookies. The proxy refreshes sessions.
+          // Server Components cannot set cookies. The proxy performs refreshes.
         }
       },
     },

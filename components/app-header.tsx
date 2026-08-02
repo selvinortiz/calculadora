@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type KeyboardEvent, type PointerEvent } from "react";
 import {
   ArrowRightStartOnRectangleIcon,
+  Bars3Icon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
   ChevronRightIcon,
@@ -14,14 +15,15 @@ import {
   HomeIcon,
   UserGroupIcon,
   UsersIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import styles from "./app-header.module.css";
 import type { OrganizationRole } from "@/lib/domain";
 
 const NAVIGATION = [
-  { href: "/", label: "Inicio", icon: HomeIcon },
-  { href: "/clientes", label: "Clientes", icon: UsersIcon },
-  { href: "/financiamientos", label: "Financiamientos", icon: DocumentTextIcon },
+  { href: "/", label: "Inicio", mobileLabel: "Inicio", icon: HomeIcon },
+  { href: "/clientes", label: "Clientes", mobileLabel: "Clientes", icon: UsersIcon },
+  { href: "/financiamientos", label: "Financiamientos", mobileLabel: "Créditos", icon: DocumentTextIcon },
 ] as const;
 
 const ADMINISTRATION = [
@@ -36,6 +38,8 @@ const DEFAULT_WIDTH_RATIO = 0.16;
 const MIN_WIDTH = 208;
 const MAX_WIDTH = 360;
 const COLLAPSED_WIDTH = 68;
+const MOBILE_BREAKPOINT = 1024;
+const MIN_WORKSPACE_WIDTH = 720;
 const WIDTH_STORAGE_KEY = "creditos-sidebar-width-v2";
 const LEGACY_WIDTH_STORAGE_KEY = "creditos-sidebar-width";
 const COLLAPSED_STORAGE_KEY = "creditos-sidebar-collapsed";
@@ -52,6 +56,8 @@ export function AppHeader({
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
+  const [maxSidebarWidth, setMaxSidebarWidth] = useState(MAX_WIDTH);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const initials = operatorName
     .split(/\s+/)
@@ -69,9 +75,9 @@ export function AppHeader({
         const legacyValue = window.localStorage.getItem(LEGACY_WIDTH_STORAGE_KEY);
         const legacyWidth = legacyValue === null ? Number.NaN : Number(legacyValue);
         if (Number.isFinite(savedWidth)) {
-          setSidebarWidth(clampWidth(savedWidth));
+          setSidebarWidth(clampWidth(savedWidth, window.innerWidth));
         } else if (Number.isFinite(legacyWidth) && legacyWidth !== LEGACY_DEFAULT_WIDTH) {
-          setSidebarWidth(clampWidth(legacyWidth));
+          setSidebarWidth(clampWidth(legacyWidth, window.innerWidth));
         } else {
           setSidebarWidth(smartDefault);
         }
@@ -85,6 +91,27 @@ export function AppHeader({
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
+
+  useEffect(() => {
+    function syncSidebarBounds() {
+      if (window.innerWidth <= MOBILE_BREAKPOINT) return;
+      setMaxSidebarWidth(getMaxSidebarWidth(window.innerWidth));
+      setSidebarWidth((current) => clampWidth(current, window.innerWidth));
+    }
+
+    syncSidebarBounds();
+    window.addEventListener("resize", syncSidebarBounds);
+    return () => window.removeEventListener("resize", syncSidebarBounds);
+  }, []);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    function closeWithEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    }
+    document.addEventListener("keydown", closeWithEscape);
+    return () => document.removeEventListener("keydown", closeWithEscape);
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     if (!preferencesLoaded) return;
@@ -111,7 +138,7 @@ export function AppHeader({
     document.documentElement.dataset.sidebarResizing = "true";
 
     function move(pointerEvent: globalThis.PointerEvent) {
-      setSidebarWidth(clampWidth(startWidth + pointerEvent.clientX - startX));
+      setSidebarWidth(clampWidth(startWidth + pointerEvent.clientX - startX, window.innerWidth));
     }
 
     function finish() {
@@ -129,7 +156,7 @@ export function AppHeader({
   function resizeWithKeyboard(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
-    setSidebarWidth((current) => clampWidth(current + (event.key === "ArrowRight" ? 8 : -8)));
+    setSidebarWidth((current) => clampWidth(current + (event.key === "ArrowRight" ? 8 : -8), window.innerWidth));
   }
 
   return (
@@ -154,6 +181,39 @@ export function AppHeader({
             {collapsed ? <ChevronDoubleRightIcon /> : <ChevronDoubleLeftIcon />}
           </button>
         </div>
+        <button
+          className={styles.mobileMenuButton}
+          type="button"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-navigation-menu"
+          onClick={() => setMobileMenuOpen((current) => !current)}
+        >
+          {mobileMenuOpen ? <XMarkIcon aria-hidden="true" /> : <Bars3Icon aria-hidden="true" />}
+          <span>Menú</span>
+        </button>
+        <nav className={styles.mobilePrimaryNav} aria-label="Navegación principal móvil">
+          {NAVIGATION.map((item) => {
+            const isCurrent = item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return <Link key={item.href} className={styles.mobileNavLink} href={item.href} aria-current={isCurrent ? "page" : undefined} onClick={() => setMobileMenuOpen(false)}>{item.mobileLabel}</Link>;
+          })}
+        </nav>
+        {mobileMenuOpen && <div className={styles.mobileMenuPanel} id="mobile-navigation-menu">
+          {role === "owner" && <nav className={styles.mobileMenuLinks} aria-label="Administración móvil">
+            {ADMINISTRATION.map((item) => {
+              const isCurrent = item.href === "/configuracion" ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return <Link key={item.href} href={item.href} aria-current={isCurrent ? "page" : undefined} onClick={() => setMobileMenuOpen(false)}>{item.label}</Link>;
+            })}
+          </nav>}
+          <div className={styles.mobileAccountArea}>
+            <Link className={styles.mobileProfileLink} href="/cuenta/perfil" onClick={() => setMobileMenuOpen(false)}>
+              <span className={styles.operatorAvatar} aria-hidden="true">{initials}</span>
+              <span><strong>{operatorName}</strong><small>Editar perfil</small></span>
+            </Link>
+            <form action="/api/auth/sign-out" method="post">
+              <button className={styles.mobileSignOutButton} type="submit"><ArrowRightStartOnRectangleIcon aria-hidden="true" />Cerrar sesión</button>
+            </form>
+          </div>
+        </div>}
         <div className={styles.navigationArea}>
           <p className={styles.navLabel}>Principal</p>
           <nav className={styles.nav} aria-label="Navegación principal">
@@ -189,7 +249,7 @@ export function AppHeader({
             })}
           </nav>
         </div>}
-        <div className={styles.accountArea}>
+        <div className={`${styles.accountArea} ${styles.desktopAccountArea}`}>
           <Link
             className={styles.profileLink}
             href="/cuenta/perfil"
@@ -219,7 +279,7 @@ export function AppHeader({
           aria-label="Cambiar ancho de la barra lateral"
           aria-orientation="vertical"
           aria-valuemin={MIN_WIDTH}
-          aria-valuemax={MAX_WIDTH}
+          aria-valuemax={maxSidebarWidth}
           aria-valuenow={sidebarWidth}
           tabIndex={0}
           onPointerDown={beginResize}
@@ -230,10 +290,14 @@ export function AppHeader({
   );
 }
 
-function clampWidth(width: number) {
-  return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(width)));
+function clampWidth(width: number, viewportWidth: number) {
+  return Math.min(getMaxSidebarWidth(viewportWidth), Math.max(MIN_WIDTH, Math.round(width)));
 }
 
 function getDefaultWidth(viewportWidth: number) {
-  return clampWidth(Math.max(DEFAULT_WIDTH, viewportWidth * DEFAULT_WIDTH_RATIO));
+  return clampWidth(Math.max(DEFAULT_WIDTH, viewportWidth * DEFAULT_WIDTH_RATIO), viewportWidth);
+}
+
+function getMaxSidebarWidth(viewportWidth: number) {
+  return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, viewportWidth - MIN_WORKSPACE_WIDTH));
 }

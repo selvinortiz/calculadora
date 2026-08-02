@@ -107,7 +107,7 @@
   margin: 0 0 0.55rem;
   padding: 0 0.65rem;
   color: var(--text-subtle);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -121,7 +121,7 @@
 .navLink {
   display: flex;
   min-width: 0;
-  min-height: 2.5rem;
+  min-height: 2.75rem;
   align-items: center;
   gap: 0.7rem;
   padding: 0.45rem 0.55rem;
@@ -129,7 +129,7 @@
   color: var(--text-muted);
   border: 1px solid transparent;
   border-radius: 0.65rem;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
@@ -258,7 +258,7 @@
 .signOutButton {
   display: flex;
   width: 100%;
-  min-height: 2.2rem;
+  min-height: 2.75rem;
   align-items: center;
   gap: 0.55rem;
   justify-content: flex-start;
@@ -267,7 +267,7 @@
   color: var(--text-muted);
   background: transparent;
   border-color: transparent;
-  font-size: 0.66rem;
+  font-size: 0.75rem;
 }
 
 .signOutButton svg {
@@ -317,7 +317,12 @@
 .navLink:focus-visible,
 .profileLink:focus-visible,
 .signOutButton:focus-visible,
-.collapseButton:focus-visible {
+.collapseButton:focus-visible,
+.mobileMenuButton:focus-visible,
+.mobileNavLink:focus-visible,
+.mobileMenuLinks a:focus-visible,
+.mobileProfileLink:focus-visible,
+.mobileSignOutButton:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
@@ -368,10 +373,16 @@
   padding-inline: 0;
 }
 
-@media (max-width: 52rem) {
+.mobileMenuButton,
+.mobilePrimaryNav,
+.mobileMenuPanel {
+  display: none;
+}
+
+@media (max-width: 64rem) {
   .sidebar,
   .sidebar[data-collapsed="true"] {
-    position: static;
+    position: relative;
     height: auto;
     padding: 0;
     background: rgb(255 255 255 / 94%);
@@ -394,7 +405,8 @@
   .brand,
   .sidebar[data-collapsed="true"] .brand {
     display: flex;
-    padding: 0.75rem 1rem 0.6rem;
+    min-height: 3.5rem;
+    padding: 0.65rem 0.75rem;
   }
 
   .brandCopy,
@@ -412,79 +424,197 @@
   .navigationArea,
   .sidebar[data-collapsed="true"] .navigationArea,
   .adminArea,
-  .sidebar[data-collapsed="true"] .adminArea {
-    grid-column: 1 / -1;
-    margin-top: 0;
+  .sidebar[data-collapsed="true"] .adminArea,
+  .desktopAccountArea {
+    display: none;
   }
 
-  .adminArea {
+  .mobileMenuButton {
+    display: inline-flex;
+    min-width: 4.75rem;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-right: 0.75rem;
+    padding: 0.45rem 0.65rem;
+    color: var(--text-strong);
+    background: var(--surface-subtle);
+    border-color: var(--border);
+    font-size: 0.8125rem;
+  }
+
+  .mobileMenuButton svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    stroke-width: 2;
+  }
+
+  .mobilePrimaryNav {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.25rem;
+    padding: 0.35rem 0.5rem 0.5rem;
     border-top: 1px solid var(--border);
   }
 
-  .navLabel {
-    display: none;
+  .mobileNavLink {
+    display: flex;
+    min-width: 0;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.35rem;
+    overflow: hidden;
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    border-radius: 0.6rem;
+    font-size: 0.8125rem;
+    font-weight: 750;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .accountArea,
-  .sidebar[data-collapsed="true"] .accountArea {
+  .mobileNavLink:hover {
+    color: var(--text-strong);
+    background: var(--surface-subtle);
+  }
+
+  .mobileNavLink[aria-current="page"] {
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    border-color: #d7ddff;
+  }
+
+  .mobileMenuPanel {
+    position: absolute;
+    z-index: 50;
+    top: 100%;
+    right: 0;
+    left: 0;
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--sidebar);
+    border-bottom: 1px solid var(--border-strong);
+    box-shadow: 0 1rem 2.5rem rgb(31 41 55 / 18%);
+  }
+
+  .mobileMenuLinks {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .mobileMenuLinks a {
     display: flex;
-    gap: 0.15rem;
-    margin: 0 0.75rem 0 0;
-    padding: 0;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .mobileMenuLinks a:hover,
+  .mobileMenuLinks a[aria-current="page"] {
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    border-color: #d7ddff;
+  }
+
+  .mobileAccountArea {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .mobileProfileLink {
+    display: flex;
+    min-width: 0;
+    min-height: 2.75rem;
+    flex: 1;
+    align-items: center;
+    gap: 0.6rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .mobileProfileLink > span:last-child {
+    display: grid;
+    min-width: 0;
+    gap: 0.1rem;
+  }
+
+  .mobileProfileLink strong,
+  .mobileProfileLink small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobileProfileLink strong {
+    font-size: 0.8125rem;
+  }
+
+  .mobileProfileLink small {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  .mobileSignOutButton {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.65rem;
+    color: var(--text-muted);
     background: transparent;
-    border: 0;
+    border-color: var(--border);
+    font-size: 0.75rem;
   }
 
-  .profileLink,
-  .sidebar[data-collapsed="true"] .profileLink {
-    justify-content: center;
-    padding: 0.25rem;
-  }
-
-  .profileCopy,
-  .profileChevron {
-    display: none;
-  }
-
-  .signOutForm {
-    border-top: 0;
-  }
-
-  .signOutButton,
-  .sidebar[data-collapsed="true"] .signOutButton {
-    width: 2.35rem;
-    min-height: 2.35rem;
-    justify-content: center;
-    margin: 0;
-    padding: 0;
-  }
-
-  .signOutButton span {
-    display: none;
-  }
-
-  .nav {
-    display: flex;
-    gap: 0.25rem;
-    padding: 0 0.75rem 0.55rem;
-    overflow-x: auto;
-  }
-
-  .navLink,
-  .sidebar[data-collapsed="true"] .navLink {
-    min-height: 2.3rem;
-    flex: 1 0 auto;
-    justify-content: center;
-    padding: 0.4rem 0.6rem;
-    font-size: 0.7rem;
-  }
-
-  .navIcon {
-    display: none;
+  .mobileSignOutButton svg {
+    width: 1rem;
+    height: 1rem;
   }
 }
 
-@media (prefers-color-scheme: dark) and (max-width: 52rem) {
+@media (max-width: 28rem) {
+  .brandCopy small {
+    display: none;
+  }
+
+  .brandCopy strong {
+    max-width: 10rem;
+  }
+
+  .mobileMenuLinks {
+    grid-template-columns: 1fr;
+  }
+
+  .mobileAccountArea {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mobileSignOutButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-color-scheme: dark) and (max-width: 64rem) {
   .sidebar,
   .sidebar[data-collapsed="true"] {
     background: rgb(24 27 34 / 94%);

@@ -22,15 +22,16 @@ export async function requireOwnerContext() {
   const admin = createSupabaseAdminClient();
   if (!supabase || !admin) return { error: "unavailable" as const };
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "unauthorized" as const };
+  const { data, error } = await supabase.auth.getClaims();
+  const userId = typeof data?.claims?.sub === "string" ? data.claims.sub : "";
+  if (error || !userId) return { error: "unauthorized" as const };
   const { data: membership } = await supabase
     .from("organization_members")
     .select("organization_id,role,active")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("active", true)
     .maybeSingle();
   if (!membership || membership.role !== "owner") return { error: "forbidden" as const };
 
-  return { supabase, admin, user, organizationId: membership.organization_id };
+  return { supabase, admin, user: { id: userId }, organizationId: membership.organization_id };
 }

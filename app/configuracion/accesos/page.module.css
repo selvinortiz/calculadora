@@ -283,13 +283,13 @@
 }
 
 .dialogActions button {
-  min-height: 2.4rem;
+  min-height: 2.75rem;
   padding: 0.5rem 0.75rem;
   color: var(--text-strong);
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 0.58rem;
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 780;
   cursor: pointer;
 }
@@ -324,12 +324,21 @@
   }
 
   .actionButton {
-    width: 2.15rem;
+    width: 2.75rem;
     padding: 0;
   }
 }
 
 @media (max-width: 36rem) {
+  .actionButton {
+    width: auto;
+    padding-inline: 0.7rem;
+  }
+
+  .actionButton span {
+    display: inline;
+  }
+
   .feedbackHeading,
   .passwordPanel {
     align-items: stretch;

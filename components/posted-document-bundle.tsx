@@ -39,6 +39,15 @@ export function PostedDocumentBundle({
   loan,
   printKey,
 }: PostedDocumentBundleProps) {
+  if (!isPostedDocumentComplete(document)) {
+    return (
+      <div className={styles.incompleteDocument} role="status">
+        <strong>Documento histórico incompleto</strong>
+        <p>Este registro no contiene la instantánea necesaria para reconstruir o reimprimir el documento con fidelidad. Los importes faltantes no se muestran como cero.</p>
+      </div>
+    );
+  }
+
   const snapshot = asRecord(document.snapshot);
   const payload = asRecord(snapshot.payload);
   const organizationName = stringValue(snapshot.organizationName);
@@ -218,6 +227,37 @@ export function PostedDocumentBundle({
   return null;
 }
 
+export function isPostedDocumentComplete(document: PostedSnapshotDocument) {
+  const snapshot = asRecord(document.snapshot);
+  const payload = asRecord(snapshot.payload);
+  if (!stringValue(snapshot.organizationName) || !stringValue(snapshot.customerName)) return false;
+
+  if (document.kind === "payment_schedule") {
+    return scheduleRows(payload.schedule).length > 0
+      && positiveNumber(payload.principal)
+      && positiveInteger(payload.termMonths)
+      && Boolean(dateValue(payload.issueDate) || dateValue(snapshot.issuedAt) || dateValue(document.issued_on));
+  }
+
+  if (document.kind === "capital_payment_record") {
+    const details = asRecord(payload.details);
+    return positiveNumber(details.capitalPayment)
+      && nonNegativeNumber(details.currentCapital)
+      && nonNegativeNumber(details.newCapital)
+      && Boolean(dateValue(details.transactionDate) || dateValue(snapshot.issuedAt) || dateValue(document.issued_on));
+  }
+
+  if (document.kind === "payment_adjustment_record") {
+    const adjustment = asRecord(payload.adjustment);
+    return positiveInteger(adjustment.paymentNumber)
+      && positiveNumber(adjustment.scheduledPayment)
+      && nonNegativeNumber(adjustment.receivedPayment)
+      && Boolean(dateValue(payload.paymentDate) || dateValue(snapshot.issuedAt) || dateValue(document.issued_on));
+  }
+
+  return false;
+}
+
 function adjustmentValue(value: unknown): PaymentCreditAdjustment {
   const adjustment = asRecord(value);
   return {
@@ -273,4 +313,19 @@ function numberValue(value: unknown, fallback = 0) {
 function integerValue(value: unknown) {
   const number = numberValue(value);
   return Number.isInteger(number) ? number : 0;
+}
+
+function positiveNumber(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0;
+}
+
+function nonNegativeNumber(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0;
+}
+
+function positiveInteger(value: unknown) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0;
 }

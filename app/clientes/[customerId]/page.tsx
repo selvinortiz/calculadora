@@ -46,9 +46,9 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
             <td data-label="Capital del plan">{money(loan.currentPrincipal)}</td>
             <td data-label="Cuota regular">{money(loan.regularPayment)}</td>
             <td data-label="Acciones"><div className={styles.actions}>
-              <Link className={`${styles.rowAction} ${styles.actionIconOnly}`} href={`/financiamientos/${loan.id}`} title="Ver financiamiento" aria-label={`Ver financiamiento ${loan.accountReference}`}><EyeIcon aria-hidden="true" /></Link>
-              <Link className={`${styles.contextAction} ${styles.actionIconOnly}`} href={`/abono-capital?financiamiento=${loan.id}`} title="Registrar abono" aria-label={`Registrar abono para ${loan.accountReference}`}><ArrowDownCircleIcon aria-hidden="true" /></Link>
-              <Link className={`${styles.contextAction} ${styles.actionIconOnly}`} href={`/ajustes?financiamiento=${loan.id}`} title="Registrar ajuste" aria-label={`Registrar ajuste para ${loan.accountReference}`}><AdjustmentsHorizontalIcon aria-hidden="true" /></Link>
+              <Link className={`${styles.rowAction} ${styles.actionIconOnly}`} href={`/financiamientos/${loan.id}`} title="Ver financiamiento" aria-label={`Ver financiamiento ${loan.accountReference}`}><EyeIcon aria-hidden="true" /><span className={styles.actionLabel}>Ver</span></Link>
+              <Link className={`${styles.contextAction} ${styles.actionIconOnly}`} href={`/abono-capital?financiamiento=${loan.id}`} title="Registrar abono" aria-label={`Registrar abono para ${loan.accountReference}`}><ArrowDownCircleIcon aria-hidden="true" /><span className={styles.actionLabel}>Abono</span></Link>
+              <Link className={`${styles.contextAction} ${styles.actionIconOnly}`} href={`/ajustes?financiamiento=${loan.id}`} title="Registrar ajuste" aria-label={`Registrar ajuste para ${loan.accountReference}`}><AdjustmentsHorizontalIcon aria-hidden="true" /><span className={styles.actionLabel}>Ajuste</span></Link>
             </div></td>
           </tr>)}</tbody>
         </table> : <div className={`${styles.emptyState} ${styles.embeddedEmpty}`}><p>Este cliente todavía no tiene financiamientos.</p><Link className={styles.primaryAction} href={`/financiamientos/nuevo?cliente=${customer.id}`}>Crear financiamiento</Link></div>}

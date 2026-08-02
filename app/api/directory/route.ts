@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { getCurrentPortalSession } from "@/lib/current-portal-session";
+import { clearPortalSessionCache, getCurrentPortalSession } from "@/lib/current-portal-session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { centsToMoney } from "@/lib/domain";
@@ -130,6 +130,7 @@ export async function PATCH(request: NextRequest) {
   });
   if (error?.code === "23505") return jsonError("Cada tipo de documento necesita un prefijo distinto.", 409);
   if (error) return jsonError("No fue posible guardar la configuración.", 503);
+  clearPortalSessionCache();
   return NextResponse.json({ ok: true });
 }
 

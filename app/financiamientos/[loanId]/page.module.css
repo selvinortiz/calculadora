@@ -16,7 +16,8 @@
   gap: 0.3rem;
   margin-bottom: 0.7rem;
   color: var(--text-muted);
-  font-size: 0.63rem;
+  min-height: 2.75rem;
+  font-size: 0.8125rem;
   font-weight: 720;
   text-decoration: none;
 }
@@ -42,7 +43,7 @@
 
 .loanActions a {
   display: inline-flex;
-  min-height: 2.4rem;
+  min-height: 2.75rem;
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 0.7rem;
@@ -50,7 +51,7 @@
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 0.62rem;
-  font-size: 0.66rem;
+  font-size: 0.8125rem;
   font-weight: 780;
   text-decoration: none;
 }
@@ -301,6 +302,11 @@
   border-radius: 0.75rem;
 }
 
+.table:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .table table {
   width: 100%;
   border-collapse: collapse;
@@ -491,13 +497,13 @@
 .replacementLink,
 .transactionActions .disclosureButton {
   display: inline-flex;
-  min-height: 2.2rem;
+  min-height: 2.75rem;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
   padding: 0.45rem 0.72rem;
   border-radius: 0.55rem;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 780;
   line-height: 1;
   text-decoration: none;
@@ -507,6 +513,19 @@
   color: var(--accent-strong);
   background: var(--accent-soft);
   border-color: transparent;
+}
+
+.documentUnavailable {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding: 0.45rem 0.65rem;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .secondaryButton:hover {

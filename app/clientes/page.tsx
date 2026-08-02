@@ -47,8 +47,8 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
           <td data-label="Financiamientos"><span className={customer.financingCount > 0 ? styles.statusBadge : styles.mutedValue}>{customer.financingCount} {customer.financingCount === 1 ? "activo" : "activos"}</span></td>
           <td data-label="Última actividad">{formatDate(customer.latestActivityAt)}</td>
           <td data-label="Acciones"><div className={styles.actions}>
-            <Link className={`${styles.rowAction} ${styles.actionIconOnly}`} href={`/clientes/${customer.id}`} aria-label={`Ver ${customer.name}`} title="Ver cliente"><EyeIcon aria-hidden="true" /></Link>
-            <Link className={`${styles.rowAction} ${styles.actionIconOnly}`} href={`/clientes/${customer.id}/editar`} aria-label={`Editar ${customer.name}`} title="Editar cliente"><PencilSquareIcon aria-hidden="true" /></Link>
+            <Link className={`${styles.rowAction} ${styles.actionIconOnly}`} href={`/clientes/${customer.id}`} aria-label={`Ver ${customer.name}`} title="Ver cliente"><EyeIcon aria-hidden="true" /><span className={styles.actionLabel}>Ver</span></Link>
+            <Link className={`${styles.rowAction} ${styles.actionIconOnly}`} href={`/clientes/${customer.id}/editar`} aria-label={`Editar ${customer.name}`} title="Editar cliente"><PencilSquareIcon aria-hidden="true" /><span className={styles.actionLabel}>Editar</span></Link>
           </div></td>
         </tr>)}</tbody>
       </table>

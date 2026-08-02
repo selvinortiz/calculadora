@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { generateTemporaryPassphrase, requireOwnerContext } from "@/lib/account-administration";
 import { normalizeEmailAddress } from "@/lib/email-address";
 import { isSameOrigin } from "@/lib/mutation-response";
+import { clearPortalSessionCache } from "@/lib/current-portal-session";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   if (!isSameOrigin(request)) return jsonError("Solicitud no permitida.", 403);
@@ -41,6 +42,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       target_details: { previous_email: previousEmail, email },
     });
     if (auditError) return jsonError("El correo cambió, pero no fue posible registrar la auditoría.", 503);
+    clearPortalSessionCache(userId);
     return NextResponse.json({ ok: true, email: updatedUserData.user.email || email }, { headers: { "Cache-Control": "no-store" } });
   }
 
@@ -60,6 +62,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       target_details: {},
     });
     if (auditError) return jsonError("El acceso cambió, pero no fue posible registrar la auditoría.", 503);
+    clearPortalSessionCache(userId);
     return NextResponse.json({ ok: true, active });
   }
 
@@ -78,6 +81,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       target_details: {},
     });
     if (auditError) return jsonError("La contraseña cambió, pero no fue posible registrar la auditoría.", 503);
+    clearPortalSessionCache(userId);
     return NextResponse.json({ ok: true, temporaryPassword }, { headers: { "Cache-Control": "no-store" } });
   }
 

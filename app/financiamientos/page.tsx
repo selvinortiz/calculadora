@@ -35,7 +35,7 @@ export default async function FinancingsPage({ searchParams }: { searchParams: P
           <td data-label="Último movimiento"><div className={styles.primaryCell}><strong>{loan.latestActivity ? activityLabel(loan.latestActivity.type) : "Financiamiento"}</strong><span>{loan.latestActivity ? `${loan.latestActivity.documentNumber} · ${formatDate(loan.latestActivity.effectiveDate)}` : "Sin movimientos"}</span></div></td>
           <td data-label="Estado"><span className={styles.statusBadge}>Activo</span></td>
           <td data-label="Acciones"><div className={styles.actions}>
-            <Link className={`${styles.rowAction} ${styles.actionIconOnly}`} href={`/financiamientos/${loan.id}`} title="Ver financiamiento" aria-label={`Ver financiamiento ${loan.accountReference}`}><EyeIcon aria-hidden="true" /></Link>
+            <Link className={`${styles.rowAction} ${styles.actionIconOnly}`} href={`/financiamientos/${loan.id}`} title="Ver financiamiento" aria-label={`Ver financiamiento ${loan.accountReference}`}><EyeIcon aria-hidden="true" /><span className={styles.actionLabel}>Ver</span></Link>
             <Link className={styles.contextAction} href={`/abono-capital?financiamiento=${loan.id}`} title="Registrar abono"><ArrowDownCircleIcon aria-hidden="true" /><span>Abono</span></Link>
             <Link className={styles.contextAction} href={`/ajustes?financiamiento=${loan.id}`} title="Registrar ajuste"><AdjustmentsHorizontalIcon aria-hidden="true" /><span>Ajuste</span></Link>
           </div></td>

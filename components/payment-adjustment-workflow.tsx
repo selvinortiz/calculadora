@@ -321,10 +321,11 @@ export function PaymentAdjustmentWorkflow({
             <form className={styles.formGrid} onSubmit={(event) => event.preventDefault()} noValidate>
               <Field
                 id="adjustment-payment-number"
-                label="Cuota revisada"
+                label="Número de cuota"
                 value={paymentNumber}
                 onChange={(event) => setPaymentNumber(event.target.value)}
                 error={attemptedStep === 1 ? paymentErrors.paymentNumber : undefined}
+                hint="La cuota cuyo pago estás registrando."
                 min={1}
                 step="1"
               />

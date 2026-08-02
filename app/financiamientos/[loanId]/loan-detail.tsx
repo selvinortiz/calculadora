@@ -15,6 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import {
+  isPostedDocumentComplete,
   PostedDocumentBundle,
   type PostedSnapshotDocument,
 } from "../../../components/posted-document-bundle";
@@ -59,7 +60,12 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
       return next;
     });
   }
-  function printDocument(transactionId: string) {
+  function printDocument(transaction: Transaction) {
+    if (!canReprint(transaction)) {
+      setMessage("Este documento histórico está incompleto y no se puede reimprimir con fidelidad.");
+      return;
+    }
+    const transactionId = transaction.id;
     setExpandedSections((current) => new Set(current).add(transactionId));
     setPrinting(transactionId);
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
@@ -188,7 +194,8 @@ export function LoanDetail({ loan, role }: { loan: Loan; role: OrganizationRole 
           <div className={styles.transactionActions}>
             {transaction.documents.length > 0 && <button className={styles.disclosureButton} type="button" aria-expanded={sectionIsOpen(transaction.id)} aria-controls={`transaction-${transaction.id}`} onClick={() => toggleSection(transaction.id)}><span>{sectionIsOpen(transaction.id) ? "Ocultar detalle" : "Ver detalle"}</span><ChevronDownIcon className={styles.chevronIcon} aria-hidden="true" /></button>}
             {role === "owner" && transaction.status === "posted" && transaction.id === latestPostedTransactionId && <button className={styles.secondaryButton} type="button" onClick={() => requestEdit(transaction)}><PencilSquareIcon aria-hidden="true" /><span>Editar</span></button>}
-            {transaction.documents.length > 0 && <button className={styles.secondaryButton} type="button" onClick={() => printDocument(transaction.id)}><PrinterIcon aria-hidden="true" /><span>Reimprimir</span></button>}
+            {canReprint(transaction) && <button className={styles.secondaryButton} type="button" onClick={() => printDocument(transaction)}><PrinterIcon aria-hidden="true" /><span>Reimprimir</span></button>}
+            {transaction.documents.length > 0 && !canReprint(transaction) && <span className={styles.documentUnavailable}>No reimprimible</span>}
             {role === "owner" && transaction.status === "posted" && <button className={styles.dangerButton} type="button" onClick={() => requestVoid(transaction)}><NoSymbolIcon aria-hidden="true" /><span>Anular</span></button>}
             {role === "owner" && transaction.status === "voided" && !loan.transactions.some((candidate) => candidate.replacesTransactionId === transaction.id) && <a className={styles.replacementLink} href={`${replacementPath(transaction.type)}?reemplaza=${transaction.id}`}><ArrowPathIcon aria-hidden="true" /><span>Reemplazar</span></a>}
           </div>
@@ -280,7 +287,7 @@ function EditTextArea({ label, name, defaultValue }: { label: string; name: stri
   return <label className={`${styles.editField} ${styles.fullEditField}`}><span>{label}</span><textarea name={name} rows={3} maxLength={1000} defaultValue={defaultValue} /></label>;
 }
 
-function Schedule({ rows }: { rows: Installment[] }) { return <div className={styles.table}><table><thead><tr><th>Cuota</th><th>Vence</th><th>Capital</th><th>Interés</th><th>Total</th><th>Capital pendiente</th></tr></thead><tbody>{rows.map((row) => <tr key={row.paymentNumber}><td>{row.paymentNumber}</td><td>{date(row.dueDate)}</td><td>{money(row.principal)}</td><td>{money(row.interest)}</td><td>{money(row.payment)}</td><td>{money(row.remainingPrincipal)}</td></tr>)}</tbody></table></div>; }
+function Schedule({ rows }: { rows: Installment[] }) { return <div className={styles.table} role="region" aria-label="Calendario de cuotas; desliza horizontalmente para ver todas las columnas" tabIndex={0}><table><thead><tr><th>Cuota</th><th>Vence</th><th>Capital</th><th>Interés</th><th>Total</th><th>Capital pendiente</th></tr></thead><tbody>{rows.map((row) => <tr key={row.paymentNumber}><td>{row.paymentNumber}</td><td>{date(row.dueDate)}</td><td>{money(row.principal)}</td><td>{money(row.interest)}</td><td>{money(row.payment)}</td><td>{money(row.remainingPrincipal)}</td></tr>)}</tbody></table></div>; }
 function Item({ label, value }: { label: string; value: string }) { return <div><dt>{label}</dt><dd>{value}</dd></div>; }
 function CurrentMetric({ label, value }: { label: string; value: string }) { return <div className={styles.currentMetric}><span>{label}</span><strong>{value}</strong></div>; }
 function money(value: number) { return new Intl.NumberFormat("es-GT", { style: "currency", currency: "GTQ" }).format(value); }
@@ -288,6 +295,7 @@ function rate(value: unknown) { const number = Number(value); return Number.isFi
 function date(value: string) { if (!value) return "—"; return new Intl.DateTimeFormat("es-GT", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${value.slice(0, 10)}T00:00:00Z`)); }
 function label(type: string) { return ({ loan_origination: "Financiamiento", capital_payment: "Abono a capital", payment_adjustment: "Ajuste" } as Record<string, string>)[type] || type; }
 function transactionOverview(transaction: Transaction) {
+  if (transaction.documents.length > 0 && !canReprint(transaction)) return "Documento histórico incompleto; consulta el detalle";
   const snapshot = asRecord(transaction.documents[0]?.snapshot);
   const payload = asRecord(snapshot.payload);
   if (transaction.type === "loan_origination") return `Capital ${moneyValue(payload.principal)} · ${String(payload.termMonths || "—")} cuotas`;
@@ -303,6 +311,7 @@ function transactionOverview(transaction: Transaction) {
   }
   return transaction.documentNumber;
 }
+function canReprint(transaction: Transaction) { return transaction.documents.length > 0 && transaction.documents.every(isPostedDocumentComplete); }
 function latestAdjustmentStatus(transactions: Transaction[], currentScheduleSource?: string) {
   const transaction = [...transactions].reverse().find((candidate) => candidate.type === "payment_adjustment" && candidate.status === "posted" && candidate.dependsOnTransactionId === currentScheduleSource);
   if (!transaction) return null;

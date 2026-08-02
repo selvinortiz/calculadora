@@ -52,7 +52,25 @@ export default async function globalSetup() {
         organizationName: "Créditos Local",
         customerName: "Cliente de ejemplo",
         accountReference: "LOCAL-E2E",
-        payload: {},
+        payload: {
+          price: 2500,
+          downPayment: 0,
+          principal: 2500,
+          annualRate: 12,
+          termMonths: 3,
+          issueDate: "2026-08-01",
+          quote: {
+            monthly: 858.33,
+            finalPayment: 858.34,
+            interestTotal: 75,
+            total: 2575,
+          },
+          schedule: [
+            { paymentNumber: 1, dueDate: "2026-08-31", principal: 833.33, interest: 25, payment: 858.33, remainingPrincipal: 1666.67 },
+            { paymentNumber: 2, dueDate: "2026-09-30", principal: 833.33, interest: 25, payment: 858.33, remainingPrincipal: 833.34 },
+            { paymentNumber: 3, dueDate: "2026-10-31", principal: 833.34, interest: 25, payment: 858.34, remainingPrincipal: 0 },
+          ],
+        },
       },
     },
   });
